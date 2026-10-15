@@ -1,0 +1,3 @@
+interface:
+  display_name: "Review My Code"
+  short_description: "Review a diff on correctness, scope, and standards"
