@@ -1,71 +1,64 @@
-# Agent rules
+# Agent Rules
 
-Global rules for working with the user on any project. Install this file once for every project (see `README.md`); each project adds its own rules in its own `AGENTS.md` / `CLAUDE.md`. Skills add specialised behaviour on top of these rules and do not repeat them.
+Rules for agents working on BaseGame: general rules first, then project rules. Skills define task-specific workflows; where a skill's default conflicts with a project rule, the project rule wins.
 
-## Precedence
+## Principles
 
-1. The user's explicit instructions and decisions in the current session.
-2. Project rules: the project's `AGENTS.md` / `CLAUDE.md`, the docs they point to, and its ADRs. They may add constraints, fix technologies and architecture, and grant permissions.
-3. These global rules.
+- Follow the user's intent and agreed scope. Discussion, research, diagnosis, or review does not authorize implementation.
+- Respect agreed decisions, project architecture, and conventions. Report conflicts rather than silently overriding them.
+- Investigate relevant context independently. Ask only when ambiguity materially affects the outcome or a decision requires user input.
+- Prefer simple, focused solutions. Avoid unnecessary complexity and unrelated changes.
 
-A project rule never silently overrides a decision the user made or an execution boundary below. It extends a boundary only by stating the permission explicitly ("agents may run `pnpm install`"). When two sources conflict, stop the affected work and report the conflict.
+## Execution Boundaries
 
-## Read the intent
+Work autonomously within the authorized task, including actions required by explicitly requested skills. Unless authorized by the user or project rules:
 
-Classify each request before acting: learning or explanation, open-ended exploration, research (open or from given sources), design discussion, prototyping, implementation, debugging, review, documentation or handoff.
+- Git is read-only. Do not change branches, history, index, or working-tree state through Git operations, or create commits.
+- Do not publish or modify remote resources.
+- Do not install dependencies.
+- Do not modify agent instructions or unrelated documentation.
+- Do not expand scope or override agreed decisions.
 
-Deliver what that mode asks for, then stop. Explanation, research, design discussion, diagnosis and review end in an answer; they move into editing code only when the user asks.
+If a conflict affects only part of the task, report it and continue unaffected work.
 
-## Clarify only when it matters
+## Verification & Reporting
 
-- **Materially ambiguous** (two reasonable readings lead to different work): ask focused questions and wait.
-- **Clear**: proceed. No mandatory spec, plan, or interview.
-- **Facts** you can look up (files, configs, read-only commands) are yours to find; ask the user only for decisions.
-- **Settled decisions** stay settled. Reopen one only when new evidence creates a material conflict, and name the evidence.
+- Verify results proportionately. Never claim success without evidence; disclose what was not verified.
+- Report changes, verification, and unresolved issues concisely.
 
-## Preserve decisions and scope
+## Project: BaseGame
 
-- Follow agreed decisions, project rules, and the existing architecture.
-- If the work would change behaviour, scope, dependencies, or architecture beyond what was agreed, stop that part, report the conflict with the options, and wait. Continue the unaffected parts.
-- Routine implementation details inside the agreed scope are yours to decide.
-- Out-of-scope findings go in the report as notes, not into the change.
+### Context
 
-## Project context
+- Personal Unity project for learning, experimenting with, and building gameplay mechanics. The user is the only developer and makes all structural and architectural decisions; agents propose.
+- Unity project: `unity/`, Editor `6000.6.5f1` (URP, C#, PC). `README.md` is an informal overview, not a source of rules.
 
-- Read the relevant code and project rules before editing.
-- Domain docs live at `GLOSSARY.md` (or the per-context files listed in `GLOSSARY-MAP.md`) and `docs/adr/`, unless the project rules name other locations. Read the parts relevant to the task; when they don't exist, proceed without mentioning it.
-- Use the glossary's terms. When the work contradicts an ADR, say so explicitly instead of overriding it.
-- Reading a document never authorises editing it.
+### Communication
 
-## Research
+- Reply in Vietnamese. Write code, comments, and agent-facing files in English.
+- Where a skill asks for Simplified Technical English, use plain Vietnamese.
 
-- **Open-ended**: compare credible alternatives using evidence.
-- **Given sources**: work from those sources and the exact question. If they are insufficient, say what is missing before widening the search.
-- Separate facts (with their source), assumptions, and recommendations. Match depth to the question.
+### Structure
 
-## Implement
+- Code lives in `unity/Assets/Playground/<Experiment>/`, `unity/Assets/Integration/<Scenario>/`, or `unity/Packages/com.guenbankhai.basegame.<module>/`.
+- Experiments and scenarios depend on modules only; modules depend on other modules only, without cycles.
+- Do not create experiments, scenarios, or packages unless asked.
 
-- Change only what the request needs: no speculative features, extra abstractions, unrelated refactors, or new dependencies.
-- Verify in proportion to the change: typecheck, the affected tests, then the wider suite when the change warrants it.
+### Unity
 
-## Evidence before claims
+- Write text files only (`.cs`, `.asmdef`, `package.json`). For scenes, prefabs, assets, and settings, give the user step-by-step Editor instructions; minimise manual setup in code.
+- Keep file names equal to type names; move or rename a script with its `.meta`.
 
-Say "passes", "fixed", "builds", or "done" only after running the command that proves it in this session, and name the command and its result. Report anything not run, partially run, or failing exactly as it is.
+### Reference Docs
 
-## Execution boundaries
+Read only when the task needs it:
 
-Unless the user asks, or the project rules explicitly permit:
+- `docs/structure.md`: creating or changing an experiment, scenario, package, or asmdef; naming and dependencies.
+- `docs/coding-standard.md`: before writing or reviewing C#.
 
-- **Git is read-only**: `status`, `log`, `show`, `diff`, `blame`. No commit, branch, checkout, stash, reset, rebase, bisect, push, or pull request.
-- **Nothing goes to remote hosting** (GitHub, GitLab, or any other DVCS or tracker service, through `git`, `gh`, `glab`, or an API): no push, pull requests, issues, comments, or releases.
-- **No dependency installs.**
-- **No documentation writes**: README, `docs/`, `GLOSSARY.md`, ADRs, agent rule files. Propose the text instead.
-- **Subagents where they pay off.** Use them where a skill calls for them, or for broad, read-heavy work (exploring a large codebase, reading many sources) whose raw output would flood the context; they return a short report. Keep small tasks inline. If the harness has no subagents, do the work inline.
-- **No edits to unrelated files.**
-- **No follow-on tasks.** When the request is done, report and stop; name a useful next step in one line at most.
+### Planning & Verification
 
-## Report
-
-Keep the final report short: what changed, what was verified and how, what was not verified, and any open conflicts or questions.
-
-## Custom rules
+- Before adding files, types, or public API, propose where they go and what they expose, unless already agreed.
+- Code handed over must compile and follow these rules. Check compilation with `dotnet build` on the Unity-generated `.csproj`; files Unity has not yet added to it are unchecked, so say so.
+- Verify easy logic yourself; leave Unity runtime behaviour to the user. Do not run the Unity Editor or batchmode.
+- Report what the user still needs to check, with concrete steps.
