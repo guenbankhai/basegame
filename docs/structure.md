@@ -46,7 +46,7 @@ Folders and packages are created only when needed.
 |---|---|---|
 | Package | `com.guenbankhai.basegame.<module>` (lowercase) | `com.guenbankhai.basegame.inventory` |
 | Module namespace / asmdef | `BaseGame.<Module>`, `.Editor`, `.Tests` | `BaseGame.Inventory.Tests` |
-| Experiment namespace / asmdef | `BaseGame.Playground.<Experiment>` | `BaseGame.Playground.InventoryGrid` |
+| Experiment namespace / asmdef | `BaseGame.Playground.<Experiment>`, `.Tests` | `BaseGame.Playground.InventoryGrid` |
 | Scenario namespace / asmdef | `BaseGame.Integration.<Scenario>` | `BaseGame.Integration.CraftingLoop` |
 | Unity version in `package.json` | `"unity": "6000.6"`, `"unityRelease": "5f1"` | |
 | Company / Product (this project) | `GuenBanKhai` / `BaseGame` | |
@@ -54,6 +54,7 @@ Folders and packages are created only when needed.
 ## Setup notes
 
 - **Experiment**: one asmdef at the experiment root. It references only module asmdefs and the Unity package assemblies it uses (e.g. `Unity.InputSystem`). Code without an asmdef lands in `Assembly-CSharp`, which asmdefs cannot reference.
+- **Experiment tests** (optional): `Tests/` asmdef `BaseGame.Playground.<Experiment>.Tests`, Editor platform only, referencing the experiment asmdef and the test framework. No other extra asmdefs.
 - **Module**: `Runtime/` asmdef `BaseGame.<Module>`; `Editor/` asmdef `BaseGame.<Module>.Editor`, Editor platform only; `Tests/` asmdef `BaseGame.<Module>.Tests`, referencing the test framework.
 - **Module tests**: tests in embedded packages (under `unity/Packages/`) run without extra setup. A package installed any other way (local path, Git, registry), e.g. in `validation/`, must be listed under `"testables"` in that project's `manifest.json`.
 - Modules never hard-code save paths; use `Application.persistentDataPath`.
