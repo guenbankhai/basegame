@@ -1,0 +1,24 @@
+{
+    "name": "BaseGame.Playground.Calendar.Tests",
+    "rootNamespace": "BaseGame.Playground.Calendar.Tests",
+    "references": [
+        "BaseGame.Playground.Calendar",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
