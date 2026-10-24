@@ -1,14 +1,19 @@
-# Project Structure
+# Cấu trúc project
 
-## Layout
+## Bố cục
 
 ```text
 basegame/
-├── AGENTS.md, README.md
-├── docs/                          project docs; ADRs in docs/adr/ (created when needed)
-├── unity/                         main Unity project
+├── AGENTS.md, README.md, GLOSSARY.md
+├── docs/
+│   ├── roadmap.md, structure.md, coding-standard.md, module-workflow.md
+│   ├── modules/                   mỗi module một tài liệu thiết kế; _template.md
+│   └── adr/                       NNNN-<module>-<slug>.md
+├── unity/                         project Unity chính
 │   ├── Assets/
-│   │   ├── Scenes/, Settings/, …  project-wide Unity defaults
+│   │   ├── Scenes/                scene của experiment: <Experiment>.unity
+│   │   ├── Config/                config và asset dữ liệu của experiment: <Experiment>*.asset
+│   │   ├── Settings/              cấu hình render pipeline (URP)
 │   │   ├── Playground/<Experiment>/
 │   │   └── Integration/<Scenario>/
 │   └── Packages/
@@ -17,44 +22,46 @@ basegame/
 │           ├── Runtime/
 │           ├── Editor/
 │           └── Tests/
-└── validation/                    empty Unity project for checking a module installs alone (created later)
+└── validation/                    project Unity trống, kiểm tra một module cài riêng được (tạo sau)
 ```
 
-Folders and packages are created only when needed.
+Thư mục và package chỉ tạo khi cần.
 
-| Area | Role |
+| Khu vực | Vai trò |
 |---|---|
-| Playground | Experiments: try, compare, rewrite, or delete freely |
-| Integration | Scenarios that combine modules; real modules only |
-| Packages | Modules: reusable, held to the project's quality bar |
-| validation/ | Proves a module installs and runs in a clean project |
+| Playground | Experiment: thử, so sánh, viết lại hoặc xóa tự do (code ở đây; scene ở `Scenes/`, config ở `Config/`) |
+| Integration | Scenario ghép nhiều module; chỉ dùng module thật |
+| Packages | Module: dùng lại được, phải đạt chuẩn chất lượng của project |
+| validation/ | Chứng minh module cài và chạy được trong project sạch |
 
-## Dependencies
+## Phụ thuộc
 
-| From \ To | Packages | Integration | Playground |
+| Từ \ Tới | Packages | Integration | Playground |
 |---|---|---|---|
-| Playground | ✅ | ❌ | ❌ (experiments never use each other) |
+| Playground | ✅ | ❌ | ❌ (experiment không dùng lẫn nhau) |
 | Integration | ✅ | — | ❌ |
-| Packages | ✅ declared, no cycles | ❌ | ❌ |
+| Packages | ✅ có khai báo, không vòng | ❌ | ❌ |
 
-- A module dependency is declared in both `package.json` and the asmdef.
-- Unity does not block every violation (a package can still reference an asmdef in `Assets/`), so these rules are kept by review.
+- Phụ thuộc giữa các module khai báo ở cả `package.json` lẫn asmdef.
+- Unity không chặn mọi vi phạm (package vẫn reference được asmdef trong `Assets/`), nên các quy tắc này được giữ bằng review.
 
-## Naming
+## Đặt tên
 
-| Item | Convention | Example |
+| Mục | Quy ước | Ví dụ |
 |---|---|---|
-| Package | `com.guenbankhai.basegame.<module>` (lowercase) | `com.guenbankhai.basegame.inventory` |
-| Module namespace / asmdef | `BaseGame.<Module>`, `.Editor`, `.Tests` | `BaseGame.Inventory.Tests` |
-| Experiment namespace / asmdef | `BaseGame.Playground.<Experiment>`, `.Tests` | `BaseGame.Playground.InventoryGrid` |
-| Scenario namespace / asmdef | `BaseGame.Integration.<Scenario>` | `BaseGame.Integration.CraftingLoop` |
-| Unity version in `package.json` | `"unity": "6000.6"`, `"unityRelease": "5f1"` | |
-| Company / Product (this project) | `GuenBanKhai` / `BaseGame` | |
+| Package | `com.guenbankhai.basegame.<module>` (chữ thường) | `com.guenbankhai.basegame.inventory` |
+| Namespace / asmdef của module | `BaseGame.<Module>`, `.Editor`, `.Tests` | `BaseGame.Inventory.Tests` |
+| Namespace / asmdef của experiment | `BaseGame.Playground.<Experiment>`, `.Tests` | `BaseGame.Playground.InventoryGrid` |
+| Namespace / asmdef của scenario | `BaseGame.Integration.<Scenario>` | `BaseGame.Integration.CraftingLoop` |
+| Phiên bản Unity trong `package.json` | `"unity": "6000.6"`, `"unityRelease": "5f1"` | |
+| Company / Product (project này) | `GuenBanKhai` / `BaseGame` | |
 
-## Setup notes
+## Ghi chú thiết lập
 
-- **Experiment**: one asmdef at the experiment root. It references only module asmdefs and the Unity package assemblies it uses (e.g. `Unity.InputSystem`). Code without an asmdef lands in `Assembly-CSharp`, which asmdefs cannot reference.
-- **Experiment tests** (optional): `Tests/` asmdef `BaseGame.Playground.<Experiment>.Tests`, Editor platform only, referencing the experiment asmdef and the test framework. No other extra asmdefs.
-- **Module**: `Runtime/` asmdef `BaseGame.<Module>`; `Editor/` asmdef `BaseGame.<Module>.Editor`, Editor platform only; `Tests/` asmdef `BaseGame.<Module>.Tests`, referencing the test framework.
-- **Module tests**: tests in embedded packages (under `unity/Packages/`) run without extra setup. A package installed any other way (local path, Git, registry), e.g. in `validation/`, must be listed under `"testables"` in that project's `manifest.json`.
-- Modules never hard-code save paths; use `Application.persistentDataPath`.
+- **Scene và config của experiment**: để phẳng trong `Assets/Scenes/` và `Assets/Config/`, đặt tên theo experiment (`Calendar.unity`, `CalendarConfig.asset`). Product phát triển ở project riêng, nên các thư mục này chỉ chứa đồ của experiment. Xóa experiment thì xóa luôn scene và config của nó.
+- **`Assets/Settings/`**: chỉ chứa cấu hình render pipeline (URP Global Settings, volume profile, URP Asset nếu có). Còn cài package URP thì URP tự tạo lại Global Settings khi thiếu, nên không xóa thư mục này. Không để đồ của experiment ở đây.
+- **Experiment**: một asmdef ở gốc experiment. Chỉ reference asmdef của module và assembly của package Unity mà nó dùng (ví dụ `Unity.InputSystem`). Code không có asmdef sẽ vào `Assembly-CSharp`, mà asmdef không reference được assembly này.
+- **Test của experiment** (không bắt buộc): asmdef `Tests/` tên `BaseGame.Playground.<Experiment>.Tests`, chỉ cho platform Editor, reference asmdef của experiment và test framework. Không thêm asmdef nào khác.
+- **Module**: asmdef `Runtime/` tên `BaseGame.<Module>`; asmdef `Editor/` tên `BaseGame.<Module>.Editor`, chỉ cho platform Editor; asmdef `Tests/` tên `BaseGame.<Module>.Tests`, reference test framework.
+- **Test của module**: test trong package embedded (nằm dưới `unity/Packages/`) chạy được không cần thiết lập thêm. Package cài theo cách khác (đường dẫn local, Git, registry), ví dụ trong `validation/`, phải được liệt kê trong `"testables"` của `manifest.json` ở project đó.
+- Module không bao giờ hard-code đường dẫn save; dùng `Application.persistentDataPath`.

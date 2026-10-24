@@ -1,7 +1,9 @@
 {
     "name": "BaseGame.Playground.Calendar",
     "rootNamespace": "BaseGame.Playground.Calendar",
-    "references": [],
+    "references": [
+        "BaseGame.Calendar"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

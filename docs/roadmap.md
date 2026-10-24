@@ -40,7 +40,7 @@ Game **life-sim chủ đề trường học**, không gói gọn trong trường
 ## 3. Nguyên tắc phát triển
 
 - Mỗi cơ chế là một **module độc lập, dùng lại được**; luật riêng của game nằm ngoài module.
-- Quy trình mỗi module: **Playground (thử nghiệm) → chốt thiết kế → package**.
+- Quy trình mỗi module: **thiết kế → playground → package → playground dùng package → ổn định**. Chi tiết và kinh nghiệm: [`module-workflow.md`](module-workflow.md).
 - Làm **từng module một**. Câu hỏi thuộc module sau thì để tới lúc làm mới quyết.
 - Unity-first: dùng Input System, Cinemachine, NavMesh, ScriptableObject… trước khi tự xây.
 
@@ -52,7 +52,7 @@ Hầu hết module khác đều cần; làm trước.
 
 | Module | Làm gì | Câu hỏi nghiên cứu | Trạng thái |
 |---|---|---|---|
-| **Time & Calendar** | Giờ, ngày, tuần, mùa, năm; tốc độ thời gian; tạm dừng; ngủ / tua nhanh; event khi sang giờ, ngày, tuần, mùa | Trôi theo `Update` hay tick? Tạm dừng thế nào? Chuyển mùa do bên ngoài gọi | Chưa bắt đầu |
+| **Time & Calendar** | Giờ, ngày, tuần, mùa, năm; tốc độ thời gian; tạm dừng; ngủ / skip / fast-forward; event khi sang giờ, ngày, tuần, mùa | Thiết kế: [`modules/calendar.md`](modules/calendar.md) | Đang phát triển |
 | **Stats** | Chỉ số và modifier (cộng, nhân %, có thời hạn) | Thứ tự áp modifier? Định nghĩa bằng ScriptableObject hay class thuần? | Chưa bắt đầu |
 | **Items** | Định nghĩa item, instance, stack, độ bền, thuộc tính | Tách dữ liệu tĩnh và trạng thái riêng từng món? ID ổn định | Chưa bắt đầu |
 | **Inventory** | Container ô slot + giới hạn khối lượng; dùng cho túi, rương, kho | Di chuyển, tách, gộp đồ; event khi thay đổi | Chưa bắt đầu |
@@ -127,4 +127,4 @@ Quyết khi làm tới module liên quan:
 - **Chuẩn bị cho multiplayer.** Đề xuất: tách dữ liệu khỏi MonoBehaviour, ID ổn định, đổi trạng thái qua hàm rõ ràng, không có `Player.Instance` toàn cục.
 - **Lỡ lớp học** thì có hậu quả gì.
 - **Ranh giới Opportunities và Quests & Story.**
-- **Integration scenario đầu tiên.** Dự kiến "Một tuần ở thị trấn": lớp học và ca làm theo lịch, 2–3 NPC theo lịch, nhu cầu và mua đồ ăn, 3 sự kiện chính để chuyển mùa, ngủ và save.
+- **Scenario đầu tiên.** Dự kiến "Một tuần ở thị trấn": lớp học và ca làm theo lịch, 2–3 NPC theo lịch, nhu cầu và mua đồ ăn, 3 sự kiện chính để chuyển mùa, ngủ và save.

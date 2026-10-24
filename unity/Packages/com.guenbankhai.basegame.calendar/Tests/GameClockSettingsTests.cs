@@ -1,0 +1,109 @@
+using System;
+using NUnit.Framework;
+
+namespace BaseGame.Calendar.Tests
+{
+    public class GameClockSettingsTests
+    {
+        [Test]
+        public void NewClock_StartsAtConfiguredPoint()
+        {
+            var settings = TestCalendar.Settings(dayStartMinute: 360, startMinutesIntoDay: 120);
+            settings.StartYear = 3;
+            settings.StartSeasonIndex = 2;
+
+            var now = new GameClock(settings).Now;
+
+            Assert.AreEqual(120, now.TotalMinutes);
+            Assert.AreEqual(0, now.Day);
+            Assert.AreEqual(8 * 60, now.ClockMinute);
+            Assert.AreEqual(3, now.Year);
+            Assert.AreEqual(2, now.SeasonIndex);
+            Assert.AreEqual(0, now.DayInSeason);
+            Assert.AreEqual(0, now.DayOfWeek);
+        }
+
+        [TestCase(7, 0, 0, 0)]
+        [TestCase(10, 5, 0, 0)]
+        [TestCase(10, 0, 15, 0)]
+        [TestCase(1, 1440, 0, 0)]
+        [TestCase(1, 0, 0, 4)]
+        public void NewClock_InvalidSettings_Throws(int step, int dayStartMinute, int startMinutesIntoDay, int startSeasonIndex)
+        {
+            var settings = TestCalendar.Settings(minutesPerStep: step, dayStartMinute: dayStartMinute, startMinutesIntoDay: startMinutesIntoDay);
+            settings.StartSeasonIndex = startSeasonIndex;
+
+            Assert.Throws<ArgumentException>(() => new GameClock(settings));
+        }
+
+        [Test]
+        public void NewClock_NoSeasonsOrNoDays_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(seasons: new SeasonDefinition[0])));
+            Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(weekLength: 0)));
+        }
+
+        [Test]
+        public void NewClock_NegativeSeasonLength_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, -1))));
+        }
+
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(0f)]
+        public void NewClock_NonFiniteOrZeroRates_Throws(float value)
+        {
+            var secondsPerMinute = TestCalendar.Settings();
+            secondsPerMinute.SecondsPerGameMinute = value;
+            var maxSpeed = TestCalendar.Settings();
+            maxSpeed.MaxSpeed = value;
+
+            Assert.Throws<ArgumentException>(() => new GameClock(secondsPerMinute));
+            Assert.Throws<ArgumentException>(() => new GameClock(maxSpeed));
+        }
+
+        [Test]
+        public void NewClock_NullSettings_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new GameClock(null));
+        }
+
+        [Test]
+        public void Names_ComeFromTheSettings()
+        {
+            var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, 0, 5)));
+
+            Assert.AreEqual(7, clock.WeekLength);
+            Assert.AreEqual(3, clock.SeasonCount);
+            Assert.AreEqual("D3", clock.GetDayName(3));
+            Assert.AreEqual("S2", clock.GetSeasonName(2));
+        }
+
+        [Test]
+        public void Names_OutOfRange_Throw()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetDayName(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetDayName(7));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetSeasonName(4));
+        }
+
+        [Test]
+        public void ChangingSettingsAfterwards_DoesNotReachTheClock()
+        {
+            var settings = TestCalendar.Settings();
+            var clock = new GameClock(settings);
+
+            settings.DayNames = new[] { "Only" };
+            settings.Seasons = TestCalendar.Seasons(1);
+            settings.MinutesPerStep = 60;
+
+            Assert.AreEqual(7, clock.WeekLength);
+            Assert.AreEqual(4, clock.SeasonCount);
+            clock.Tick(1f);
+            Assert.AreEqual(1, clock.Now.TotalMinutes);
+        }
+    }
+}

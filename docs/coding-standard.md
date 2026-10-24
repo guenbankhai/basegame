@@ -1,34 +1,34 @@
-# Coding Standard
+# Chuẩn code
 
-Applies to all C# in Playground, Integration, and Packages. Formatting and field naming are enforced by `.editorconfig`.
+Áp dụng cho mọi code C# trong Playground, Integration và Packages. Định dạng và cách đặt tên field do `.editorconfig` kiểm tra.
 
-## Naming
+## Đặt tên
 
-- Follow Microsoft C# conventions: `PascalCase` for types, methods, properties, events, and public fields; `camelCase` for locals and parameters.
-- Private fields: `_camelCase` (Unity's Inspector still shows `_moveSpeed` as "Move Speed").
-- Constants and `static readonly` fields: `PascalCase`.
+- Theo quy ước C# của Microsoft: `PascalCase` cho type, method, property, event và public field; `camelCase` cho biến cục bộ và tham số.
+- Private field: `_camelCase` (Inspector của Unity vẫn hiện `_moveSpeed` thành "Move Speed").
+- Hằng số và field `static readonly`: `PascalCase`.
 
-## Files
+## File
 
-- One main type per file; the file name equals the type name.
-- Namespace matches the asmdef name (see `docs/structure.md`).
+- Mỗi file một type chính; tên file trùng tên type.
+- Namespace trùng tên asmdef (xem `docs/structure.md`).
 
 ## Unity
 
-- Use `[SerializeField] private` instead of public fields; expose read access through properties.
-- No `Find*` or `SendMessage`. Cache components in `Awake` instead of calling `GetComponent` every frame.
-- Between code, use C# `event Action<T>`. Use `UnityEvent` only when the connection is made in the Inspector.
+- Dùng `[SerializeField] private` thay cho public field; cho đọc qua property.
+- Không dùng `Find*` hay `SendMessage`. Cache component trong `Awake`, không gọi `GetComponent` mỗi frame.
+- Giữa các phần code, dùng `event Action<T>` của C#. Chỉ dùng `UnityEvent` khi nối trong Inspector.
 
 ## Null
 
-- Nullable reference types stay disabled.
-- Do not use `?.` or `??` on `UnityEngine.Object`: Unity overrides `== null`, and these operators bypass it.
+- Nullable reference types để tắt.
+- Không dùng `?.` hay `??` với `UnityEngine.Object`: Unity override `== null`, còn hai toán tử này bỏ qua override đó.
 
-## Static State
+## State static
 
-- Do not keep gameplay state in `static` fields. State belongs to component or ScriptableObject instances.
-- `const`, `static readonly` values, and pure static methods are fine.
-- Domain reload is disabled in this project, so static fields keep their values between Play sessions. When static state is unavoidable, reset it:
+- Không giữ state gameplay trong field `static`. State thuộc về instance: component, ScriptableObject hoặc class C# thường.
+- `const`, giá trị `static readonly` và static method thuần thì được phép.
+- Project này tắt domain reload, nên field static giữ nguyên giá trị giữa các lần Play. Khi buộc phải có state static, reset nó:
 
 ```csharp
 [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -38,11 +38,11 @@ private static void ResetStatics()
 }
 ```
 
-## Language
+## Phiên bản ngôn ngữ
 
-- C# 9 (the `LangVersion` in Unity-generated `.csproj`): no file-scoped namespaces, global usings, or other C# 10+ features.
+- C# 9 (`LangVersion` trong `.csproj` do Unity sinh): không dùng file-scoped namespace, global using hay tính năng C# 10 trở lên.
 
-## Tests and Docs
+## Test và tài liệu
 
-- Packages: tests for important behaviour and a short usage doc are required.
-- Playground: tests and docs are optional.
+- Package: bắt buộc có test cho hành vi quan trọng và một usage doc ngắn.
+- Playground: test và tài liệu không bắt buộc.

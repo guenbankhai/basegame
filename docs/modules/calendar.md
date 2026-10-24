@@ -1,41 +1,52 @@
-# Calendar (Time & Calendar)
+# Calendar
 
-Thiết kế đã thống nhất cho module Time & Calendar trong `roadmap.md`. Trạng thái: **Playground xong** (`Assets/Playground/Calendar/`, test EditMode đã chạy trong Unity), bước tiếp theo là Sang package.
+Đồng hồ và lịch của game: giờ, ngày, thứ, mùa, năm; tốc độ; tạm dừng; skip; fast-forward; event; snapshot để save.
 
-## Tên
+Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ: `GLOSSARY.md` (mục Calendar). Cách dùng nhanh: `README.md` của package. Trạng thái: `roadmap.md`.
 
 | Mục | Giá trị |
 |---|---|
-| Package | `com.guenbankhai.basegame.calendar` |
-| Namespace / asmdef | `BaseGame.Calendar` |
-| Experiment | `Assets/Playground/Calendar/`, `BaseGame.Playground.Calendar` (+ `.Tests`) |
+| Package | `unity/Packages/com.guenbankhai.basegame.calendar` |
+| Namespace / asmdef | `BaseGame.Calendar`, `BaseGame.Calendar.Tests` |
+| Phụ thuộc | Không có |
+| Quyết định | [ADR 0001](../adr/0001-calendar-step-based-clock.md) · [0002](../adr/0002-calendar-skip-and-fast-forward.md) · [0003](../adr/0003-calendar-plain-csharp-core.md) · [0004](../adr/0004-calendar-command-queue.md) |
 
 Không dùng tên `Time`: nếu tồn tại namespace `BaseGame.Time`, mọi code trong `BaseGame.*` viết `Time.deltaTime` sẽ trỏ vào namespace đó thay vì `UnityEngine.Time` và lỗi compile.
 
 ## Phạm vi
 
-**Trong module:** giờ, ngày, thứ, mùa, năm; tốc độ; tạm dừng; skip; tua nhanh; event; snapshot để save.
+**Trong module:** giờ, ngày, thứ, mùa, năm; tốc độ; tạm dừng; skip; fast-forward; event; snapshot để save.
 
 **Ngoài module** (luật game hoặc module khác):
-- Sự kiện nào làm chuyển mùa (game gọi `AdvanceSeason()`).
-- Luật ép kết thúc ngày kiểu Stardew (2:00 ngất → 6:00). Game tự nghe event giờ và gọi `SkipTo`.
+- Sự kiện nào làm chuyển mùa: game gọi `AdvanceSeason()`.
+- Luật ép kết thúc ngày kiểu Stardew (2:00 ngất → 6:00): game tự nghe event giờ và gọi `SkipTo`.
 - "Ngày của người chơi" (thức qua đêm vẫn tính hôm qua).
 - Play time (giây thật đã chơi): Save hoặc meta.
 - Ánh sáng ngày đêm, định dạng file save, nâng phiên bản dữ liệu save.
+- Cách các scene khác nhau (trường, thị trấn) cùng dùng một đồng hồ: quyết khi làm scenario đầu tiên.
 
 ## Kiến trúc
 
-- `GameClock`: lõi C# thuần. Giữ toàn bộ state, tốc độ, tạm dừng, thời gian lẻ giữa hai bước, trạng thái tua; phát event. Test bằng EditMode.
-- `GameClockDriver`: MonoBehaviour mỏng. Tạo `GameClock` trong `Awake`, `Update` gọi `Clock.Tick(Time.deltaTime)`. Có thể thay bằng driver khác (debug, mạng) mà không sửa lõi.
-- `CalendarConfig`: ScriptableObject, **chỉ giữ config**, không giữ state (domain reload đang tắt).
-- Lấy tham chiếu: `[SerializeField] GameClockDriver` → `.Clock`, hoặc truyền `GameClock` qua constructor. Không singleton, không service locator.
+| Thành phần | Vai trò |
+|---|---|
+| `GameClock` | Lõi C# thuần. Giữ state, tốc độ, pause source, thời gian lẻ giữa hai step, trạng thái fast-forward; phát event. Test bằng EditMode |
+| `CalendarSettings` | Class C# thuần chứa toàn bộ config. `GameClock(CalendarSettings)` kiểm tra và copy một lần; sửa settings sau đó không ảnh hưởng đồng hồ đang chạy |
+| `CalendarConfig` | ScriptableObject chỉ giữ một `CalendarSettings` để chỉnh trong Inspector. `CreateSettings()` trả bản copy, nên code không bao giờ sửa được asset. Không giữ state (domain reload đang tắt) |
+| `GameClockDriver` | MonoBehaviour mỏng: tạo `GameClock` trong `Awake`, `Update` gọi `Clock.Tick(Time.deltaTime)`. Chạy trước component khác (`DefaultExecutionOrder(-1000)`) |
+| `CalendarDate`, `TickInfo` | Giá trị chỉ đọc do `GameClock` tạo, truyền qua event |
+| `CalendarSnapshot` | Snapshot; `GameClock` giữ state sống trong đúng một snapshot |
+
+- Lấy tham chiếu: `[SerializeField] GameClockDriver` → `.Clock` từ `Awake`/`OnEnable` trở đi, hoặc truyền `GameClock` qua constructor. Không singleton, không service locator.
+- Config thiếu hoặc sai: driver log lỗi, tự tắt, `Clock` là `null`.
+- Có thể thay driver (debug, mạng) mà không sửa lõi.
+- UI lấy tên thứ và mùa qua `GameClock` (`GetDayName`, `GetSeasonName`), không đọc thẳng config.
 
 ## Mô hình thời gian
 
 State (nguồn sự thật duy nhất):
 
 ```text
-long TotalMinutes        số phút kể từ lúc bắt đầu Ngày 0; luôn là bội của MinutesPerStep; chỉ giảm khi Restore
+long TotalMinutes        số phút kể từ lúc bắt đầu Day 0; luôn là bội của N; chỉ giảm khi restore
 int  Year
 int  SeasonIndex
 long SeasonStartDay      ngày tuyệt đối mùa hiện tại bắt đầu
@@ -46,41 +57,46 @@ Tính ra:
 
 ```text
 Day         = TotalMinutes / 1440                          luôn ≥ 0
-ClockMinute = (TotalMinutes + DayStartMinute) % 1440       giờ hiển thị
+ClockMinute = (TotalMinutes + DayStartMinute) % 1440       clock time
 DayOfWeek   = Day % WeekLength
 DayInSeason = Day - SeasonStartDay
 ```
 
-`TotalMinutes = 0` là lúc bắt đầu Ngày 0, đồng hồ chỉ `DayStartMinute`.
+`TotalMinutes = 0` là lúc bắt đầu Day 0, đồng hồ chỉ `DayStartMinute`.
 
 Quy tắc:
 - Một ngày luôn là 24h × 60 phút.
-- **Bước:** đồng hồ chỉ nhảy theo bước `MinutesPerStep` phút (N, chia hết cho 60; mặc định 10, kiểu Stardew). Đồng hồ và nhịp gameplay là một: không có thời điểm nằm giữa hai bước. Mọi mốc thời gian (`DayStartMinute`, giờ bắt đầu game mới, đích skip và tua, `NextOccurrence`, snapshot khi restore) phải là bội của N.
-- **Sang giờ** khi `ClockMinute % 60 == 0`. **Sang ngày** khi `TotalMinutes % 1440 == 0`, tức đồng hồ chỉ `DayStartMinute` (game này: 00:00; kiểu Stardew: 06:00). Ngày trôi liền mạch, không bắt buộc ngủ.
+- **Step:** N = `MinutesPerStep`, chia hết cho 60 (mặc định 10, kiểu Stardew). Mọi mốc thời gian (`DayStartMinute`, giờ bắt đầu game mới, đích skip và fast-forward, `NextOccurrence`, snapshot khi restore) phải là bội của N.
+- **Sang giờ** khi `ClockMinute % 60 == 0`. **Sang ngày** ở day boundary, tức khi `TotalMinutes % 1440 == 0` (game này: 00:00; kiểu Stardew: 06:00). Ngày trôi liền mạch, không bắt buộc ngủ.
 - **Tuần** chạy liên tục qua các mùa, không reset.
-- **Mùa:** số mùa trong năm = số phần tử `Seasons[]`. Mỗi mùa có `LengthInDays`: `> 0` thì tự chuyển khi đủ ngày; `0` thì chỉ chuyển bằng `AdvanceSeason()`.
+- **Mùa:** số mùa trong năm = số phần tử `Seasons[]`; `LengthInDays > 0` là fixed-length season, `0` là command-only season.
 
-**Chuyển mùa** (chỉ xảy ra ở mốc sang ngày):
+### Chuyển mùa
+
+Chỉ xảy ra ở day boundary:
 - `AdvanceSeason()` luôn gọi được, chỉ bật cờ `SeasonAdvancePending`. Gọi nhiều lần trong một ngày vẫn chỉ chuyển một mùa.
-- Ở mốc sang ngày, mùa đổi nếu cờ đang bật **hoặc** mùa có độ dài cố định đã có `DayInSeason >= LengthInDays`. Mỗi mốc đổi tối đa một mùa. Mùa có độ dài cố định vẫn có thể bị chuyển sớm bằng lệnh.
-- Khi đổi: `SeasonStartDay = Day` của ngày mới, xóa cờ, qua mùa cuối thì `Year + 1` và về mùa 0.
-- Toàn bộ logic này nằm trong **một** hàm nội bộ `ProcessDayBoundary()`, dùng chung cho tick và skip.
+- Ở day boundary, mùa đổi nếu cờ đang bật **hoặc** fixed-length season đã có `DayInSeason >= LengthInDays`. Mỗi day boundary đổi tối đa một mùa. Fixed-length season vẫn có thể bị chuyển sớm bằng lệnh.
+- Khi đổi: `SeasonStartDay = Day` của ngày mới, xóa cờ; qua mùa cuối thì `Year + 1` và về mùa 0.
+- Toàn bộ logic nằm trong **một** hàm nội bộ `ProcessDayBoundary()`, dùng chung cho chạy thường và skip.
 
 ## Tốc độ và tạm dừng
 
-- Lõi nhận giây thật qua `Tick(realDeltaSeconds)`, nhân với tốc độ riêng và `SecondsPerGameMinute`.
+- Lõi nhận giây thật qua `Tick(realDeltaSeconds)`, nhân với running speed và chia cho `SecondsPerGameMinute`.
 - Driver dùng `Time.deltaTime`, nên `timeScale = 0` cũng dừng đồng hồ.
-- Tạm dừng riêng theo tập lý do: `Pause(source)` / `Resume(source)`. Đồng hồ chạy khi tập rỗng.
-- Mặc định `SecondsPerGameMinute = 1200 / 1440` (≈ 0.8333): một ngày dài đúng 20 phút thật, mỗi bước 10 phút là 8.33 giây.
-- `ExactMinutes` (`double`, chỉ đọc) = `TotalMinutes` + thời gian đã tích lũy cho bước kế tiếp. Dùng để nội suy hình ảnh (mặt trời, kim đồng hồ) cho mượt giữa hai bước.
-- Mỗi frame trôi tối đa `MaxStepsPerFrame` bước; phần dư bị bỏ. Khi quá tải thì thời gian game chậm lại, giống `Time.maximumDeltaTime`.
+- Mặc định `SecondsPerGameMinute = 1200 / 1440` (≈ 0.8333): một ngày dài 20 phút thật, mỗi step 10 phút là 8.33 giây.
+- `ExactMinutes` (`double`) = `TotalMinutes` + thời gian đã tích lũy cho step kế tiếp. Dùng để nội suy hình ảnh (mặt trời, kim đồng hồ) giữa hai step.
+- Mỗi `Tick` chạy tối đa `MaxStepsPerFrame` step; phần dư bị bỏ. Khi quá tải thì thời gian game chậm lại, giống `Time.maximumDeltaTime`.
+- `Speed` là running speed (kể cả trong các event của step chạm đích fast-forward). `SetSpeed` đặt base speed.
+- `MaxSpeed` là giới hạn trên của mọi tốc độ. Tốc độ vượt giới hạn bị từ chối chứ không bị kẹp, để lỗi ở nơi gọi (chia cho 0, dữ liệu sai) lộ ra ngay. UI chọn tốc độ nên giới hạn theo `MaxSpeed`.
+- Tạm dừng theo tập pause source: `Pause(source)` / `Resume(source)`; đồng hồ chạy khi tập rỗng.
 
-## Bước thời gian và event
+## Step và event
 
-- Lõi luôn **đi từng bước một**: cập nhật state tới bước đó, phát các event của bước đó, rồi mới sang bước kế tiếp. Trong mọi handler, `Now` là thời điểm của chính event đó.
-- Event mốc (`HourChanged`, `DayChanged`, `WeekChanged`, `SeasonChanged`, `YearChanged`) luôn phát **đúng phút** xảy ra (N chia hết cho 60 nên mốc luôn rơi vào một bước).
-- `Ticked` phát mỗi bước. `TickInfo.DeltaMinutes` = số phút kể từ lần cập nhật gần nhất (`Ticked`, `Skipped` hoặc `Restored`), nên luôn bằng N. Vì mọi thời điểm đều là bội của N, skip không làm mất phút nào.
-- Cùng một phút: phát theo thứ tự Tick → Hour → Day → Week → Season → Year. Trước khi phát, toàn bộ state đã cập nhật xong.
+- Lõi luôn **đi từng step một**: cập nhật state tới step đó, phát các event của step đó, chạy hàng đợi lệnh, rồi mới sang step kế tiếp. Trong mọi handler, `Now` là thời điểm của chính event đó.
+- Event mốc luôn phát **đúng phút** xảy ra (N chia hết cho 60 nên mốc luôn rơi vào một step).
+- `Ticked` phát mỗi step. `TickInfo.DeltaMinutes` = số phút kể từ lần cập nhật gần nhất (`Ticked`, `Skipped` hoặc `Restored`), nên luôn bằng N.
+- Cùng một phút: Tick → Hour → Day → Week → Season → Year → (hàng đợi lệnh) → FastForwardCompleted. Trước khi phát, toàn bộ state đã cập nhật xong.
+- Handler ném exception: lõi bắt theo từng handler, gọi `Debug.LogException`, rồi vẫn gọi các handler còn lại.
 
 ```text
 Ticked(TickInfo)                         Date, DeltaMinutes, Speed, IsFastForwarding
@@ -91,35 +107,56 @@ Restored(CalendarDate)
 FastForwardCompleted(CalendarDate)
 ```
 
-**Hàng đợi lệnh và exception:**
-- Lệnh làm thay đổi đồng hồ (`SkipTo`, `FastForward*`, `StopFastForward`, `SetSpeed`, `Pause`, `Resume`, `Restore`) được gọi trong handler sẽ vào hàng đợi FIFO. `AdvanceSeason()` chỉ bật cờ nên chạy ngay. Lệnh đọc luôn dùng được.
-- Hàng đợi chạy ngay sau khi phát xong các event của bước hiện tại. Sau đó, nếu đồng hồ đang tạm dừng, vừa skip hoặc vừa restore, thì bỏ phần thời gian còn lại của lần `Tick` này.
-- Tham số của lệnh trong hàng đợi được kiểm tra lúc lệnh chạy; lệnh sai thì `Debug.LogException` và bỏ qua, đồng hồ vẫn chạy tiếp.
-- Gọi `Tick` từ trong handler: ném `InvalidOperationException`.
-- Tua đến đích: phát `FastForwardCompleted` sau các event của bước cuối; thời gian còn dư trong lần `Tick` đó bị bỏ.
-- Handler ném exception: lõi bắt lỗi theo từng handler, gọi `Debug.LogException`, rồi vẫn gọi các handler còn lại.
+### Hàng đợi lệnh
 
-## Skip và tua nhanh: hai cơ chế riêng
+- Lệnh đổi đồng hồ (`SkipTo`, `FastForward*`, `StopFastForward`, `SetSpeed`, `Pause`, `Resume`, `Restore`) gọi trong handler sẽ vào hàng đợi FIFO. `AdvanceSeason()` chỉ bật cờ nên chạy ngay. Lệnh đọc luôn dùng được.
+- Hàng đợi chạy ngay sau khi phát xong các event của step hiện tại. Lệnh sinh ra trong lúc chạy hàng đợi (từ handler của `Skipped`, `Restored`…) xếp vào cuối, không lồng nhau.
+- Tham số của lệnh trong hàng đợi được kiểm tra lúc lệnh chạy; lệnh sai thì `Debug.LogException` và bỏ qua.
+- Một lượt chạy tối đa 1000 lệnh; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
+- Gọi `Tick` trong handler: ném `InvalidOperationException`.
 
-| | **Skip** (`SkipTo`) | **Tua nhanh** (`FastForward`, `FastForwardTo`) |
+### Bỏ phần thời gian còn dư
+
+Sau mỗi step (gồm event và hàng đợi), phần thời gian còn lại của lần `Tick` đó bị bỏ nếu:
+- đồng hồ đang tạm dừng;
+- vừa skip hoặc vừa restore;
+- fast-forward vừa tới đích (kể cả `FastForwardTo(Now)`);
+- running speed đã đổi.
+
+Lệnh không làm đổi running speed (ví dụ `SetSpeed` trong lúc fast-forward, hoặc `SetSpeed` bằng đúng tốc độ cũ) không làm bỏ.
+
+### Step chạm đích fast-forward
+
+Theo thứ tự:
+1. Phát các event của step (Tick → … → Year). `IsFastForwarding` vẫn là `true` và `Speed` vẫn là tốc độ fast-forward (khớp `TickInfo`).
+2. Chạy các lệnh mà handler của step đó xếp hàng. Lúc này vẫn đang fast-forward.
+3. Nếu không lệnh nào dừng, thay hoặc hủy fast-forward (`StopFastForward`, `FastForward*`, `SkipTo`, `Restore`): tắt fast-forward, phát `FastForwardCompleted`, rồi chạy các lệnh mà handler của `FastForwardCompleted` xếp hàng. Nếu có lệnh như vậy: không phát `Completed` cho đích cũ.
+
+Ví dụ: fast-forward lúc ngủ tới 6:00, handler `HourChanged` lúc 6:00 gọi `FastForwardTo(7:00)` thì chỉ có `Completed(7:00)`, không có `Completed(6:00)`. Lệnh khác (`SetSpeed`, `Pause`) không ngăn `Completed`.
+
+## Skip và fast-forward
+
+| | **Skip** (`SkipTo`) | **Fast-forward** (`FastForward`, `FastForwardTo`) |
 |---|---|---|
-| Cách chạy | Nhảy thẳng trong một lệnh | Thời gian trôi nhanh qua từng frame, vẫn đi từng bước |
+| Cách chạy | Nhảy thẳng trong một lệnh | Thời gian trôi nhanh qua từng frame, vẫn đi từng step |
 | Event | Chỉ một `Skipped(from, to)` | Mọi event bình thường, kèm tốc độ hiện tại |
-| Lịch | Lặp qua từng mốc sang ngày, gọi `ProcessDayBoundary()` mà không phát event | Như chạy thường |
+| Lịch | Lặp qua từng day boundary, gọi `ProcessDayBoundary()` mà không phát event | Như chạy thường |
 | Dùng cho | Ngủ có màn hình đen, chuyển cảnh, debug | Ngủ có hiệu ứng, ngồi hết giờ học, chờ tới giờ hẹn |
 
-- Phân biệt **skip** (thời gian có trôi trong thế giới) và **load** (không trôi): `Skipped` và `Restored` là hai event khác nhau.
-- **Giới hạn của skip:** trong khoảng nhảy, mùa có độ dài cố định tự chuyển bao nhiêu lần cũng được; cờ chờ đã bật thì áp ở mốc sang ngày đầu tiên; mùa chuyển bằng lệnh thì đứng yên. Module nào quét `(from, to]` rồi gọi `AdvanceSeason()` thì mùa đổi ở mốc sang ngày **sau** `to`. Muốn đúng tuyệt đối thì dùng tua nhanh.
-
-Tương tác:
-- `SkipTo` trong lúc tua: hủy tua (không phát `Completed`) rồi nhảy.
-- Tạm dừng khi đang tua: tua dừng theo, resume thì chạy tiếp.
+- Skip (thời gian có trôi trong thế giới) khác restore (không trôi): `Skipped` và `Restored` là hai event khác nhau.
+- **Giới hạn của skip:** trong khoảng nhảy, fixed-length season tự chuyển bao nhiêu lần cũng được; cờ chờ đã bật thì áp ở day boundary đầu tiên; command-only season thì đứng yên. Module nào quét `(from, to]` rồi gọi `AdvanceSeason()` thì mùa đổi ở day boundary **sau** `to`. Muốn đúng tuyệt đối thì dùng fast-forward.
+- `SkipTo` trong lúc fast-forward: hủy fast-forward (không phát `Completed`) rồi nhảy.
+- Tạm dừng khi đang fast-forward: fast-forward dừng theo, resume thì chạy tiếp.
 - `SkipTo` vẫn chạy khi đang tạm dừng.
 
 ## API và trường hợp biên
 
 ```csharp
-CalendarDate Now { get; }  float Speed { get; }  bool IsPaused { get; }  bool IsFastForwarding { get; }
+CalendarDate Now { get; }  double ExactMinutes { get; }
+float Speed { get; }  float MaxSpeed { get; }  bool IsPaused { get; }  bool IsFastForwarding { get; }
+int WeekLength { get; }  int SeasonCount { get; }
+string GetDayName(int dayOfWeek);  string GetSeasonName(int seasonIndex);
+long NextOccurrence(int clockMinute);
 
 void Tick(float realDeltaSeconds);
 void SetSpeed(float speed);
@@ -127,90 +164,77 @@ void Pause(object source);  void Resume(object source);
 void FastForward(float speed);  void FastForwardTo(long targetMinutes, float speed);  void StopFastForward();
 void SkipTo(long targetMinutes);
 void AdvanceSeason();
-double ExactMinutes { get; }
-long NextOccurrence(int clockMinute);
 CalendarSnapshot CaptureSnapshot();  void Restore(CalendarSnapshot snapshot);
+
+const int MaxSkipDays = 36500;
+const long MaxTotalMinutes = long.MaxValue / 2;
 ```
+
+`CalendarDate` và `TickInfo` có constructor `internal`. `CalendarSnapshot` có constructor public để hệ thống save dựng lại.
 
 | Lệnh | Quy tắc |
 |---|---|
-| Chung | "Báo lỗi" = ném exception khi gọi trực tiếp (`ArgumentException` hoặc lớp con). Mọi mốc thời gian không phải bội của N đều báo lỗi |
-| `SetSpeed(s)` | `s < 0` báo lỗi; kẹp ở `MaxSpeed`. Là tốc độ cơ bản; đổi trong lúc tua thì áp dụng sau khi tua xong |
-| `FastForward(s)`, `FastForwardTo(t, s)` | `s <= 0` báo lỗi; `s` kẹp ở `MaxSpeed`. Gọi lại khi đang tua thì thay mục tiêu cũ, không phát `Completed` cho mục tiêu cũ. `t == Now` thì hoàn thành ngay và phát `Completed`; `t < Now` báo lỗi. Dừng đúng tại `t` |
-| `StopFastForward()` | Quay về tốc độ cơ bản, không phát `Completed` |
-| `SkipTo(t)` | `t == Now` thì không làm gì, không phát event; `t < Now` báo lỗi |
+| Chung | "Báo lỗi" = ném `ArgumentException` (hoặc lớp con) khi gọi trực tiếp. Mọi mốc thời gian không phải bội của N đều báo lỗi |
+| `Tick(d)` | `d < 0`, NaN hoặc vô hạn báo lỗi |
+| `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi; thông báo lỗi ghi rõ `MaxSpeed`. Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
+| `FastForward(s)`, `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ (kể cả khi gọi trong handler ở step chạm đích cũ). `t == Now` thì hoàn thành ngay và phát `Completed`; `t < Now` báo lỗi. Dừng đúng tại `t` |
+| `StopFastForward()` | Quay về base speed, không phát `Completed` |
+| `SkipTo(t)` | `t == Now` thì không làm gì; `t < Now` báo lỗi; xa hơn `MaxSkipDays` ngày báo lỗi (coi là bug của nơi gọi, tránh treo game) |
 | `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai); `m` ngoài `[0, 1440)` báo lỗi |
-| `Pause(src)`, `Resume(src)` | `src == null` báo lỗi; pause hai lần cùng nguồn vẫn tính là một; resume nguồn không có thì không làm gì |
+| `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)` báo lỗi |
+| `Pause(src)`, `Resume(src)` | `src == null` báo lỗi; pause hai lần cùng pause source vẫn tính là một; resume pause source không có thì không làm gì |
+
+### Settings
+
+| Trường | Ràng buộc |
+|---|---|
+| `SecondsPerGameMinute`, `MaxSpeed` | Số hữu hạn, > 0 |
+| `MinutesPerStep` | Ước dương của 60 |
+| `DayStartMinute`, `StartMinutesIntoDay` | Trong `[0, 1440)`, bội của N |
+| `DayNames` | Ít nhất một phần tử; độ dài là độ dài tuần |
+| `Seasons` | Ít nhất một mùa; `LengthInDays >= 0` |
+| `StartYear` | `>= 0` |
+| `StartSeasonIndex` | Trong `Seasons` |
+| `MaxStepsPerFrame` | `> 0` |
+
+Settings sai: constructor `GameClock` ném `ArgumentException`; `CalendarConfig.OnValidate` log warning trong Editor.
+
+Settings chỉ là cấu hình ban đầu. Thay đổi lúc đang chạy (kể cả menu cheat) dùng lệnh của `GameClock`. Cần đổi thứ chưa có lệnh (ví dụ `MaxSpeed`, độ dài ngày) thì thêm lệnh riêng khi có nhu cầu. Cấu trúc lịch (step, giờ bắt đầu ngày, số mùa, tên thứ) không đổi lúc đang chạy.
 
 ## Save
 
-- `CaptureSnapshot()` / `Restore(snapshot)`. `CalendarSnapshot` là struct serializable chứa đúng 5 trường state ở trên.
-- Không lưu: lý do tạm dừng, tốc độ, thời gian lẻ giữa hai bước, trạng thái tua.
-- `Restore` không phát lại event, chỉ phát `Restored`.
-- `Restore` báo lỗi nếu: `TotalMinutes < 0` hoặc không phải bội của N, `SeasonIndex` ngoài số mùa hiện có, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`.
-- `Restore` hủy tua đang chạy (không phát `Completed`), bỏ thời gian lẻ; giữ nguyên lý do tạm dừng và tốc độ cơ bản.
+- `CaptureSnapshot()` trả bản copy của state; `Restore(snapshot)` nạp lại. `CalendarSnapshot` là struct `[Serializable]`, dùng được với `JsonUtility`.
+- Không lưu: pause source, tốc độ, thời gian lẻ giữa hai step, trạng thái fast-forward.
+- `Restore` không phát lại event, chỉ phát `Restored`; hủy fast-forward đang chạy (không phát `Completed`), bỏ thời gian lẻ; giữ nguyên pause source và base speed.
+- `Restore` báo lỗi nếu: `TotalMinutes` ngoài `[0, MaxTotalMinutes]` hoặc không phải bội của N, `SeasonIndex` ngoài số mùa hiện có, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`. Snapshot bị từ chối không làm đổi gì.
 - Đổi `MinutesPerStep` sau khi đã có save: save cũ có thể không còn là bội của N mới và bị từ chối.
-- `DayInSeason` vượt độ dài mới của mùa: không xử lý riêng, mùa tự chuyển ở mốc sang ngày kế tiếp.
-- Đổi `DayStartMinute` sau khi đã có save thì giờ hiển thị của save cũ bị lệch.
+- Đổi `DayStartMinute` sau khi đã có save: clock time của save cũ bị lệch.
+- `DayInSeason` vượt độ dài mới của mùa: không xử lý riêng, mùa tự chuyển ở day boundary kế tiếp.
 
 ## Quy ước cho module dùng Calendar
 
-Các module sau phải tuân theo quy ước này để chạy thường và skip luôn ra cùng một kết quả.
+Để chạy thường và skip luôn ra cùng một kết quả:
 
-- **Module tích lũy** (Needs, Status Effects, Crafting, cây lớn): logic mô phỏng viết một lần thành `Advance(deltaMinutes)`, gọi từ cả `Ticked` lẫn `Skipped`. Tự xử lý đúng các ngưỡng xảy ra giữa khoảng thời gian (ví dụ hết đói lúc 3h thì bị ốm từ 3h).
-- **Module theo mốc** (Opportunities, lớp học): ở `Skipped`, tự quét khoảng `(from, to]` để không sót mốc.
-- **Module theo trạng thái** (NPC Routines, cửa hàng mở hay đóng): trạng thái là hàm của thời gian, `f(lịch, thời điểm)`. Tính lại ở `Skipped` và `Restored`; khi tốc độ cao thì không đi bộ bằng NavMesh mà đặt vị trí theo thời gian. Chi tiết quyết khi làm Schedule và NPC Routines.
-- Muốn giảm chi phí thì tăng `MinutesPerStep` (bước thô hơn cho cả lịch); hình ảnh nội suy bằng `ExactMinutes`.
+- **Accumulating module** (Needs, Status Effects, Crafting, cây lớn): viết logic mô phỏng một lần thành `Advance(deltaMinutes)`, gọi từ cả `Ticked` lẫn `Skipped`. Tự xử lý đúng các ngưỡng xảy ra giữa khoảng thời gian (hết đói lúc 3h thì bị ốm từ 3h).
+- **Milestone module** (Opportunities, lớp học): ở `Skipped`, tự quét khoảng `(from, to]` để không sót mốc.
+- **State-based module** (NPC Routines, cửa hàng mở hay đóng): trạng thái là hàm của thời gian, `f(lịch, thời điểm)`. Tính lại ở `Skipped` và `Restored`; khi tốc độ cao thì đặt vị trí theo thời gian thay vì đi bộ bằng NavMesh. Chi tiết quyết khi làm Schedule và NPC Routines.
 
-## Câu hỏi mở
+Quy ước chung:
+- Ai gọi `Pause(this)` thì tự `Resume(this)`, kể cả trong `OnDisable`. Pause source bị hủy mà chưa resume sẽ giữ đồng hồ dừng mãi.
+- Muốn giảm chi phí thì tăng `MinutesPerStep` (step thô hơn cho cả lịch); hình ảnh nội suy bằng `ExactMinutes`.
 
-- Tham chiếu tới đồng hồ qua nhiều scene (trường, thị trấn): quyết ở Integration scenario.
+## Kiểm thử
 
-## Kế hoạch Playground
+Test EditMode trong `Tests/` của package, mỗi file một nhóm quy tắc ở trên:
 
-```text
-Assets/Playground/Calendar/
-├── BaseGame.Playground.Calendar.asmdef
-├── Core/
-│   ├── CalendarConfig.cs        ScriptableObject
-│   ├── SeasonDefinition.cs      [Serializable] struct: Name, LengthInDays
-│   ├── CalendarSnapshot.cs      [Serializable] struct
-│   ├── CalendarDate.cs          readonly struct: giá trị tính ra
-│   ├── TickInfo.cs              readonly struct
-│   └── GameClock.cs
-├── GameClockDriver.cs
-├── Debug/
-│   ├── CalendarDebugOverlay.cs  IMGUI
-│   ├── FakeNeed.cs              C# thuần: Advance(deltaMinutes), có ngưỡng
-│   └── FakeNeedListener.cs      nối FakeNeed với Ticked + Skipped
-└── Tests/
-    └── BaseGame.Playground.Calendar.Tests.asmdef   Editor only
-```
+| File | Phủ |
+|---|---|
+| `GameClockSettingsTests` | Settings hợp lệ và sai, giá trị bắt đầu, tên thứ và mùa, settings được copy |
+| `CalendarConfigTests` | Giá trị mặc định của asset, `CreateSettings()` trả bản copy |
+| `GameClockTimeTests` | Step, `ExactMinutes`, `DayStartMinute`, thứ tự event, tốc độ, tạm dừng, `NextOccurrence`, `MaxStepsPerFrame` |
+| `GameClockSeasonTests` | Fixed-length season, command-only season, chuyển sớm, sang năm, tuần qua các mùa |
+| `GameClockSkipFastForwardTests` | Skip, fast-forward, tương tác giữa hai cơ chế; **fast-forward và skip cùng một khoảng ra cùng kết quả** |
+| `GameClockCommandQueueTests` | Hàng đợi lệnh, bỏ phần dư, exception trong handler |
+| `GameClockSnapshotTests` | Lưu và restore, dữ liệu sai, giữ pause source và base speed |
 
-`CalendarConfig`: `SecondsPerGameMinute`, `DayStartMinute`, `DayNames[]` (độ dài tuần), `Seasons[]`, mốc bắt đầu game mới (năm, mùa, phút trong Ngày 0), `MinutesPerStep` (chia hết cho 60), `MaxSpeed`, `MaxStepsPerFrame`. Config được kiểm tra một lần trong constructor của `GameClock` (sai thì ném lỗi) và trong `OnValidate`.
-
-Debug overlay:
-- Hiển thị: giờ, thứ, ngày trong mùa, mùa, năm; tốc độ và trạng thái; giá trị FakeNeed.
-- Log 20 event gần nhất; số event mỗi giây thật; hai thanh tiến trình trong ngày (theo bước và mượt theo `ExactMinutes`).
-- Nút: tạm dừng/tiếp tục, tốc độ, tua tới 6:00, skip tới 6:00, skip 3 ngày, `AdvanceSeason`, lưu/nạp snapshot.
-
-Test EditMode cần phủ:
-- **Tua và skip cùng một khoảng ra cùng snapshot và cùng giá trị FakeNeed** (test quan trọng nhất).
-- `Day`, `ClockMinute`, mốc sang giờ và sang ngày với `DayStartMinute` khác 0.
-- Chuyển mùa theo độ dài và theo lệnh; gọi `AdvanceSeason()` nhiều lần; chuyển sớm; sang năm.
-- Skip qua nhiều mùa và nhiều năm; mùa chuyển bằng lệnh đứng yên khi skip.
-- Một `Tick` nhiều phút: `Now` đúng tại từng event; thứ tự event.
-- `DeltaMinutes` sau skip và restore.
-- Hàng đợi lệnh trong handler; bỏ phần thời gian còn lại sau skip hoặc pause; exception trong handler.
-- Tua dừng đúng mốc; `MaxSpeed`; `MaxStepsPerFrame`.
-- Các trường hợp biên trong bảng API.
-- Snapshot: lưu rồi nạp ra cùng state; `Restore` báo lỗi với dữ liệu sai.
-
-Setup Editor: tạo asset `CalendarConfig` và scene `Calendar.unity`; một GameObject gắn `GameClockDriver`, `CalendarDebugOverlay`, `FakeNeedListener`.
-
-## Sang package
-
-Đã chạy thử và chốt `MinutesPerStep = 10`, ngày 20 phút thật. Các bước còn lại:
-1. Tạo `com.guenbankhai.basegame.calendar`: `Runtime/` (lõi, config, driver) và `Tests/`. Không đưa phần Debug vào.
-2. Viết lại sạch, không copy nguyên bản thử; chuyển test sang.
-3. Viết usage doc ngắn; cập nhật trạng thái trong `roadmap.md` và `README.md`.
+Thử bằng tay: experiment `Assets/Playground/Calendar/` (overlay IMGUI có nút cho mọi lệnh), scene `Assets/Scenes/Calendar.unity`.
