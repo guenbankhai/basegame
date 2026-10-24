@@ -35,7 +35,9 @@ If a conflict affects only part of the task, report it and continue unaffected w
 
 ### Communication
 
-- Reply in Vietnamese. Write code, comments, and agent-facing files in English.
+- Reply in Vietnamese.
+- Write all docs in Vietnamese, concise but complete. Exceptions: this file and skills stay in English; glossary terms (`GLOSSARY.md`) and code identifiers stay in English inside Vietnamese text.
+- Write code in English. Comments are English and short: explain the mechanism or the reason, not what the code already says.
 - Where a skill asks for Simplified Technical English, use plain Vietnamese.
 
 ### Structure
@@ -55,6 +57,7 @@ Read only when the task needs it:
 
 - `docs/structure.md`: creating or changing an experiment, scenario, package, or asmdef; naming and dependencies.
 - `docs/coding-standard.md`: before writing or reviewing C#.
+- `docs/module-workflow.md`: starting, advancing, or finishing a module stage; deciding where module docs and decisions go.
 
 ### Planning & Verification
 
