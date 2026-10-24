@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace GuenBanKhai.Calendar.Tests
 {
@@ -42,6 +43,16 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void Snapshot_SurvivesJsonUtilityRoundTrip()
+        {
+            var snapshot = new CalendarSnapshot(TestCalendar.Minutes(40, 12), 3, 1, 30, true);
+
+            var loaded = JsonUtility.FromJson<CalendarSnapshot>(JsonUtility.ToJson(snapshot));
+
+            Assert.AreEqual(snapshot, loaded);
+        }
+
+        [Test]
         public void Restore_InvalidData_Throws()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10, seasons: TestCalendar.Seasons(28, 28)));
@@ -64,8 +75,8 @@ namespace GuenBanKhai.Calendar.Tests
             clock.Tick(20f);
             var snapshot = clock.CaptureSnapshot();
             clock.Tick(35f);
-            var ticks = new List<TickInfo>();
-            clock.Ticked += ticks.Add;
+            var ticks = new List<StepInfo>();
+            clock.Stepped += ticks.Add;
 
             clock.Restore(snapshot);
             Assert.AreEqual(20.0, clock.ExactMinutes, 1e-6);

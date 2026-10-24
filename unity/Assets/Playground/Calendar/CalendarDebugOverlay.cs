@@ -16,8 +16,8 @@ namespace BaseGame.Playground.Calendar
         private const float FastForwardSpeed = 50f;
         private static readonly float[] SpeedOptions = { 0f, 1f, 2f, 5f, 10f };
 
-        [Tooltip("Ticked fires every step, so it is left out of the log unless this is on.")]
-        [SerializeField] private bool _logTicked = false;
+        [Tooltip("Stepped fires every step, so it is left out of the log unless this is on.")]
+        [SerializeField] private bool _logStepped = false;
 
         private readonly Queue<string> _log = new Queue<string>();
         private GameClockDriver _driver;
@@ -25,6 +25,8 @@ namespace BaseGame.Playground.Calendar
         private GameClock _clock;
         private GUIStyle _titleStyle;
         private CalendarSnapshot? _savedSnapshot;
+        // Tracks only this overlay's pause source; IsPaused is also true while another source holds the clock.
+        private bool _isPausing;
         private int _eventsThisWindow;
         private float _windowStart;
         private float _eventsPerSecond;
@@ -45,7 +47,7 @@ namespace BaseGame.Playground.Calendar
             }
 
             _clock = _driver.Clock;
-            _clock.Ticked += OnTicked;
+            _clock.Stepped += OnStepped;
             _clock.HourChanged += OnHourChanged;
             _clock.DayChanged += OnDayChanged;
             _clock.WeekChanged += OnWeekChanged;
@@ -64,7 +66,7 @@ namespace BaseGame.Playground.Calendar
                 return;
             }
 
-            _clock.Ticked -= OnTicked;
+            _clock.Stepped -= OnStepped;
             _clock.HourChanged -= OnHourChanged;
             _clock.DayChanged -= OnDayChanged;
             _clock.WeekChanged -= OnWeekChanged;
@@ -74,6 +76,7 @@ namespace BaseGame.Playground.Calendar
             _clock.Restored -= OnRestored;
             _clock.FastForwardCompleted -= OnFastForwardCompleted;
             _clock.Resume(this);
+            _isPausing = false;
             _clock = null;
         }
 
@@ -123,7 +126,7 @@ namespace BaseGame.Playground.Calendar
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Events / real second: {_eventsPerSecond:0.0}");
-            _logTicked = GUILayout.Toggle(_logTicked, "Log Ticked");
+            _logStepped = GUILayout.Toggle(_logStepped, "Log Stepped");
             GUILayout.EndHorizontal();
             foreach (string line in _log)
             {
@@ -136,9 +139,9 @@ namespace BaseGame.Playground.Calendar
         private void DrawButtons(FakeNeed need)
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(_clock.IsPaused ? "Resume" : "Pause"))
+            if (GUILayout.Button(_isPausing ? "Resume" : "Pause"))
             {
-                if (_clock.IsPaused)
+                if (_isPausing)
                 {
                     _clock.Resume(this);
                 }
@@ -146,6 +149,8 @@ namespace BaseGame.Playground.Calendar
                 {
                     _clock.Pause(this);
                 }
+
+                _isPausing = !_isPausing;
             }
 
             foreach (float speed in SpeedOptions)
@@ -159,6 +164,11 @@ namespace BaseGame.Playground.Calendar
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            if (GUILayout.Button($"Fast-forward (x{FastForwardSpeed:0})"))
+            {
+                _clock.FastForward(FastForwardSpeed);
+            }
+
             if (GUILayout.Button($"Fast-forward to 06:00 (x{FastForwardSpeed:0})"))
             {
                 _clock.FastForwardTo(_clock.NextOccurrence(MorningMinute), FastForwardSpeed);
@@ -196,7 +206,7 @@ namespace BaseGame.Playground.Calendar
             }
 
             GUI.enabled = _savedSnapshot.HasValue;
-            if (GUILayout.Button("Load snapshot") && _savedSnapshot.HasValue)
+            if (GUILayout.Button("Restore snapshot") && _savedSnapshot.HasValue)
             {
                 _clock.Restore(_savedSnapshot.Value);
             }
@@ -231,11 +241,11 @@ namespace BaseGame.Playground.Calendar
             }
         }
 
-        private void OnTicked(TickInfo info)
+        private void OnStepped(StepInfo info)
         {
-            if (_logTicked)
+            if (_logStepped)
             {
-                LogEvent($"Ticked +{info.DeltaMinutes} min (x{info.Speed:0.##}{(info.IsFastForwarding ? ", FF" : "")})");
+                LogEvent($"Stepped +{info.DeltaMinutes} min (x{info.Speed:0.##}{(info.IsFastForwarding ? ", FF" : "")})");
             }
             else
             {

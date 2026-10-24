@@ -56,7 +56,7 @@ namespace GuenBanKhai.Calendar.Tests
         public static List<string> RecordAll(GameClock clock)
         {
             var events = new List<string>();
-            clock.Ticked += info => events.Add($"Ticked {info.Date.TotalMinutes}");
+            clock.Stepped += info => events.Add($"Stepped {info.Date.TotalMinutes}");
             clock.HourChanged += date => events.Add($"Hour {date.TotalMinutes}");
             clock.DayChanged += date => events.Add($"Day {date.TotalMinutes}");
             clock.WeekChanged += date => events.Add($"Week {date.TotalMinutes}");

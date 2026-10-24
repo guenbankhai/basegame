@@ -10,7 +10,7 @@ namespace GuenBanKhai.Calendar
     /// </summary>
     public class GameClock
     {
-        /// <summary>A longer jump is a caller bug; rejecting it keeps the per-day skip loop from hanging the game.</summary>
+        /// <summary>A longer skip is a caller bug; rejecting it keeps the per-day skip loop from hanging the game.</summary>
         public const int MaxSkipDays = 36500;
 
         /// <summary>Far beyond any real game: only rejects corrupt saves and leaves headroom against overflow.</summary>
@@ -69,7 +69,7 @@ namespace GuenBanKhai.Calendar
             _lastUpdateMinutes = _state.TotalMinutes;
         }
 
-        public event Action<TickInfo> Ticked;
+        public event Action<StepInfo> Stepped;
         public event Action<CalendarDate> HourChanged;
         public event Action<CalendarDate> DayChanged;
         public event Action<CalendarDate> WeekChanged;
@@ -268,7 +268,7 @@ namespace GuenBanKhai.Calendar
 
         /// <summary>
         /// Raises only Skipped. Fixed-length seasons still change on the way; command-only seasons do not.
-        /// Cancels a fast-forward and runs even while paused.
+        /// Cancels a fast-forward, even when the target is now, and runs even while paused.
         /// </summary>
         public void SkipTo(long targetMinutes)
         {
@@ -283,12 +283,12 @@ namespace GuenBanKhai.Calendar
                 throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must be at most {MaxSkipDays} days after now.");
             }
 
+            StopFastForwardNow();
             if (targetMinutes == _state.TotalMinutes)
             {
                 return;
             }
 
-            StopFastForwardNow();
             var from = Now;
             long nextBoundary = (_state.TotalMinutes / CalendarDate.MinutesPerDay + 1) * CalendarDate.MinutesPerDay;
             for (; nextBoundary <= targetMinutes; nextBoundary += CalendarDate.MinutesPerDay)
@@ -298,17 +298,22 @@ namespace GuenBanKhai.Calendar
             }
 
             _state.TotalMinutes = targetMinutes;
-            MarkJumped();
+            RestartFromNow();
             var to = Now;
             Dispatch(() => Raise(Skipped, from, to));
         }
 
         /// <summary>
-        /// Takes effect at the next day boundary; repeated calls before then add nothing. Not queued inside a handler,
-        /// since it only sets a flag.
+        /// Takes effect at the next day boundary; repeated calls before then add nothing. Queued inside a handler like
+        /// the other commands, so a queued Restore or SkipTo before it cannot erase or move the flag.
         /// </summary>
         public void AdvanceSeason()
         {
+            if (TryEnqueue(AdvanceSeason))
+            {
+                return;
+            }
+
             _state.SeasonAdvancePending = true;
         }
 
@@ -361,7 +366,7 @@ namespace GuenBanKhai.Calendar
 
             StopFastForwardNow();
             _state = snapshot;
-            MarkJumped();
+            RestartFromNow();
             var now = Now;
             Dispatch(() => Raise(Restored, now));
         }
@@ -384,14 +389,14 @@ namespace GuenBanKhai.Calendar
             var now = Now;
             bool hourChanged = now.ClockMinute % 60 == 0;
             bool weekChanged = dayChanged && now.Day % _dayNames.Length == 0;
-            var tick = new TickInfo(now, _state.TotalMinutes - _lastUpdateMinutes, Speed, _isFastForwarding);
+            var info = new StepInfo(now, _state.TotalMinutes - _lastUpdateMinutes, Speed, _isFastForwarding);
             _lastUpdateMinutes = _state.TotalMinutes;
             bool reachedTarget = _isFastForwarding && _fastForwardTarget == _state.TotalMinutes;
             int fastForwardVersion = _fastForwardVersion;
 
             Dispatch(() =>
             {
-                Raise(Ticked, tick);
+                Raise(Stepped, info);
                 if (hourChanged)
                 {
                     Raise(HourChanged, now);
@@ -474,8 +479,8 @@ namespace GuenBanKhai.Calendar
             Raise(FastForwardCompleted, now);
         }
 
-        /// <summary>After a skip or restore, DeltaMinutes counts from here and time gathered before the jump is dropped.</summary>
-        private void MarkJumped()
+        /// <summary>After a skip or restore, DeltaMinutes counts from here and time gathered before it is dropped.</summary>
+        private void RestartFromNow()
         {
             _lastUpdateMinutes = _state.TotalMinutes;
             _pendingMinutes = 0;
@@ -505,6 +510,12 @@ namespace GuenBanKhai.Calendar
             if (targetMinutes < _state.TotalMinutes)
             {
                 throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must not be before now ({_state.TotalMinutes}).");
+            }
+
+            // Past this the clock would hold a state that Restore rejects, so its own save could not be loaded.
+            if (targetMinutes > MaxTotalMinutes)
+            {
+                throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must be at most MaxTotalMinutes ({MaxTotalMinutes}).");
             }
 
             ValidateOnStep(targetMinutes, paramName);

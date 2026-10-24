@@ -49,6 +49,22 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, -1))));
         }
 
+        [Test]
+        public void NewClock_NegativeStartYear_Throws()
+        {
+            var settings = TestCalendar.Settings();
+            settings.StartYear = -1;
+
+            Assert.Throws<ArgumentException>(() => new GameClock(settings));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void NewClock_MaxStepsPerFrameNotPositive_Throws(int maxStepsPerFrame)
+        {
+            Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(maxStepsPerFrame: maxStepsPerFrame)));
+        }
+
         [TestCase(float.NaN)]
         [TestCase(float.PositiveInfinity)]
         [TestCase(0f)]

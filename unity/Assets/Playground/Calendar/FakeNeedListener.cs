@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace BaseGame.Playground.Calendar
 {
-    /// <summary>Feeds FakeNeed the way an accumulating module must: from both Ticked and Skipped.</summary>
+    /// <summary>Feeds FakeNeed the way an accumulating module must: from both Stepped and Skipped.</summary>
     [RequireComponent(typeof(GameClockDriver))]
     public class FakeNeedListener : MonoBehaviour
     {
@@ -30,7 +30,7 @@ namespace BaseGame.Playground.Calendar
             }
 
             _clock = _driver.Clock;
-            _clock.Ticked += OnTicked;
+            _clock.Stepped += OnStepped;
             _clock.Skipped += OnSkipped;
         }
 
@@ -41,12 +41,12 @@ namespace BaseGame.Playground.Calendar
                 return;
             }
 
-            _clock.Ticked -= OnTicked;
+            _clock.Stepped -= OnStepped;
             _clock.Skipped -= OnSkipped;
             _clock = null;
         }
 
-        private void OnTicked(TickInfo info)
+        private void OnStepped(StepInfo info)
         {
             Need.Advance(info.DeltaMinutes, info.Date.TotalMinutes);
         }

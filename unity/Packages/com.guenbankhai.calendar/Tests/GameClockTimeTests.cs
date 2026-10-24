@@ -20,11 +20,11 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Tick_RaisesTickedOncePerStep_WithNowAtThatStep()
+        public void Tick_RaisesSteppedOncePerStep_WithNowAtThatStep()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             var seen = new List<(long Date, long Now, long Delta)>();
-            clock.Ticked += info => seen.Add((info.Date.TotalMinutes, clock.Now.TotalMinutes, info.DeltaMinutes));
+            clock.Stepped += info => seen.Add((info.Date.TotalMinutes, clock.Now.TotalMinutes, info.DeltaMinutes));
 
             clock.Tick(30f);
 
@@ -59,7 +59,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(1), weekLength: 1));
             clock.Tick(1439f);
             var order = new List<string>();
-            clock.Ticked += info => order.Add($"Tick {clock.Now.Year}");
+            clock.Stepped += info => order.Add($"Step {clock.Now.Year}");
             clock.HourChanged += date => order.Add($"Hour {date.Year}");
             clock.DayChanged += date => order.Add($"Day {date.Year}");
             clock.WeekChanged += date => order.Add($"Week {date.Year}");
@@ -68,7 +68,7 @@ namespace GuenBanKhai.Calendar.Tests
 
             clock.Tick(1f);
 
-            CollectionAssert.AreEqual(new[] { "Tick 2", "Hour 2", "Day 2", "Week 2", "Season 2", "Year 2" }, order);
+            CollectionAssert.AreEqual(new[] { "Step 2", "Hour 2", "Day 2", "Week 2", "Season 2", "Year 2" }, order);
         }
 
         [Test]
@@ -78,7 +78,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 60, seasons: TestCalendar.Seasons(1), weekLength: 1));
             var events = new List<string>();
             void Record(string name, CalendarDate date) => events.Add($"{name} {date.TotalMinutes} now {clock.Now.TotalMinutes}");
-            clock.Ticked += info => Record("Ticked", info.Date);
+            clock.Stepped += info => Record("Stepped", info.Date);
             clock.HourChanged += date => Record("Hour", date);
             clock.DayChanged += date => Record("Day", date);
             clock.WeekChanged += date => Record("Week", date);
@@ -90,7 +90,7 @@ namespace GuenBanKhai.Calendar.Tests
             var expected = new List<string>();
             for (long minute = 60; minute <= 1500; minute += 60)
             {
-                expected.Add($"Ticked {minute} now {minute}");
+                expected.Add($"Stepped {minute} now {minute}");
                 expected.Add($"Hour {minute} now {minute}");
                 if (minute == 1440)
                 {

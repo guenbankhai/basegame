@@ -3,7 +3,7 @@ using System;
 namespace GuenBanKhai.Calendar.Tests
 {
     /// <summary>
-    /// Stand-in accumulating module: drops 1 per game minute and records when it hit 0. Fed from both Ticked and
+    /// Stand-in accumulating module: drops 1 per game minute and records when it hit 0. Fed from both Stepped and
     /// Skipped, as the module convention asks, so fast-forward and skip must end with the same value.
     /// </summary>
     internal class TestAccumulator
@@ -11,7 +11,7 @@ namespace GuenBanKhai.Calendar.Tests
         public TestAccumulator(GameClock clock, int start)
         {
             Value = start;
-            clock.Ticked += info => Advance(info.DeltaMinutes, info.Date.TotalMinutes);
+            clock.Stepped += info => Advance(info.DeltaMinutes, info.Date.TotalMinutes);
             clock.Skipped += (from, to) => Advance(to.TotalMinutes - from.TotalMinutes, to.TotalMinutes);
         }
 

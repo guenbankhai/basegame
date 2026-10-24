@@ -8,7 +8,7 @@ namespace GuenBanKhai.Calendar.Tests
     {
         [TestCase(1)]
         [TestCase(10)]
-        public void SkipTo_JumpsAndRaisesOnlySkipped(int step)
+        public void SkipTo_MovesAtOnce_AndRaisesOnlySkipped(int step)
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: step, startMinutesIntoDay: 360));
             var events = TestCalendar.RecordAll(clock);
@@ -82,12 +82,28 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void SkipToOrFastForwardTo_PastMaxTotalMinutes_Throws_SoTheClockStaysRestorable()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            long start = GameClock.MaxTotalMinutes - CalendarDate.MinutesPerDay;
+            clock.Restore(new CalendarSnapshot(start, 1, 0, 0, false));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(GameClock.MaxTotalMinutes + 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(GameClock.MaxTotalMinutes + 1, 10f));
+            Assert.AreEqual(start, clock.Now.TotalMinutes);
+            Assert.IsFalse(clock.IsFastForwarding);
+
+            clock.SkipTo(GameClock.MaxTotalMinutes);
+            Assert.DoesNotThrow(() => clock.Restore(clock.CaptureSnapshot()));
+        }
+
+        [Test]
         public void SkipTo_DropsGatheredTime_AndNextTickCountsFromTheSkip()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             clock.Tick(15f);
             var deltas = new List<long>();
-            clock.Ticked += info => deltas.Add(info.DeltaMinutes);
+            clock.Stepped += info => deltas.Add(info.DeltaMinutes);
 
             clock.SkipTo(100);
             Assert.AreEqual(100.0, clock.ExactMinutes, 1e-6);
@@ -112,9 +128,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void FastForwardTo_RaisesNormalEvents_AndStopsExactlyAtTarget()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
-            var ticks = new List<TickInfo>();
+            var ticks = new List<StepInfo>();
             var completed = new List<long>();
-            clock.Ticked += ticks.Add;
+            clock.Stepped += ticks.Add;
             clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
 
             clock.FastForwardTo(60, 20f);
@@ -138,14 +154,14 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             var seen = new List<string>();
-            clock.Ticked += info => seen.Add($"Ticked {info.Date.TotalMinutes} {info.IsFastForwarding} {clock.IsFastForwarding} {clock.Speed}");
+            clock.Stepped += info => seen.Add($"Stepped {info.Date.TotalMinutes} {info.IsFastForwarding} {clock.IsFastForwarding} {clock.Speed}");
             clock.HourChanged += date => seen.Add($"Hour {date.TotalMinutes} {clock.IsFastForwarding} {clock.Speed}");
             clock.FastForwardCompleted += date => seen.Add($"Completed {date.TotalMinutes} {clock.IsFastForwarding} {clock.Speed}");
 
             clock.FastForwardTo(60, 20f);
             clock.Tick(10f);
 
-            Assert.AreEqual("Ticked 60 True True 20", seen[seen.Count - 3]);
+            Assert.AreEqual("Stepped 60 True True 20", seen[seen.Count - 3]);
             Assert.AreEqual("Hour 60 True 20", seen[seen.Count - 2]);
             Assert.AreEqual("Completed 60 False 1", seen[seen.Count - 1]);
         }
@@ -302,6 +318,41 @@ namespace GuenBanKhai.Calendar.Tests
 
             Assert.IsFalse(clock.IsFastForwarding);
             Assert.AreEqual(0, completed);
+        }
+
+        [Test]
+        public void SkipToNow_CancelsFastForward_WithoutCompletingOrSkipping()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            var events = TestCalendar.RecordAll(clock);
+            int completed = 0;
+            clock.FastForwardCompleted += _ => completed++;
+
+            clock.FastForwardTo(100, 10f);
+            clock.SkipTo(0);
+
+            Assert.IsFalse(clock.IsFastForwarding);
+            Assert.AreEqual(0, completed);
+            CollectionAssert.IsEmpty(events);
+        }
+
+        [Test]
+        public void FastForwardTo_SkipToNowByAHandlerAtTheTarget_DoesNotComplete()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
+            int completed = 0;
+            int skipped = 0;
+            clock.FastForwardCompleted += _ => completed++;
+            clock.Skipped += (from, to) => skipped++;
+            clock.HourChanged += date => clock.SkipTo(date.TotalMinutes);
+
+            clock.FastForwardTo(60, 20f);
+            clock.Tick(10f);
+
+            Assert.AreEqual(0, completed);
+            Assert.AreEqual(0, skipped);
+            Assert.AreEqual(60, clock.Now.TotalMinutes);
+            Assert.IsFalse(clock.IsFastForwarding);
         }
 
         [Test]

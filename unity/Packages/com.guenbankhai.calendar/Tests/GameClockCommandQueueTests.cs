@@ -15,7 +15,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             var events = TestCalendar.RecordAll(clock);
             var nowInHourHandler = new List<long>();
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 60)
                 {
@@ -37,7 +37,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void PauseInHandler_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -59,7 +59,7 @@ namespace GuenBanKhai.Calendar.Tests
             var snapshot = clock.CaptureSnapshot();
             var restored = new List<long>();
             clock.Restored += date => restored.Add(date.TotalMinutes);
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -78,7 +78,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void SetSpeedInHandler_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -99,7 +99,7 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.FastForward(10f);
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -119,7 +119,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             var completed = new List<long>();
             clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -138,7 +138,7 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.FastForward(10f);
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 3)
                 {
@@ -157,7 +157,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void SameSpeedCommandsInHandler_DoNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Ticked += info => clock.SetSpeed(1f);
+            clock.Stepped += info => clock.SetSpeed(1f);
 
             clock.Tick(10f);
 
@@ -170,7 +170,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             object a = new object();
             object b = new object();
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 1)
                 {
@@ -200,7 +200,7 @@ namespace GuenBanKhai.Calendar.Tests
                 order.Add($"Skipped {to.TotalMinutes}");
                 clock.Pause(a);
             };
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 1)
                 {
@@ -238,7 +238,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void QueuedCommand_IsCheckedWhenItRuns_AndAFailureIsLoggedNotThrown()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Ticked += info =>
+            clock.Stepped += info =>
             {
                 if (info.Date.TotalMinutes == 1)
                 {
@@ -254,19 +254,65 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void AdvanceSeasonInHandler_AppliesImmediately()
+        public void AdvanceSeasonInHandler_IsQueued_AndDoesNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            bool pendingInsideHandler = false;
-            clock.Ticked += _ =>
+            bool pendingInsideHandler = true;
+            clock.Stepped += info =>
             {
-                clock.AdvanceSeason();
-                pendingInsideHandler = clock.CaptureSnapshot().SeasonAdvancePending;
+                if (info.Date.TotalMinutes == 1)
+                {
+                    clock.AdvanceSeason();
+                    pendingInsideHandler = clock.CaptureSnapshot().SeasonAdvancePending;
+                }
+            };
+
+            clock.Tick(5f);
+
+            Assert.IsFalse(pendingInsideHandler, "Queued until the minute's events are done.");
+            Assert.IsTrue(clock.CaptureSnapshot().SeasonAdvancePending);
+            Assert.AreEqual(5, clock.Now.TotalMinutes);
+        }
+
+        [Test]
+        public void AdvanceSeasonAfterRestoreInHandler_AppliesToTheRestoredState()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            var snapshot = clock.CaptureSnapshot();
+            clock.Stepped += info =>
+            {
+                if (info.Date.TotalMinutes == 3)
+                {
+                    clock.Restore(snapshot);
+                    clock.AdvanceSeason();
+                }
+            };
+
+            clock.Tick(10f);
+
+            Assert.AreEqual(0, clock.Now.TotalMinutes);
+            Assert.IsTrue(clock.CaptureSnapshot().SeasonAdvancePending);
+        }
+
+        [Test]
+        public void AdvanceSeasonAfterSkipToInHandler_ChangesTheSeasonAfterTheSkip()
+        {
+            var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(0, 0)));
+            clock.Stepped += info =>
+            {
+                if (info.Date.TotalMinutes == 1)
+                {
+                    clock.SkipTo(TestCalendar.Minutes(2, 12));
+                    clock.AdvanceSeason();
+                }
             };
 
             clock.Tick(1f);
+            Assert.AreEqual(0, clock.Now.SeasonIndex, "The skip crossed day boundaries before the flag was set.");
 
-            Assert.IsTrue(pendingInsideHandler);
+            clock.Tick(TestCalendar.Minutes(0, 12));
+            Assert.AreEqual(1, clock.Now.SeasonIndex);
+            Assert.AreEqual(0, clock.Now.DayInSeason);
         }
 
         [Test]
@@ -285,8 +331,8 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings());
             int secondCalls = 0;
-            clock.Ticked += _ => throw new InvalidOperationException("boom");
-            clock.Ticked += _ => secondCalls++;
+            clock.Stepped += _ => throw new InvalidOperationException("boom");
+            clock.Stepped += _ => secondCalls++;
             LogAssert.Expect(LogType.Exception, new Regex("boom"));
             LogAssert.Expect(LogType.Exception, new Regex("boom"));
 
@@ -300,7 +346,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void TickInsideHandler_IsRejected()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Ticked += _ => clock.Tick(1f);
+            clock.Stepped += _ => clock.Tick(1f);
             LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException"));
 
             clock.Tick(1f);

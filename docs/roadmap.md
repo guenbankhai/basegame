@@ -52,7 +52,7 @@ Hầu hết module khác đều cần; làm trước.
 
 | Module | Làm gì | Câu hỏi nghiên cứu | Trạng thái |
 |---|---|---|---|
-| **Time & Calendar** | Giờ, ngày, tuần, mùa, năm; tốc độ thời gian; tạm dừng; ngủ / skip / fast-forward; event khi sang giờ, ngày, tuần, mùa | Thiết kế: [`modules/calendar.md`](modules/calendar.md) | Đang phát triển |
+| **Calendar** | Giờ, ngày, tuần, mùa, năm; tốc độ thời gian; tạm dừng; ngủ / skip / fast-forward; event khi sang giờ, ngày, tuần, mùa | Thiết kế: [`modules/calendar.md`](modules/calendar.md) | Đang phát triển |
 | **Stats** | Chỉ số và modifier (cộng, nhân %, có thời hạn) | Thứ tự áp modifier? Định nghĩa bằng ScriptableObject hay class thuần? | Chưa bắt đầu |
 | **Items** | Định nghĩa item, instance, stack, độ bền, thuộc tính | Tách dữ liệu tĩnh và trạng thái riêng từng món? ID ổn định | Chưa bắt đầu |
 | **Inventory** | Container ô slot + giới hạn khối lượng; dùng cho túi, rương, kho | Di chuyển, tách, gộp đồ; event khi thay đổi | Chưa bắt đầu |
@@ -112,7 +112,7 @@ Experiment để hiểu, không thành module: Input System (bộ action cho top
 
 ## 5. Thứ tự đề xuất
 
-1. Time & Calendar
+1. Calendar
 2. Stats
 3. Items → Inventory
 4. Interaction, Game Flags, Save
