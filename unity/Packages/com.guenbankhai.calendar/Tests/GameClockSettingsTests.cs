@@ -86,6 +86,37 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void NewClock_MaxSpeedBelowStartingSpeed_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(maxSpeed: 0.5f)));
+            Assert.DoesNotThrow(() => new GameClock(TestCalendar.Settings(maxSpeed: 1f)));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        public void NewClock_EmptyDayOrSeasonName_Throws(string name)
+        {
+            var dayName = TestCalendar.Settings();
+            dayName.DayNames = new[] { "D0", name };
+            var seasonName = TestCalendar.Settings(seasons: new[] { new SeasonDefinition("S0", 28), new SeasonDefinition(name, 28) });
+
+            Assert.Throws<ArgumentException>(() => new GameClock(dayName));
+            Assert.Throws<ArgumentException>(() => new GameClock(seasonName));
+        }
+
+        [Test]
+        public void Seasons_CanBeBuiltWithSetters()
+        {
+            var season = new SeasonDefinition { Name = "Monsoon", LengthInDays = 5 };
+
+            var clock = new GameClock(TestCalendar.Settings(seasons: new[] { season }));
+
+            Assert.AreEqual("Monsoon", clock.GetSeasonName(0));
+            clock.SkipTo(TestCalendar.Minutes(5));
+            Assert.AreEqual(2, clock.Now.Year, "The only season wraps into the next year after its 5 days.");
+        }
+
+        [Test]
         public void NewClock_NullSettings_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new GameClock(null));

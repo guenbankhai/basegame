@@ -98,12 +98,12 @@ Lấy settings từ asset bằng `config.CreateSettings()`. Hàm này trả bả
 | `SecondsPerGameMinute` | `1200 / 1440` (ngày 20 phút thật) | Số hữu hạn, > 0 |
 | `MinutesPerStep` | 10 | Ước dương của 60 |
 | `DayStartMinute` | 0 (00:00) | Trong `[0, 1440)`, bội của step |
-| `DayNames` | Mon … Sun | Ít nhất một tên; số tên là độ dài tuần |
-| `Seasons` | 4 mùa × 28 ngày | Ít nhất một mùa; `LengthInDays >= 0` |
+| `DayNames` | Mon … Sun | Ít nhất một tên, không tên nào null hoặc rỗng; số tên là độ dài tuần |
+| `Seasons` | 4 mùa × 28 ngày | Ít nhất một mùa; `Name` không null hoặc rỗng; `LengthInDays >= 0` |
 | `StartYear`, `StartSeasonIndex` | 1, 0 | `StartYear >= 0`; index nằm trong `Seasons` |
 | `StartMinutesIntoDay` | 360 | Trong `[0, 1440)`, bội của step |
-| `MaxSpeed` | 100 | Số hữu hạn, > 0 |
-| `MaxStepsPerFrame` | 120 | > 0 |
+| `MaxSpeed` | 100 | Số hữu hạn, `>= 1` (đồng hồ bắt đầu ở base speed 1) |
+| `MaxStepsPerFrame` | 120 | > 0. Giá trị lớn kèm fast-forward nhanh có thể chạy rất nhiều step và event trong một frame, gây giật |
 
 Settings sai: constructor `GameClock` ném `ArgumentException`; trong Editor, asset log warning.
 
@@ -163,6 +163,7 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | `StopFastForward()` | Về base speed, không phát `Completed` |
 | `SkipTo(t)` | Hủy fast-forward đang chạy, kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `GameClock.MaxSkipDays` ngày: lỗi. Cần sang năm khi `Year` đã là `int.MaxValue`: ném `InvalidOperationException`, không đổi gì. Chạy được cả khi đang tạm dừng |
 | `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua |
+| `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai). `m` ngoài `[0, 1440)` hoặc không phải bội của step: lỗi. Kết quả vượt `GameClock.MaxTotalMinutes`: ném `InvalidOperationException` |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
 
 Tốc độ vượt `MaxSpeed` bị từ chối chứ không bị kẹp, để lỗi ở nơi gọi lộ ra ngay. UI chọn tốc độ nên giới hạn theo `clock.MaxSpeed`.

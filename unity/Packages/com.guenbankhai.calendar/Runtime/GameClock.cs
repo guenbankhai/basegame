@@ -15,7 +15,7 @@ namespace GuenBanKhai.Calendar
 
         /// <summary>
         /// About 1.9 million years: far beyond any real game, and small enough that ExactMinutes (a double) stays precise
-        /// to well under a minute. A whole number of days, so it is on every valid step.
+        /// to well under a thousandth of a minute. A whole number of days, so it is on every valid step.
         /// </summary>
         public const long MaxTotalMinutes = 700_000_000L * CalendarDate.MinutesPerDay;
 
@@ -62,8 +62,8 @@ namespace GuenBanKhai.Calendar
 
             _minutesPerStep = settings.MinutesPerStep;
             _dayStartMinute = settings.DayStartMinute;
-            _dayNames = new List<string>(settings.DayNames).ToArray();
-            _seasons = new List<SeasonDefinition>(settings.Seasons).ToArray();
+            _dayNames = CalendarSettings.ToArray(settings.DayNames);
+            _seasons = CalendarSettings.ToArray(settings.Seasons);
             _secondsPerGameMinute = settings.SecondsPerGameMinute;
             _maxSpeed = settings.MaxSpeed;
             _maxStepsPerFrame = settings.MaxStepsPerFrame;

@@ -235,6 +235,32 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void CutOff_DropsEveryCommandStillQueued_IncludingAResume()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            var source = new object();
+            clock.Pause(source);
+            int completed = 0;
+            clock.FastForwardCompleted += date =>
+            {
+                completed++;
+                // Two commands per run grow the queue, so a command queued this late is still waiting at the cut-off.
+                clock.FastForwardTo(date.TotalMinutes, 1f);
+                clock.FastForwardTo(date.TotalMinutes, 1f);
+                if (completed == 600)
+                {
+                    clock.Resume(source);
+                }
+            };
+            LogAssert.Expect(LogType.Error, new Regex("kept queueing commands"));
+
+            clock.FastForwardTo(0, 1f);
+
+            Assert.GreaterOrEqual(completed, 600, "The Resume was queued before the cut-off.");
+            Assert.IsTrue(clock.IsPaused, "The cut-off has no exceptions: the queued Resume is dropped too.");
+        }
+
+        [Test]
         public void QueuedCommand_IsCheckedWhenItRuns_AndAFailureIsLoggedNotThrown()
         {
             var clock = new GameClock(TestCalendar.Settings());

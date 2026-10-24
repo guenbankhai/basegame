@@ -233,6 +233,7 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
             clock.FastForward(10f);
             Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
+            Assert.IsTrue(clock.IsFastForwarding, "The limit stops the clock, not the fast-forward.");
 
             Assert.AreEqual(GameClock.MaxTotalMinutes, clock.Now.TotalMinutes);
             Assert.AreEqual(GameClock.MaxTotalMinutes, clock.ExactMinutes, 1e-6, "Gathered time is dropped at the limit.");

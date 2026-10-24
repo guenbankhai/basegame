@@ -22,7 +22,7 @@ _Avoid_: test scene, sample
 
 **Step**:
 Khoảng thời gian game nhỏ nhất mà đồng hồ nhảy qua; không có thời điểm nằm giữa hai step.
-_Avoid_: tick, interval
+_Avoid_: tick, interval. Ngoại lệ: `GameClock.Tick(realDeltaSeconds)` là tên API nạp giây thật, không phải một step.
 
 **Day 0**:
 Ngày đầu tiên của một game mới, gốc để đếm mọi thời điểm.

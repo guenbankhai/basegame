@@ -422,8 +422,8 @@ namespace GuenBanKhai.Calendar.Tests
             // Crosses fixed-length seasons, a year, a pending season command and the accumulator hitting zero.
             // setSpeedEveryHour checks that base-speed changes from a handler do not disturb the fast-forward.
             long target = TestCalendar.Minutes(9, 13, 20);
-            var (fastClock, fastValue) = StartScenario(step);
-            var (skipClock, skipValue) = StartScenario(step);
+            var (fastClock, fastAccumulator) = StartAccumulatorClock(step);
+            var (skipClock, skipAccumulator) = StartAccumulatorClock(step);
             if (setSpeedEveryHour)
             {
                 fastClock.HourChanged += date => fastClock.SetSpeed(date.Hour % 3);
@@ -439,12 +439,12 @@ namespace GuenBanKhai.Calendar.Tests
 
             Assert.AreEqual(target, fastClock.Now.TotalMinutes);
             Assert.AreEqual(skipClock.CaptureSnapshot(), fastClock.CaptureSnapshot());
-            Assert.AreEqual(skipValue.Value, fastValue.Value);
-            Assert.AreEqual(skipValue.ZeroSinceMinute, fastValue.ZeroSinceMinute);
-            Assert.IsNotNull(skipValue.ZeroSinceMinute);
+            Assert.AreEqual(skipAccumulator.Value, fastAccumulator.Value);
+            Assert.AreEqual(skipAccumulator.ZeroSinceMinute, fastAccumulator.ZeroSinceMinute);
+            Assert.IsNotNull(skipAccumulator.ZeroSinceMinute);
         }
 
-        private static (GameClock Clock, TestAccumulator Value) StartScenario(int step)
+        private static (GameClock Clock, TestAccumulator Accumulator) StartAccumulatorClock(int step)
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: step, startMinutesIntoDay: 480, seasons: TestCalendar.Seasons(2, 3)));
             clock.Tick(4f * step);

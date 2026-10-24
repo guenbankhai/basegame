@@ -77,6 +77,14 @@ namespace GuenBanKhai.Calendar
                 return "DayNames needs at least one day.";
             }
 
+            foreach (string dayName in _dayNames)
+            {
+                if (string.IsNullOrEmpty(dayName))
+                {
+                    return "DayNames must not contain an empty name.";
+                }
+            }
+
             if (_seasons == null || _seasons.Length == 0)
             {
                 return "Seasons needs at least one season.";
@@ -84,6 +92,11 @@ namespace GuenBanKhai.Calendar
 
             foreach (var season in _seasons)
             {
+                if (string.IsNullOrEmpty(season.Name))
+                {
+                    return "Seasons must not contain an empty name.";
+                }
+
                 if (season.LengthInDays < 0)
                 {
                     return $"Season '{season.Name}' has a negative length.";
@@ -105,9 +118,10 @@ namespace GuenBanKhai.Calendar
                 return "StartMinutesIntoDay must be in [0, 1440) and a multiple of MinutesPerStep.";
             }
 
-            if (!float.IsFinite(_maxSpeed) || _maxSpeed <= 0f)
+            // The clock starts at base speed 1, which must already be allowed.
+            if (!float.IsFinite(_maxSpeed) || _maxSpeed < 1f)
             {
-                return "MaxSpeed must be a finite number greater than 0.";
+                return "MaxSpeed must be a finite number of at least 1, the starting speed.";
             }
 
             if (_maxStepsPerFrame <= 0)
@@ -121,7 +135,7 @@ namespace GuenBanKhai.Calendar
         private bool IsMinuteOfDayOnStep(int minute) =>
             minute >= 0 && minute < CalendarDate.MinutesPerDay && minute % _minutesPerStep == 0;
 
-        private static T[] ToArray<T>(IReadOnlyList<T> source)
+        internal static T[] ToArray<T>(IReadOnlyList<T> source)
         {
             if (source == null)
             {

@@ -16,7 +16,7 @@ namespace GuenBanKhai.Calendar
             _lengthInDays = lengthInDays;
         }
 
-        public string Name => _name;
-        public int LengthInDays => _lengthInDays;
+        public string Name { get => _name; set => _name = value; }
+        public int LengthInDays { get => _lengthInDays; set => _lengthInDays = value; }
     }
 }

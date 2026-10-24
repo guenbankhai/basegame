@@ -197,11 +197,12 @@ Ngoài `GameClock`, các kiểu giá trị có thêm:
 
 | Trường | Ràng buộc |
 |---|---|
-| `SecondsPerGameMinute`, `MaxSpeed` | Số hữu hạn, > 0 |
+| `SecondsPerGameMinute` | Số hữu hạn, > 0 |
+| `MaxSpeed` | Số hữu hạn, `>= 1`: base speed ban đầu là 1 nên phải hợp lệ ngay từ đầu |
 | `MinutesPerStep` | Ước dương của 60 |
 | `DayStartMinute`, `StartMinutesIntoDay` | Trong `[0, 1440)`, bội của N |
-| `DayNames` | Ít nhất một phần tử; độ dài là độ dài tuần |
-| `Seasons` | Ít nhất một mùa; `LengthInDays >= 0` |
+| `DayNames` | Ít nhất một phần tử, không tên nào null hoặc rỗng; độ dài là độ dài tuần |
+| `Seasons` | Ít nhất một mùa; `Name` không null hoặc rỗng; `LengthInDays >= 0` |
 | `StartYear` | `>= 0` |
 | `StartSeasonIndex` | Trong `Seasons` |
 | `MaxStepsPerFrame` | `> 0` |
