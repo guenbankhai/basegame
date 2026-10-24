@@ -6,12 +6,12 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 
 | Mục | Giá trị |
 |---|---|
-| Package | `unity/Packages/com.guenbankhai.basegame.calendar` |
-| Namespace / asmdef | `BaseGame.Calendar`, `BaseGame.Calendar.Tests` |
+| Package | `unity/Packages/com.guenbankhai.calendar` |
+| Namespace / asmdef | `GuenBanKhai.Calendar`, `GuenBanKhai.Calendar.Tests` |
 | Phụ thuộc | Không có |
 | Quyết định | [ADR 0001](../adr/0001-calendar-step-based-clock.md) · [0002](../adr/0002-calendar-skip-and-fast-forward.md) · [0003](../adr/0003-calendar-plain-csharp-core.md) · [0004](../adr/0004-calendar-command-queue.md) |
 
-Không dùng tên `Time`: nếu tồn tại namespace `BaseGame.Time`, mọi code trong `BaseGame.*` viết `Time.deltaTime` sẽ trỏ vào namespace đó thay vì `UnityEngine.Time` và lỗi compile.
+Không dùng tên `Time`: nếu tồn tại namespace `GuenBanKhai.Time`, mọi code trong `GuenBanKhai.*` viết `Time.deltaTime` sẽ trỏ vào namespace đó thay vì `UnityEngine.Time` và lỗi compile.
 
 ## Phạm vi
 

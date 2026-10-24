@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "com.guenbankhai.basegame.calendar": {
-      "version": "file:com.guenbankhai.basegame.calendar",
+    "com.guenbankhai.calendar": {
+      "version": "file:com.guenbankhai.calendar",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}

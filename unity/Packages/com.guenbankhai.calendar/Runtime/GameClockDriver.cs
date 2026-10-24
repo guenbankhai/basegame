@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>
     /// Feeds the clock Time.deltaTime, so timeScale 0 also stops it. Runs early so other components can read Clock in
@@ -10,7 +10,7 @@ namespace BaseGame.Calendar
     [DefaultExecutionOrder(-1000)]
     public class GameClockDriver : MonoBehaviour
     {
-        [SerializeField] private CalendarConfig _config;
+        [SerializeField] private CalendarConfig _config = null;
 
         /// <summary>Null if the config is missing or invalid; the driver then disables itself.</summary>
         public GameClock Clock { get; private set; }

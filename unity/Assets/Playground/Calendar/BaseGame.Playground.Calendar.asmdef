@@ -2,7 +2,7 @@
     "name": "BaseGame.Playground.Calendar",
     "rootNamespace": "BaseGame.Playground.Calendar",
     "references": [
-        "BaseGame.Calendar"
+        "GuenBanKhai.Calendar"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

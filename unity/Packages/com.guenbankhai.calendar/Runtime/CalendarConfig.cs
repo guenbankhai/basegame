@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>Inspector wrapper for CalendarSettings. Holds no runtime state, since domain reload is disabled.</summary>
-    [CreateAssetMenu(fileName = "CalendarConfig", menuName = "BaseGame/Calendar Config")]
+    [CreateAssetMenu(fileName = "CalendarConfig", menuName = "GuenBanKhai/Calendar Config")]
     public class CalendarConfig : ScriptableObject
     {
         [SerializeField] private CalendarSettings _settings = new CalendarSettings();

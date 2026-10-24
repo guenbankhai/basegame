@@ -1,6 +1,6 @@
 using System;
 
-namespace BaseGame.Calendar.Tests
+namespace GuenBanKhai.Calendar.Tests
 {
     /// <summary>
     /// Stand-in accumulating module: drops 1 per game minute and records when it hit 0. Fed from both Ticked and

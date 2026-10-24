@@ -10,7 +10,7 @@ Cách một cơ chế đi từ ý tưởng tới module ổn định trong BaseG
 | Thuật ngữ: từ nào, nghĩa gì, tránh từ nào | `GLOSSARY.md` ở gốc repo, mỗi module một mục con |
 | Thiết kế hiện hành: phạm vi, mô hình, API, trường hợp biên, quy ước cho module khác | `docs/modules/<module>.md` (khung: `docs/modules/_template.md`) |
 | Quyết định khó đảo ngược: chọn gì, vì sao, đã loại gì | `docs/adr/NNNN-<module>-<slug>.md` |
-| Cách dùng nhanh cho người gọi | `README.md` của package, link sang tài liệu thiết kế |
+| Cách dùng package, đủ để dùng mà không cần repo này | `README.md` của package; tự đứng một mình, không tham chiếu ra ngoài package |
 | Quy trình và kinh nghiệm chung | File này |
 | Cấu trúc thư mục, đặt tên, phụ thuộc | `structure.md` |
 
@@ -39,14 +39,15 @@ Format, tiêu chí và cách cập nhật `GLOSSARY.md` và ADR theo skill `doma
 
 ### 2. Playground
 
-- Code ở `Assets/Playground/<Experiment>/`; scene ở `Assets/Scenes/`, config ở `Assets/Config/` (xem `structure.md`).
+- Code ở `Assets/Playground/<Experiment>/`; scene ở `Assets/Scenes/`, config ở `Assets/Configs/` (xem `structure.md`).
 - Mục tiêu là trả lời câu hỏi thiết kế và chốt tham số bằng cách chơi thử, không phải viết code đẹp. Có overlay debug với nút cho mọi lệnh.
 - Test EditMode không bắt buộc, nhưng nên viết cho logic khó: chúng chuyển sang package sau.
 - Kết thúc: review 3 trục (`/review-my-code`), ghi quyết định vào tài liệu thiết kế, viết ADR nếu đủ điều kiện, đề xuất danh sách thay đổi cho package để user chốt.
 
 ### 3. Package
 
-- Tạo `unity/Packages/com.guenbankhai.basegame.<module>/`: `package.json`, `Runtime/`, `Tests/`, `README.md` (usage doc). Không đưa phần debug của playground vào.
+- Tạo `unity/Packages/com.guenbankhai.<module>/`: `package.json`, `Runtime/`, `Tests/`, `README.md` (usage doc). Không đưa phần debug của playground vào.
+- `README.md` của package đi theo package sang game khác, nên phải **tự đứng một mình**: không tham chiếu `docs/`, `GLOSSARY.md`, ADR hay bất kỳ file nào ngoài package. Viết đủ để người chỉ có package vẫn dùng đúng: thiết lập, khái niệm, API chính, quy tắc quan trọng, save, quy ước cho module dùng nó. Tài liệu trong `docs/` được phép trỏ vào README, chiều ngược lại thì không.
 - **Viết lại sạch**, không copy nguyên playground. Chuyển test sang, thêm test cho mọi quyết định mới.
 - Kiểm tra compile bằng `dotnet build` trên `.csproj` do Unity sinh. Nếu Unity chưa sinh csproj cho file mới, build bằng bản sao csproj trong thư mục tạm, chỉ thay danh sách file, và ghi rõ là đã kiểm tra theo cách này.
 - Chạy test EditMode trong Unity.

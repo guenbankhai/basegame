@@ -1,7 +1,7 @@
 {
-  "name": "com.guenbankhai.basegame.calendar",
+  "name": "com.guenbankhai.calendar",
   "version": "0.1.0",
-  "displayName": "BaseGame Calendar",
+  "displayName": "GuenBanKhai Calendar",
   "description": "Step-based game clock and calendar: hours, days, weeks, seasons and years; speed, pause, skip, fast forward, events and save snapshots.",
   "unity": "6000.6",
   "unityRelease": "5f1",

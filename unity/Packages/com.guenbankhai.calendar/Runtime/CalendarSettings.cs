@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>
     /// Starting settings only: GameClock checks and copies them once, so a running clock changes only through its
@@ -16,7 +16,7 @@ namespace BaseGame.Calendar
         [Tooltip("Game minutes per clock step. Must divide 60.")]
         [SerializeField] private int _minutesPerStep = 10;
         [Tooltip("Clock minute at which a new day starts (0 = 00:00, 360 = 06:00). Must be a multiple of the step.")]
-        [SerializeField] private int _dayStartMinute;
+        [SerializeField] private int _dayStartMinute = 0;
         [Tooltip("One name per weekday; the length sets the week length.")]
         [SerializeField] private string[] _dayNames = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
         [SerializeField] private SeasonDefinition[] _seasons =
@@ -29,7 +29,7 @@ namespace BaseGame.Calendar
 
         [Header("New game")]
         [SerializeField] private int _startYear = 1;
-        [SerializeField] private int _startSeasonIndex;
+        [SerializeField] private int _startSeasonIndex = 0;
         [Tooltip("Minutes after the start of Day 0. Must be a multiple of the step.")]
         [SerializeField] private int _startMinutesIntoDay = 360;
 

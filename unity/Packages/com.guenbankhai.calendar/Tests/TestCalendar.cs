@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BaseGame.Calendar.Tests
+namespace GuenBanKhai.Calendar.Tests
 {
     /// <summary>
     /// Builds settings for tests: new GameClock(TestCalendar.Settings(...)). Defaults: 1 real second per game minute,

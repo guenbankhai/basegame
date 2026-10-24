@@ -1,6 +1,6 @@
 using System;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>One moment with its derived values. Only GameClock creates these, so the values always agree.</summary>
     public readonly struct CalendarDate : IEquatable<CalendarDate>

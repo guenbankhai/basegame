@@ -1,8 +1,8 @@
 {
-    "name": "BaseGame.Calendar.Tests",
-    "rootNamespace": "BaseGame.Calendar.Tests",
+    "name": "GuenBanKhai.Calendar.Tests",
+    "rootNamespace": "GuenBanKhai.Calendar.Tests",
     "references": [
-        "BaseGame.Calendar",
+        "GuenBanKhai.Calendar",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

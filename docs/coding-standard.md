@@ -16,6 +16,7 @@
 ## Unity
 
 - Dùng `[SerializeField] private` thay cho public field; cho đọc qua property.
+- Field `[SerializeField]` luôn có giá trị khởi tạo rõ ràng: `= null` cho tham chiếu tới object Unity, giá trị mặc định cho kiểu khác (`= 0`, `= false`, `= new …`). Lý do: Unity gán field qua serialization nên compiler không thấy, và sẽ báo nhầm CS0649 ("never assigned"); khởi tạo rõ ràng cũng cho biết giá trị mặc định trong Inspector. Ngoại lệ: field trong `struct`, vì C# 9 không cho khởi tạo field trong struct.
 - Không dùng `Find*` hay `SendMessage`. Cache component trong `Awake`, không gọi `GetComponent` mỗi frame.
 - Giữa các phần code, dùng `event Action<T>` của C#. Chỉ dùng `UnityEvent` khi nối trong Inspector.
 

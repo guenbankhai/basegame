@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace BaseGame.Calendar.Tests
+namespace GuenBanKhai.Calendar.Tests
 {
     public class CalendarConfigTests
     {

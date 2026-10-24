@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BaseGame.Calendar;
+using GuenBanKhai.Calendar;
 using UnityEngine;
 
 namespace BaseGame.Playground.Calendar
@@ -17,7 +17,7 @@ namespace BaseGame.Playground.Calendar
         private static readonly float[] SpeedOptions = { 0f, 1f, 2f, 5f, 10f };
 
         [Tooltip("Ticked fires every step, so it is left out of the log unless this is on.")]
-        [SerializeField] private bool _logTicked;
+        [SerializeField] private bool _logTicked = false;
 
         private readonly Queue<string> _log = new Queue<string>();
         private GameClockDriver _driver;

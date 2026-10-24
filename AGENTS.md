@@ -36,13 +36,13 @@ If a conflict affects only part of the task, report it and continue unaffected w
 ### Communication
 
 - Reply in Vietnamese.
-- Write all docs in Vietnamese, concise but complete. Exceptions: this file and skills stay in English; glossary terms (`GLOSSARY.md`) and code identifiers stay in English inside Vietnamese text.
+- Write all docs in Vietnamese, concise but complete. Exceptions: this file and skills stay in English; glossary terms (`GLOSSARY.md`) and code identifiers stay in English inside Vietnamese text; `package.json` metadata (`displayName`, `description`) stays English, since it is package metadata, not a doc.
 - Write code in English. Comments are English and short: explain the mechanism or the reason, not what the code already says.
 - Where a skill asks for Simplified Technical English, use plain Vietnamese.
 
 ### Structure
 
-- Code lives in `unity/Assets/Playground/<Experiment>/`, `unity/Assets/Integration/<Scenario>/`, or `unity/Packages/com.guenbankhai.basegame.<module>/`.
+- Code lives in `unity/Assets/Playground/<Experiment>/`, `unity/Assets/Integration/<Scenario>/`, or `unity/Packages/com.guenbankhai.<module>/`.
 - Experiments and scenarios depend on modules only; modules depend on other modules only, without cycles.
 - Do not create experiments, scenarios, or packages unless asked.
 

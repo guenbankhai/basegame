@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace BaseGame.Calendar.Tests
+namespace GuenBanKhai.Calendar.Tests
 {
     public class GameClockSettingsTests
     {

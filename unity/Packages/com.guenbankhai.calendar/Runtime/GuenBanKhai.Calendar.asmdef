@@ -1,6 +1,6 @@
 {
-    "name": "BaseGame.Calendar",
-    "rootNamespace": "BaseGame.Calendar",
+    "name": "GuenBanKhai.Calendar",
+    "rootNamespace": "GuenBanKhai.Calendar",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

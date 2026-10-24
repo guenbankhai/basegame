@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     [Serializable]
     public struct SeasonDefinition

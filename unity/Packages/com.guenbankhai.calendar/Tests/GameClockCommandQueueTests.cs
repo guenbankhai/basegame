@@ -5,7 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace BaseGame.Calendar.Tests
+namespace GuenBanKhai.Calendar.Tests
 {
     public class GameClockCommandQueueTests
     {

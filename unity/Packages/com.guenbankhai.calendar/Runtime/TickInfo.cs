@@ -1,4 +1,4 @@
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>One step's data. Only GameClock creates these.</summary>
     public readonly struct TickInfo

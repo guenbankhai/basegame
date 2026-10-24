@@ -6,8 +6,8 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 
 | Mục | Giá trị |
 |---|---|
-| Package | `unity/Packages/com.guenbankhai.basegame.<module>` |
-| Namespace / asmdef | `BaseGame.<Module>`, `BaseGame.<Module>.Tests` |
+| Package | `unity/Packages/com.guenbankhai.<module>` |
+| Namespace / asmdef | `GuenBanKhai.<Module>`, `GuenBanKhai.<Module>.Tests` |
 | Phụ thuộc | <module khác, hoặc "Không có"> |
 | Quyết định | <link ADR> |
 

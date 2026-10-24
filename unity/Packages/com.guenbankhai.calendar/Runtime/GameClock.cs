@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace BaseGame.Calendar
+namespace GuenBanKhai.Calendar
 {
     /// <summary>
     /// Plain C# clock that moves in steps and raises each event at the step it happens. Commands called from a
