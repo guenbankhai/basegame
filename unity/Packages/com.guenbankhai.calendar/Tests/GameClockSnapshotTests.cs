@@ -69,6 +69,24 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void Restore_InvalidData_LeavesEveryPartOfTheClockAsItWas()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
+            clock.Tick(25f);
+            clock.AdvanceSeason();
+            clock.FastForwardTo(120, 2f);
+            var before = clock.CaptureSnapshot();
+            double exactBefore = clock.ExactMinutes;
+
+            Assert.Catch<ArgumentException>(() => clock.Restore(new CalendarSnapshot(15, 1, 0, 0, false)));
+
+            Assert.AreEqual(before, clock.CaptureSnapshot());
+            Assert.AreEqual(exactBefore, clock.ExactMinutes, 1e-9);
+            Assert.IsTrue(clock.IsFastForwarding);
+            Assert.AreEqual(2f, clock.Speed);
+        }
+
+        [Test]
         public void Restore_CanGoBack_AndNextTickCountsFromTheRestoredPoint()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));

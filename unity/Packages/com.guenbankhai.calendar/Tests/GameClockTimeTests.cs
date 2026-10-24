@@ -202,6 +202,44 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void NextOccurrence_AfterADayBoundary_CountsFromNow()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10, dayStartMinute: 360));
+            clock.Tick(TestCalendar.Minutes(1, 2));
+
+            Assert.AreEqual(8 * 60, clock.Now.ClockMinute);
+            Assert.AreEqual(TestCalendar.Minutes(2), clock.NextOccurrence(360));
+            Assert.AreEqual(TestCalendar.Minutes(1, 3), clock.NextOccurrence(540));
+        }
+
+        [Test]
+        public void NextOccurrence_PastMaxTotalMinutes_Throws()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            clock.Restore(new CalendarSnapshot(GameClock.MaxTotalMinutes - 1, 1, 0, 0, false));
+
+            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.NextOccurrence(0));
+            Assert.Throws<InvalidOperationException>(() => clock.NextOccurrence(10));
+        }
+
+        [Test]
+        public void Tick_PastMaxTotalMinutes_Throws_AndTheClockStaysRestorable()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            clock.Restore(new CalendarSnapshot(GameClock.MaxTotalMinutes - 1, 1, 0, 0, false));
+            clock.Tick(1f);
+            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.Now.TotalMinutes);
+
+            Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
+            clock.FastForward(10f);
+            Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
+
+            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.Now.TotalMinutes);
+            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.ExactMinutes, 1e-6, "Gathered time is dropped at the limit.");
+            Assert.DoesNotThrow(() => clock.Restore(clock.CaptureSnapshot()));
+        }
+
+        [Test]
         public void NextOccurrence_InvalidMinute_Throws()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));

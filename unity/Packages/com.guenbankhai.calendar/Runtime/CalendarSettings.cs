@@ -35,7 +35,7 @@ namespace GuenBanKhai.Calendar
 
         [Header("Limits")]
         [SerializeField] private float _maxSpeed = 100f;
-        [Tooltip("Steps processed per Tick at most; the rest is dropped.")]
+        [Tooltip("At most this many steps per Tick() call; the rest of that call's time is dropped.")]
         [SerializeField] private int _maxStepsPerFrame = 120;
 
         public float SecondsPerGameMinute { get => _secondsPerGameMinute; set => _secondsPerGameMinute = value; }
@@ -62,7 +62,7 @@ namespace GuenBanKhai.Calendar
                 return "SecondsPerGameMinute must be a finite number greater than 0.";
             }
 
-            if (_minutesPerStep <= 0 || 60 % _minutesPerStep != 0)
+            if (_minutesPerStep <= 0 || CalendarDate.MinutesPerHour % _minutesPerStep != 0)
             {
                 return "MinutesPerStep must be a positive divisor of 60.";
             }

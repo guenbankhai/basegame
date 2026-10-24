@@ -13,8 +13,11 @@ namespace GuenBanKhai.Calendar
         /// <summary>A longer skip is a caller bug; rejecting it keeps the per-day skip loop from hanging the game.</summary>
         public const int MaxSkipDays = 36500;
 
-        /// <summary>Far beyond any real game: only rejects corrupt saves and leaves headroom against overflow.</summary>
-        public const long MaxTotalMinutes = long.MaxValue / 2;
+        /// <summary>
+        /// About 1.9 million years: far beyond any real game, and small enough that ExactMinutes (a double) stays precise
+        /// to well under a minute. A whole number of days, so it is on every valid step.
+        /// </summary>
+        public const long MaxTotalMinutes = 700_000_000L * CalendarDate.MinutesPerDay;
 
         /// <summary>More than this means handlers queue commands in a loop; cutting off keeps the game from hanging.</summary>
         private const int MaxCommandsPerDrain = 1000;
@@ -89,7 +92,7 @@ namespace GuenBanKhai.Calendar
         {
             get
             {
-                long day = _state.TotalMinutes / CalendarDate.MinutesPerDay;
+                long day = Day;
                 return new CalendarDate(
                     _state.TotalMinutes,
                     _state.Year,
@@ -99,6 +102,8 @@ namespace GuenBanKhai.Calendar
                     (int)(day % _dayNames.Length));
             }
         }
+
+        private long Day => _state.TotalMinutes / CalendarDate.MinutesPerDay;
 
         /// <summary>Includes time gathered toward the next step; for smoothing visuals between steps.</summary>
         public double ExactMinutes => _state.TotalMinutes + _pendingMinutes;
@@ -168,7 +173,17 @@ namespace GuenBanKhai.Calendar
 
                 _pendingMinutes -= _minutesPerStep;
                 _dropRemainder = false;
-                Step();
+                try
+                {
+                    Step();
+                }
+                catch
+                {
+                    // Step throws only at a limit; dropping gathered time keeps ExactMinutes from running past it.
+                    _pendingMinutes = 0;
+                    throw;
+                }
+
                 if (_dropRemainder || IsPaused || Speed != speed)
                 {
                     _pendingMinutes = 0;
@@ -283,20 +298,30 @@ namespace GuenBanKhai.Calendar
                 throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must be at most {MaxSkipDays} days after now.");
             }
 
-            StopFastForwardNow();
             if (targetMinutes == _state.TotalMinutes)
             {
+                StopFastForwardNow();
                 return;
             }
 
             var from = Now;
-            long nextBoundary = (_state.TotalMinutes / CalendarDate.MinutesPerDay + 1) * CalendarDate.MinutesPerDay;
-            for (; nextBoundary <= targetMinutes; nextBoundary += CalendarDate.MinutesPerDay)
+            var previous = _state;
+            try
             {
-                _state.TotalMinutes = nextBoundary;
-                ProcessDayBoundary(out _, out _);
+                for (long nextBoundary = (Day + 1) * CalendarDate.MinutesPerDay; nextBoundary <= targetMinutes; nextBoundary += CalendarDate.MinutesPerDay)
+                {
+                    _state.TotalMinutes = nextBoundary;
+                    ProcessDayBoundary(out _, out _);
+                }
+            }
+            catch
+            {
+                // A skip that fails part-way changes nothing, like a rejected command.
+                _state = previous;
+                throw;
             }
 
+            StopFastForwardNow();
             _state.TotalMinutes = targetMinutes;
             RestartFromNow();
             var to = Now;
@@ -322,12 +347,18 @@ namespace GuenBanKhai.Calendar
         {
             if (clockMinute < 0 || clockMinute >= CalendarDate.MinutesPerDay)
             {
-                throw new ArgumentOutOfRangeException(nameof(clockMinute), clockMinute, "Must be in [0, 1440).");
+                throw new ArgumentOutOfRangeException(nameof(clockMinute), clockMinute, $"Must be in [0, {CalendarDate.MinutesPerDay}).");
             }
 
             ValidateOnStep(clockMinute, nameof(clockMinute));
             int ahead = (clockMinute - Now.ClockMinute + CalendarDate.MinutesPerDay) % CalendarDate.MinutesPerDay;
-            return _state.TotalMinutes + (ahead == 0 ? CalendarDate.MinutesPerDay : ahead);
+            long next = _state.TotalMinutes + (ahead == 0 ? CalendarDate.MinutesPerDay : ahead);
+            if (next > MaxTotalMinutes)
+            {
+                throw new InvalidOperationException($"The next occurrence is past MaxTotalMinutes ({MaxTotalMinutes}).");
+            }
+
+            return next;
         }
 
         public CalendarSnapshot CaptureSnapshot() => _state;
@@ -377,17 +408,32 @@ namespace GuenBanKhai.Calendar
         /// </summary>
         private void Step()
         {
+            // Same limit SkipTo and FastForwardTo enforce, so the clock's own snapshot always restores.
+            if (_state.TotalMinutes > MaxTotalMinutes - _minutesPerStep)
+            {
+                throw new InvalidOperationException($"The clock cannot run past MaxTotalMinutes ({MaxTotalMinutes}).");
+            }
+
+            var previous = _state;
             _state.TotalMinutes += _minutesPerStep;
             bool dayChanged = _state.TotalMinutes % CalendarDate.MinutesPerDay == 0;
             bool seasonChanged = false;
             bool yearChanged = false;
             if (dayChanged)
             {
-                ProcessDayBoundary(out seasonChanged, out yearChanged);
+                try
+                {
+                    ProcessDayBoundary(out seasonChanged, out yearChanged);
+                }
+                catch
+                {
+                    _state = previous;
+                    throw;
+                }
             }
 
             var now = Now;
-            bool hourChanged = now.ClockMinute % 60 == 0;
+            bool hourChanged = now.ClockMinute % CalendarDate.MinutesPerHour == 0;
             bool weekChanged = dayChanged && now.Day % _dayNames.Length == 0;
             var info = new StepInfo(now, _state.TotalMinutes - _lastUpdateMinutes, Speed, _isFastForwarding);
             _lastUpdateMinutes = _state.TotalMinutes;
@@ -437,11 +483,17 @@ namespace GuenBanKhai.Calendar
         {
             seasonChanged = false;
             yearChanged = false;
-            long day = _state.TotalMinutes / CalendarDate.MinutesPerDay;
+            long day = Day;
             int length = _seasons[_state.SeasonIndex].LengthInDays;
             if (!_state.SeasonAdvancePending && (length <= 0 || day - _state.SeasonStartDay < length))
             {
                 return;
+            }
+
+            // Checked before any change, so a failed boundary leaves the season as it was.
+            if (_state.SeasonIndex == _seasons.Length - 1 && _state.Year == int.MaxValue)
+            {
+                throw new InvalidOperationException($"Year cannot go past {int.MaxValue}.");
             }
 
             seasonChanged = true;

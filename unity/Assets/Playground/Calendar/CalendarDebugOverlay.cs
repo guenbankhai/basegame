@@ -13,7 +13,7 @@ namespace BaseGame.Playground.Calendar
     {
         private const int MaxLogLines = 20;
         private const int MorningMinute = 6 * 60;
-        private const float FastForwardSpeed = 50f;
+        private const float PreferredFastForwardSpeed = 50f;
         private static readonly float[] SpeedOptions = { 0f, 1f, 2f, 5f, 10f };
 
         [Tooltip("Stepped fires every step, so it is left out of the log unless this is on.")]
@@ -155,6 +155,12 @@ namespace BaseGame.Playground.Calendar
 
             foreach (float speed in SpeedOptions)
             {
+                // Hidden rather than clamped: the clock rejects speeds above MaxSpeed.
+                if (speed > _clock.MaxSpeed)
+                {
+                    continue;
+                }
+
                 if (GUILayout.Button($"x{speed:0}"))
                 {
                     _clock.SetSpeed(speed);
@@ -163,15 +169,16 @@ namespace BaseGame.Playground.Calendar
 
             GUILayout.EndHorizontal();
 
+            float fastForwardSpeed = Mathf.Min(PreferredFastForwardSpeed, _clock.MaxSpeed);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button($"Fast-forward (x{FastForwardSpeed:0})"))
+            if (GUILayout.Button($"Fast-forward (x{fastForwardSpeed:0.##})"))
             {
-                _clock.FastForward(FastForwardSpeed);
+                _clock.FastForward(fastForwardSpeed);
             }
 
-            if (GUILayout.Button($"Fast-forward to 06:00 (x{FastForwardSpeed:0})"))
+            if (GUILayout.Button($"Fast-forward to 06:00 (x{fastForwardSpeed:0.##})"))
             {
-                _clock.FastForwardTo(_clock.NextOccurrence(MorningMinute), FastForwardSpeed);
+                _clock.FastForwardTo(_clock.NextOccurrence(MorningMinute), fastForwardSpeed);
             }
 
             if (GUILayout.Button("Stop fast-forward"))

@@ -114,7 +114,7 @@ CalendarDate now = clock.Now;      // TotalMinutes, Day, Hour, Minute, ClockMinu
 string day = clock.GetDayName(now.DayOfWeek);
 string season = clock.GetSeasonName(now.SeasonIndex);
 double smooth = clock.ExactMinutes; // gồm phần thời gian đã tích cho step kế tiếp; dùng để nội suy hình ảnh
-long next6am = clock.NextOccurrence(6 * 60);   // không bao giờ trả Now: đúng 6:00 thì trả 6:00 ngày mai
+long next6am = clock.NextOccurrence(6 * 60);   // không bao giờ trả Now: đúng 6:00 thì trả 6:00 ngày mai; quá MaxTotalMinutes thì ném InvalidOperationException
 ```
 
 Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStartMinute) % 1440`, `DayOfWeek = Day % WeekLength`. Tuần chạy liên tục qua các mùa.
@@ -141,7 +141,7 @@ Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStar
 - Không gọi `Tick` trong handler (ném `InvalidOperationException`).
 - Một lượt chạy tối đa 1000 lệnh xếp hàng; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
 
-Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích, hoặc đổi running speed. Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
+Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích, hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi. Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
 
 ## Điều khiển
 
@@ -157,11 +157,11 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | Lệnh | Quy tắc |
 |---|---|
 | Chung | Mọi mốc thời gian phải là bội của step. Sai thì ném `ArgumentException` (hoặc lớp con) |
-| `Tick(d)` | `d` âm, NaN hoặc vô hạn: lỗi. Mỗi lần chạy tối đa `MaxStepsPerFrame` step, phần dư bị bỏ |
+| `Tick(d)` | `d` âm, NaN hoặc vô hạn: lỗi. Mỗi lần chạy tối đa `MaxStepsPerFrame` step, phần dư bị bỏ. Chạy quá `GameClock.MaxTotalMinutes`, hoặc cần sang năm khi `Year` đã là `int.MaxValue`: ném `InvalidOperationException`, đồng hồ đứng tại chỗ |
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed`: lỗi (thông báo ghi rõ `MaxSpeed`). Đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
 | `FastForward(s)`, `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed`: lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ. `t == Now`: hoàn thành ngay. `t < Now` hoặc `t > GameClock.MaxTotalMinutes`: lỗi |
 | `StopFastForward()` | Về base speed, không phát `Completed` |
-| `SkipTo(t)` | Hủy fast-forward đang chạy, kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `GameClock.MaxSkipDays` ngày: lỗi. Chạy được cả khi đang tạm dừng |
+| `SkipTo(t)` | Hủy fast-forward đang chạy, kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `GameClock.MaxSkipDays` ngày: lỗi. Cần sang năm khi `Year` đã là `int.MaxValue`: ném `InvalidOperationException`, không đổi gì. Chạy được cả khi đang tạm dừng |
 | `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
 
@@ -218,5 +218,5 @@ Muốn giảm tải thì tăng `MinutesPerStep` cho cả lịch, rồi nội suy
 | Hằng số | Giá trị | Ý nghĩa |
 |---|---|---|
 | `GameClock.MaxSkipDays` | 36500 | Skip xa hơn coi là bug của nơi gọi |
-| `GameClock.MaxTotalMinutes` | `long.MaxValue / 2` | `Restore`, `SkipTo`, `FastForwardTo` từ chối giá trị lớn hơn, nên snapshot của đồng hồ luôn restore được |
+| `GameClock.MaxTotalMinutes` | `700_000_000 × 1440` (khoảng 1,9 triệu năm) | `Restore`, `SkipTo`, `FastForwardTo` từ chối giá trị lớn hơn, `Tick` không chạy qua, nên snapshot của đồng hồ luôn restore được. Đủ nhỏ để `ExactMinutes` vẫn chính xác |
 | `CalendarDate.MinutesPerDay` | 1440 | Một ngày luôn là 24 × 60 phút |

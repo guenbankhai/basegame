@@ -275,6 +275,49 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void SkipToInCompletedHandler_RunsAfterCompleted_AndSkipsFromTheTarget()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
+            var seen = new List<string>();
+            clock.FastForwardCompleted += date =>
+            {
+                seen.Add($"Completed {date.TotalMinutes}");
+                clock.SkipTo(180);
+            };
+            clock.Skipped += (from, to) => seen.Add($"Skipped {from.TotalMinutes}->{to.TotalMinutes} ff {clock.IsFastForwarding}");
+
+            clock.FastForwardTo(60, 20f);
+            clock.Tick(10f);
+
+            CollectionAssert.AreEqual(new[] { "Completed 60", "Skipped 60->180 ff False" }, seen);
+            Assert.AreEqual(180, clock.Now.TotalMinutes);
+        }
+
+        [Test]
+        public void FastForwardToInCompletedHandler_StartsANewFastForward()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
+            var completed = new List<long>();
+            clock.FastForwardCompleted += date =>
+            {
+                completed.Add(date.TotalMinutes);
+                if (date.TotalMinutes == 60)
+                {
+                    clock.FastForwardTo(120, 20f);
+                }
+            };
+
+            clock.FastForwardTo(60, 20f);
+            clock.Tick(3f);
+            Assert.IsTrue(clock.IsFastForwarding, "The rest of that Tick is dropped, so the new fast-forward is still running.");
+            clock.Tick(3f);
+
+            CollectionAssert.AreEqual(new[] { 60L, 120L }, completed);
+            Assert.AreEqual(120, clock.Now.TotalMinutes);
+            Assert.IsFalse(clock.IsFastForwarding);
+        }
+
+        [Test]
         public void FastForwardAgain_ReplacesTarget_WithoutCompletingTheOldOne()
         {
             var clock = new GameClock(TestCalendar.Settings());

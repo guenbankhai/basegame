@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
@@ -74,6 +75,22 @@ namespace GuenBanKhai.Calendar.Tests
 
             Assert.AreEqual(3, clock.Now.DayOfWeek);
             Assert.AreEqual(1, weeks);
+        }
+
+        [Test]
+        public void YearPastIntMaxValue_Throws_AndChangesNothing()
+        {
+            var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, 0)));
+            var lastDayOfYear = new CalendarSnapshot(TestCalendar.Minutes(0, 23, 59), int.MaxValue, 1, 0, true);
+            clock.Restore(lastDayOfYear);
+            var events = TestCalendar.RecordAll(clock);
+
+            Assert.Throws<InvalidOperationException>(() => clock.Tick(1f));
+            Assert.AreEqual(lastDayOfYear, clock.CaptureSnapshot());
+
+            Assert.Throws<InvalidOperationException>(() => clock.SkipTo(TestCalendar.Minutes(2)));
+            Assert.AreEqual(lastDayOfYear, clock.CaptureSnapshot());
+            CollectionAssert.IsEmpty(events);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace GuenBanKhai.Calendar
     public readonly struct CalendarDate : IEquatable<CalendarDate>
     {
         public const int MinutesPerDay = 1440;
+        internal const int MinutesPerHour = 60;
 
         internal CalendarDate(long totalMinutes, int year, int seasonIndex, long dayInSeason, int clockMinute, int dayOfWeek)
         {
@@ -30,8 +31,8 @@ namespace GuenBanKhai.Calendar
 
         /// <summary>Absolute day since Day 0.</summary>
         public long Day => TotalMinutes / MinutesPerDay;
-        public int Hour => ClockMinute / 60;
-        public int Minute => ClockMinute % 60;
+        public int Hour => ClockMinute / MinutesPerHour;
+        public int Minute => ClockMinute % MinutesPerHour;
 
         public bool Equals(CalendarDate other) =>
             TotalMinutes == other.TotalMinutes && Year == other.Year && SeasonIndex == other.SeasonIndex &&

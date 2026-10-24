@@ -316,6 +316,30 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void InvalidRestoreInHandler_IsLogged_AndChangesNothing()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            clock.AdvanceSeason();
+            int restored = 0;
+            clock.Restored += _ => restored++;
+            clock.Stepped += info =>
+            {
+                if (info.Date.TotalMinutes == 1)
+                {
+                    clock.Restore(new CalendarSnapshot(0, -1, 0, 0, false));
+                }
+            };
+            LogAssert.Expect(LogType.Exception, new Regex("ArgumentException"));
+
+            clock.Tick(3f);
+
+            Assert.AreEqual(0, restored);
+            Assert.AreEqual(3, clock.Now.TotalMinutes, "A rejected command does not stop the rest of the Tick.");
+            Assert.AreEqual(1, clock.Now.Year);
+            Assert.IsTrue(clock.CaptureSnapshot().SeasonAdvancePending);
+        }
+
+        [Test]
         public void CommandInSkippedHandler_RunsBeforeSkipToReturns()
         {
             var clock = new GameClock(TestCalendar.Settings());

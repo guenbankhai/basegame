@@ -120,7 +120,7 @@ FastForwardCompleted(CalendarDate)
 
 Sau mỗi step (gồm event và hàng đợi), phần thời gian còn lại của lần `Tick` đó bị bỏ nếu:
 - đồng hồ đang tạm dừng;
-- vừa skip hoặc vừa restore;
+- vừa skip hoặc vừa restore (`SkipTo(Now)` không tính là skip vì thời gian không trôi; nó chỉ làm bỏ phần dư nếu hủy một fast-forward, tức là làm đổi running speed);
 - fast-forward vừa tới đích (kể cả `FastForwardTo(Now)`);
 - running speed đã đổi.
 
@@ -168,20 +168,28 @@ void AdvanceSeason();
 CalendarSnapshot CaptureSnapshot();  void Restore(CalendarSnapshot snapshot);
 
 const int MaxSkipDays = 36500;
-const long MaxTotalMinutes = long.MaxValue / 2;
+const long MaxTotalMinutes = 700_000_000L * 1440;   // khoảng 1,9 triệu năm
 ```
 
 `CalendarDate` và `StepInfo` có constructor `internal`. `CalendarSnapshot` có constructor public để hệ thống save dựng lại.
 
+Ngoài `GameClock`, các kiểu giá trị có thêm:
+- `CalendarDate`: `const int MinutesPerDay = 1440`, `Day`, `Hour`, `Minute`, so sánh bằng (`IEquatable`) và `ToString` để debug.
+- `CalendarSnapshot`: so sánh bằng.
+- `CalendarSettings` và `SeasonDefinition`: setter và constructor public, để code và test dựng settings không cần asset.
+
+`MaxTotalMinutes` là bội của 1440, nên nằm trên mọi step hợp lệ. Nó đủ nhỏ để `ExactMinutes` (`double`) vẫn chính xác dưới một phần nghìn phút.
+
 | Lệnh | Quy tắc |
 |---|---|
-| Chung | "Báo lỗi" = ném `ArgumentException` (hoặc lớp con) khi gọi trực tiếp. Mọi mốc thời gian không phải bội của N đều báo lỗi |
-| `Tick(d)` | `d < 0`, NaN hoặc vô hạn báo lỗi |
+| Chung | "Báo lỗi" = ném `ArgumentException` (hoặc lớp con) khi gọi trực tiếp. Mọi mốc thời gian không phải bội của N đều báo lỗi. Đồng hồ chạm giới hạn (bên dưới) thì ném `InvalidOperationException`, state giữ nguyên |
+| `Tick(d)` | `d < 0`, NaN hoặc vô hạn báo lỗi. Step kế tiếp vượt `MaxTotalMinutes` thì ném `InvalidOperationException` và bỏ thời gian đã tích lũy; đồng hồ đứng tại chỗ |
+| Sang năm | `Year` đang là `int.MaxValue` mà cần sang năm (khi `Tick` hoặc `SkipTo`) thì ném `InvalidOperationException`; state giữ nguyên như trước lệnh |
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi; thông báo lỗi ghi rõ `MaxSpeed`. Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
 | `FastForward(s)`, `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ (kể cả khi gọi trong handler ở step chạm đích cũ). `t == Now` thì hoàn thành ngay và phát `Completed`; `t < Now` hoặc `t > MaxTotalMinutes` báo lỗi. Dừng đúng tại `t` |
 | `StopFastForward()` | Quay về base speed, không phát `Completed` |
 | `SkipTo(t)` | `t == Now` thì chỉ hủy fast-forward (nếu có), không phát `Skipped`; `t < Now` hoặc `t > MaxTotalMinutes` báo lỗi; xa hơn `MaxSkipDays` ngày báo lỗi (coi là bug của nơi gọi, tránh treo game) |
-| `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai); `m` ngoài `[0, 1440)` báo lỗi |
+| `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai); `m` ngoài `[0, 1440)` báo lỗi; kết quả vượt `MaxTotalMinutes` thì ném `InvalidOperationException` |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)` báo lỗi |
 | `Pause(src)`, `Resume(src)` | `src == null` báo lỗi; pause hai lần cùng pause source vẫn tính là một; resume pause source không có thì không làm gì |
 
@@ -232,10 +240,10 @@ Test EditMode trong `Tests/` của package, mỗi file một nhóm quy tắc ở
 |---|---|
 | `GameClockSettingsTests` | Settings hợp lệ và sai, giá trị bắt đầu, tên thứ và mùa, settings được copy |
 | `CalendarConfigTests` | Giá trị mặc định của asset, `CreateSettings()` trả bản copy |
-| `GameClockTimeTests` | Step, `ExactMinutes`, `DayStartMinute`, thứ tự event, tốc độ, tạm dừng, `NextOccurrence`, `MaxStepsPerFrame` |
-| `GameClockSeasonTests` | Fixed-length season, command-only season, chuyển sớm, sang năm, tuần qua các mùa |
-| `GameClockSkipFastForwardTests` | Skip, fast-forward, tương tác giữa hai cơ chế, `SkipTo(Now)`, đích quá `MaxTotalMinutes`; **fast-forward và skip cùng một khoảng ra cùng kết quả** |
-| `GameClockCommandQueueTests` | Hàng đợi lệnh (kể cả `AdvanceSeason`), bỏ phần dư, exception trong handler |
-| `GameClockSnapshotTests` | Lưu và restore, đi qua `JsonUtility`, dữ liệu sai, giữ pause source và base speed |
+| `GameClockTimeTests` | Step, `ExactMinutes`, `DayStartMinute`, thứ tự event, tốc độ, tạm dừng, `NextOccurrence`, `MaxStepsPerFrame`, `Tick` chạm `MaxTotalMinutes` |
+| `GameClockSeasonTests` | Fixed-length season, command-only season, chuyển sớm, sang năm, tuần qua các mùa, `Year` chạm `int.MaxValue` |
+| `GameClockSkipFastForwardTests` | Skip, fast-forward, tương tác giữa hai cơ chế, `SkipTo(Now)`, đích quá `MaxTotalMinutes`, lệnh trong handler của `FastForwardCompleted`; **fast-forward và skip cùng một khoảng ra cùng kết quả** |
+| `GameClockCommandQueueTests` | Hàng đợi lệnh (kể cả `AdvanceSeason`), bỏ phần dư, exception trong handler, lệnh sai trong hàng đợi |
+| `GameClockSnapshotTests` | Lưu và restore, đi qua `JsonUtility`, dữ liệu sai (không đổi gì kể cả fast-forward và thời gian lẻ), giữ pause source và base speed |
 
 Thử bằng tay: experiment `Assets/Playground/Calendar/` (overlay IMGUI có nút cho mọi lệnh), scene `Assets/Scenes/Calendar.unity`.

@@ -24,10 +24,16 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [TestCase(7, 0, 0, 0)]
+        [TestCase(0, 0, 0, 0)]
+        [TestCase(-10, 0, 0, 0)]
         [TestCase(10, 5, 0, 0)]
         [TestCase(10, 0, 15, 0)]
         [TestCase(1, 1440, 0, 0)]
+        [TestCase(1, -1, 0, 0)]
+        [TestCase(1, 0, 1440, 0)]
+        [TestCase(1, 0, -1, 0)]
         [TestCase(1, 0, 0, 4)]
+        [TestCase(1, 0, 0, -1)]
         public void NewClock_InvalidSettings_Throws(int step, int dayStartMinute, int startMinutesIntoDay, int startSeasonIndex)
         {
             var settings = TestCalendar.Settings(minutesPerStep: step, dayStartMinute: dayStartMinute, startMinutesIntoDay: startMinutesIntoDay);
