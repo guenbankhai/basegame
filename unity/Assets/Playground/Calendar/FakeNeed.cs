@@ -3,7 +3,7 @@ using System;
 namespace BaseGame.Playground.Calendar
 {
     /// <summary>
-    /// Stand-in accumulating module: drops 1 per game minute. One Advance serves both ticking and skipping, so both
+    /// Stand-in accumulating module: drops 1 per game minute. One Advance serves both stepping and skipping, so both
     /// give the same result.
     /// </summary>
     public class FakeNeed

@@ -128,16 +128,16 @@ namespace GuenBanKhai.Calendar.Tests
         public void FastForwardTo_RaisesNormalEvents_AndStopsExactlyAtTarget()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
-            var ticks = new List<StepInfo>();
+            var steps = new List<StepInfo>();
             var completed = new List<long>();
-            clock.Stepped += ticks.Add;
+            clock.Stepped += steps.Add;
             clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
 
             clock.FastForwardTo(60, 20f);
             clock.Tick(1f);
             Assert.AreEqual(20, clock.Now.TotalMinutes);
-            Assert.AreEqual(20f, ticks[0].Speed);
-            Assert.IsTrue(ticks[0].IsFastForwarding);
+            Assert.AreEqual(20f, steps[0].Speed);
+            Assert.IsTrue(steps[0].IsFastForwarding);
             Assert.IsTrue(clock.IsFastForwarding);
 
             clock.Tick(10f);
@@ -146,7 +146,7 @@ namespace GuenBanKhai.Calendar.Tests
             CollectionAssert.AreEqual(new[] { 60L }, completed);
             Assert.IsFalse(clock.IsFastForwarding);
             Assert.AreEqual(1f, clock.Speed);
-            Assert.AreEqual(6, ticks.Count);
+            Assert.AreEqual(6, steps.Count);
         }
 
         [Test]

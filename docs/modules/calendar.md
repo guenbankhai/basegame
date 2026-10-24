@@ -22,7 +22,7 @@ Không dùng tên `Time`: nếu tồn tại namespace `GuenBanKhai.Time`, mọi 
 - Luật ép kết thúc ngày kiểu Stardew (2:00 ngất → 6:00): game tự nghe event giờ và gọi `SkipTo`.
 - "Ngày của người chơi" (thức qua đêm vẫn tính hôm qua).
 - Play time (giây thật đã chơi): Save hoặc meta.
-- Ánh sáng ngày đêm, định dạng file save, nâng phiên bản dữ liệu save.
+- Ánh sáng ngày đêm, định dạng file save, nâng phiên bản save.
 - Cách các scene khác nhau (trường, thị trấn) cùng dùng một đồng hồ: quyết khi làm scenario đầu tiên.
 
 ## Kiến trúc
@@ -234,8 +234,8 @@ Test EditMode trong `Tests/` của package, mỗi file một nhóm quy tắc ở
 | `CalendarConfigTests` | Giá trị mặc định của asset, `CreateSettings()` trả bản copy |
 | `GameClockTimeTests` | Step, `ExactMinutes`, `DayStartMinute`, thứ tự event, tốc độ, tạm dừng, `NextOccurrence`, `MaxStepsPerFrame` |
 | `GameClockSeasonTests` | Fixed-length season, command-only season, chuyển sớm, sang năm, tuần qua các mùa |
-| `GameClockSkipFastForwardTests` | Skip, fast-forward, tương tác giữa hai cơ chế; **fast-forward và skip cùng một khoảng ra cùng kết quả** |
-| `GameClockCommandQueueTests` | Hàng đợi lệnh, bỏ phần dư, exception trong handler |
-| `GameClockSnapshotTests` | Lưu và restore, dữ liệu sai, giữ pause source và base speed |
+| `GameClockSkipFastForwardTests` | Skip, fast-forward, tương tác giữa hai cơ chế, `SkipTo(Now)`, đích quá `MaxTotalMinutes`; **fast-forward và skip cùng một khoảng ra cùng kết quả** |
+| `GameClockCommandQueueTests` | Hàng đợi lệnh (kể cả `AdvanceSeason`), bỏ phần dư, exception trong handler |
+| `GameClockSnapshotTests` | Lưu và restore, đi qua `JsonUtility`, dữ liệu sai, giữ pause source và base speed |
 
 Thử bằng tay: experiment `Assets/Playground/Calendar/` (overlay IMGUI có nút cho mọi lệnh), scene `Assets/Scenes/Calendar.unity`.

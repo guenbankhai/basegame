@@ -26,7 +26,7 @@ namespace BaseGame.Playground.Calendar
         private GUIStyle _titleStyle;
         private CalendarSnapshot? _savedSnapshot;
         // Tracks only this overlay's pause source; IsPaused is also true while another source holds the clock.
-        private bool _isPausing;
+        private bool _holdsPause;
         private int _eventsThisWindow;
         private float _windowStart;
         private float _eventsPerSecond;
@@ -76,7 +76,7 @@ namespace BaseGame.Playground.Calendar
             _clock.Restored -= OnRestored;
             _clock.FastForwardCompleted -= OnFastForwardCompleted;
             _clock.Resume(this);
-            _isPausing = false;
+            _holdsPause = false;
             _clock = null;
         }
 
@@ -139,9 +139,9 @@ namespace BaseGame.Playground.Calendar
         private void DrawButtons(FakeNeed need)
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(_isPausing ? "Resume" : "Pause"))
+            if (GUILayout.Button(_holdsPause ? "Resume" : "Pause"))
             {
-                if (_isPausing)
+                if (_holdsPause)
                 {
                     _clock.Resume(this);
                 }
@@ -150,7 +150,7 @@ namespace BaseGame.Playground.Calendar
                     _clock.Pause(this);
                 }
 
-                _isPausing = !_isPausing;
+                _holdsPause = !_holdsPause;
             }
 
             foreach (float speed in SpeedOptions)

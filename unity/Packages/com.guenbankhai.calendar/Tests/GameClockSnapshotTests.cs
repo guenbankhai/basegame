@@ -47,9 +47,9 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var snapshot = new CalendarSnapshot(TestCalendar.Minutes(40, 12), 3, 1, 30, true);
 
-            var loaded = JsonUtility.FromJson<CalendarSnapshot>(JsonUtility.ToJson(snapshot));
+            var roundTripped = JsonUtility.FromJson<CalendarSnapshot>(JsonUtility.ToJson(snapshot));
 
-            Assert.AreEqual(snapshot, loaded);
+            Assert.AreEqual(snapshot, roundTripped);
         }
 
         [Test]
@@ -75,16 +75,16 @@ namespace GuenBanKhai.Calendar.Tests
             clock.Tick(20f);
             var snapshot = clock.CaptureSnapshot();
             clock.Tick(35f);
-            var ticks = new List<StepInfo>();
-            clock.Stepped += ticks.Add;
+            var steps = new List<StepInfo>();
+            clock.Stepped += steps.Add;
 
             clock.Restore(snapshot);
             Assert.AreEqual(20.0, clock.ExactMinutes, 1e-6);
             clock.Tick(10f);
 
-            Assert.AreEqual(1, ticks.Count);
-            Assert.AreEqual(30, ticks[0].Date.TotalMinutes);
-            Assert.AreEqual(10, ticks[0].DeltaMinutes);
+            Assert.AreEqual(1, steps.Count);
+            Assert.AreEqual(30, steps[0].Date.TotalMinutes);
+            Assert.AreEqual(10, steps[0].DeltaMinutes);
         }
 
         [Test]

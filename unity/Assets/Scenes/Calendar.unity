@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74ef3170f0d8b56428a53168521e7436, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BaseGame.Playground.Calendar::BaseGame.Playground.Calendar.CalendarDebugOverlay
-  _logTicked: 0
+  _logStepped: 0
 --- !u!114 &442593051
 MonoBehaviour:
   m_ObjectHideFlags: 0

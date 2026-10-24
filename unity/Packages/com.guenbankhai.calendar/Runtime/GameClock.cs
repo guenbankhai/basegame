@@ -479,7 +479,7 @@ namespace GuenBanKhai.Calendar
             Raise(FastForwardCompleted, now);
         }
 
-        /// <summary>After a skip or restore, DeltaMinutes counts from here and time gathered before it is dropped.</summary>
+        /// <summary>After a skip or restore: DeltaMinutes counts from here; earlier gathered time is dropped.</summary>
         private void RestartFromNow()
         {
             _lastUpdateMinutes = _state.TotalMinutes;
@@ -512,7 +512,7 @@ namespace GuenBanKhai.Calendar
                 throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must not be before now ({_state.TotalMinutes}).");
             }
 
-            // Past this the clock would hold a state that Restore rejects, so its own save could not be loaded.
+            // Past this the clock would hold a state that Restore rejects, so its own snapshot could not be restored.
             if (targetMinutes > MaxTotalMinutes)
             {
                 throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must be at most MaxTotalMinutes ({MaxTotalMinutes}).");

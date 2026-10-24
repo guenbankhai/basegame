@@ -42,7 +42,7 @@ Test EditMode nằm trong `Tests/`. Package embedded chạy test được ngay. 
 | `CalendarConfig` | ScriptableObject giữ một `CalendarSettings` để chỉnh trong Inspector |
 | `GameClockDriver` | MonoBehaviour gọi `Clock.Tick(Time.deltaTime)` mỗi frame |
 | `CalendarDate`, `StepInfo` | Giá trị chỉ đọc, do `GameClock` tạo và truyền qua event |
-| `CalendarSnapshot` | Dữ liệu save, struct `[Serializable]` |
+| `CalendarSnapshot` | Snapshot của state để save, struct `[Serializable]` |
 
 Không có singleton, không có state static.
 
