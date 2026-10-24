@@ -182,9 +182,9 @@ Ngoài `GameClock`, các kiểu giá trị có thêm:
 
 | Lệnh | Quy tắc |
 |---|---|
-| Chung | "Báo lỗi" = ném `ArgumentException` (hoặc lớp con) khi gọi trực tiếp. Mọi mốc thời gian không phải bội của N đều báo lỗi. Đồng hồ chạm giới hạn (bên dưới) thì ném `InvalidOperationException`, state giữ nguyên |
+| Chung | "Báo lỗi" = ném `ArgumentException` (hoặc lớp con) khi gọi trực tiếp. Mọi mốc thời gian không phải bội của N đều báo lỗi. Đồng hồ chạm giới hạn (bên dưới) thì ném `InvalidOperationException`, state không vượt qua giới hạn |
 | `Tick(d)` | `d < 0`, NaN hoặc vô hạn báo lỗi. Step kế tiếp vượt `MaxTotalMinutes` thì ném `InvalidOperationException` và bỏ thời gian đã tích lũy; đồng hồ đứng tại chỗ |
-| Sang năm | `Year` đang là `int.MaxValue` mà cần sang năm (khi `Tick` hoặc `SkipTo`) thì ném `InvalidOperationException`; state giữ nguyên như trước lệnh |
+| Sang năm | `Year` đang là `int.MaxValue` mà cần sang năm (khi `Tick` hoặc `SkipTo`) thì ném `InvalidOperationException`. `SkipTo`: state giữ nguyên như trước lệnh. `Tick`: đồng hồ đứng ở step cuối trước day boundary đó; các step đã chạy trong lần `Tick` này (và event của chúng) vẫn giữ, thời gian đã tích lũy bị bỏ |
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi; thông báo lỗi ghi rõ `MaxSpeed`. Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
 | `FastForward(s)`, `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞) báo lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ (kể cả khi gọi trong handler ở step chạm đích cũ). `t == Now` thì hoàn thành ngay và phát `Completed`; `t < Now` hoặc `t > MaxTotalMinutes` báo lỗi. Dừng đúng tại `t` |
 | `StopFastForward()` | Quay về base speed, không phát `Completed` |

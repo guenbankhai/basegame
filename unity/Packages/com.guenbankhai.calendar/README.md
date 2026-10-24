@@ -141,7 +141,7 @@ Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStar
 - Không gọi `Tick` trong handler (ném `InvalidOperationException`).
 - Một lượt chạy tối đa 1000 lệnh xếp hàng; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
 
-Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích, hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi. Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
+Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích, hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi; nó chỉ làm bỏ phần dư khi hủy một fast-forward (vì running speed đổi). Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
 
 ## Điều khiển
 
@@ -162,7 +162,7 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | `FastForward(s)`, `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed`: lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ. `t == Now`: hoàn thành ngay. `t < Now` hoặc `t > GameClock.MaxTotalMinutes`: lỗi |
 | `StopFastForward()` | Về base speed, không phát `Completed` |
 | `SkipTo(t)` | Hủy fast-forward đang chạy, kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `GameClock.MaxSkipDays` ngày: lỗi. Cần sang năm khi `Year` đã là `int.MaxValue`: ném `InvalidOperationException`, không đổi gì. Chạy được cả khi đang tạm dừng |
-| `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua |
+| `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua. Tạm dừng khi đang fast-forward thì fast-forward dừng theo; resume thì chạy tiếp |
 | `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai). `m` ngoài `[0, 1440)` hoặc không phải bội của step: lỗi. Kết quả vượt `GameClock.MaxTotalMinutes`: ném `InvalidOperationException` |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
 
@@ -178,7 +178,7 @@ Tốc độ vượt `MaxSpeed` bị từ chối chứ không bị kẹp, để l
 | Event | Chỉ `Skipped(from, to)` | Mọi event, kèm tốc độ hiện tại |
 | Dùng cho | Ngủ màn hình đen, chuyển cảnh, debug | Ngủ có hiệu ứng, ngồi hết giờ học, chờ tới giờ hẹn |
 
-Trong lúc skip, fixed-length season vẫn tự chuyển; cờ `AdvanceSeason()` đã bật thì áp ở day boundary đầu tiên; command-only season đứng yên. Muốn mọi event đúng từng phút thì dùng fast-forward.
+Trong lúc skip, fixed-length season vẫn tự chuyển; cờ `AdvanceSeason()` đã bật thì áp ở day boundary đầu tiên; command-only season đứng yên. Module nào ở `Skipped` quét `(from, to]` rồi gọi `AdvanceSeason()` thì mùa đổi ở day boundary **sau** `to`. Muốn mọi event đúng từng phút thì dùng fast-forward.
 
 ### Step chạm đích fast-forward
 
@@ -200,7 +200,7 @@ clock.Restore(data);
 ```
 
 - Snapshot gồm `TotalMinutes`, `Year`, `SeasonIndex`, `SeasonStartDay`, `SeasonAdvancePending`.
-- Không lưu tốc độ, pause source, trạng thái fast-forward. `Restore` giữ nguyên base speed và pause source hiện có, hủy fast-forward đang chạy.
+- Không lưu tốc độ, pause source, trạng thái fast-forward. `Restore` giữ nguyên base speed và pause source hiện có, hủy fast-forward đang chạy (không phát `Completed`), bỏ thời gian lẻ giữa hai step.
 - `Restore` ném `ArgumentException` nếu `TotalMinutes` âm, quá `GameClock.MaxTotalMinutes` hoặc không phải bội của step, `SeasonIndex` ngoài số mùa, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`. Snapshot bị từ chối không làm đổi gì.
 - Đổi `MinutesPerStep` hoặc `DayStartMinute` sau khi đã có save: save cũ có thể bị từ chối hoặc lệch giờ.
 
