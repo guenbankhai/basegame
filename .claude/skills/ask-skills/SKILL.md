@@ -20,10 +20,11 @@ There is no mandatory flow. Every step below is optional: take the one the situa
 
 ## Module stages (BaseGame)
 
-Stage reviews follow `docs/module-workflow.md` and only report; nothing is applied until you confirm.
+Stages follow `docs/module-workflow.md`. Every review, stage or not, classifies and passes findings by `docs/review.md`, runs independently of earlier rounds, and only reports; nothing is applied until you confirm.
 
-- **`/review-my-design <module> [since <ref>]`**: stage 1. Reviews the design doc against the design checklist; blocking items come as a grilling round. Use it instead of `/grill-me` to review a design; keep `/grill-with-docs` for shaping the design.
-- **`/review-my-module <module> <playground|release> [since <ref>]`**: stage 2 or 4. Runs `/review-my-code` with the stage's scope: playground checks only what would give a wrong answer to a design question; release runs all three axes plus the release checklist.
+- **`/review-my-design <module>`**: stage 1. Walks the design gates and core invariants, lists Thu gọn; decisions you must make come as numbered questions. Use it instead of `/grill-me` to review a design; keep `/grill-with-docs` for shaping the design.
+- **`/review-my-module <module> <playground|release>`**: stage 2 or 3. Runs `/review-my-code` with the stage's gates: playground checks only what would give a wrong answer to a design question; release runs all three axes plus the release gates.
+- **`/review-my-code`** on any later change (including a released module) uses the section "Review code ngoài giai đoạn" of `docs/review.md`.
 
 ## On-ramps
 

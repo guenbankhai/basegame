@@ -57,6 +57,10 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
+### 3b. Identify the project's review rules
+
+If the repo documents how reviews classify and pass findings (for BaseGame: `docs/review.md`, section "Luật chung" plus the section that matches the target), those rules decide severity, which scenarios count, extra report sections (such as a simplification list), and the pass verdict. Paste them into every axis brief in step 4. They override the defaults in this skill wherever the two differ.
+
 ### 4. Spawn the axis sub-agents in parallel
 
 Issue the sub-agent calls together, in the foreground, and aggregate the reports they return. Each prompt includes the diff command and commit list, the axis brief below, and that axis's sources: the spec for Scope; the standards files from step 3 **plus the smell baseline pasted in full** for Standards (the sub-agent has no other access to it). Skip the Scope sub-agent when there is no spec.
@@ -71,7 +75,7 @@ Every brief also carries: "Read surrounding code where a hunk's correctness depe
 
 ### 5. Report
 
-Present the findings under `## Correctness`, `## Scope`, and `## Standards` headings. Do **not** merge or rerank findings across axes, because the axes are deliberately separate.
+Present the findings under `## Correctness`, `## Scope`, and `## Standards` headings. Do **not** merge or rerank findings across axes, because the axes are deliberately separate. When step 3b found project review rules, tag each finding with their severity, drop what they say to drop, and add the sections and verdict they require.
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
 

@@ -11,14 +11,21 @@
 
 ## API của module
 
-Áp dụng cho Packages; Playground nên theo để code chuyển sang package dễ hơn. Mỗi module ghi lại các quy tắc này trong bảng trường hợp biên.
+Áp dụng cho Packages; Playground nên theo để code chuyển sang package dễ hơn. Đây là mặc định của mọi module: tài liệu module không viết lại, chỉ ghi chỗ làm khác và lý do.
 
+- **Kiểm tra ở biên:** kiểm tra đầy đủ đầu vào từ bên ngoài: tham số của lệnh public, settings, snapshot. Bên trong lõi không thêm code cho trường hợp chỉ xảy ra khi tràn kiểu dữ liệu.
 - **Lỗi:** đầu vào sai (null, NaN, vô hạn, ngoài khoảng, ID không có, ID trùng) ném `ArgumentException` hoặc lớp con. Lệnh không hợp với trạng thái hiện tại (gọi trong handler bị cấm, chạm giới hạn của lõi) ném `InvalidOperationException`. Lệnh bị từ chối không làm đổi state.
 - **Giá trị ngoài khoảng:** báo lỗi, không âm thầm kẹp lại. Chỉ kẹp khi kẹp chính là luật của mô hình (giá trị hiện tại của Resource, min/max của Stat).
+- **Giới hạn:** giới hạn mà game thật có thể chạm tới (độ dài skip, số stack) nằm trong settings, có giá trị mặc định, để mỗi game tự đặt. Hằng số chỉ dùng cho giới hạn chống treo khi code bên ngoài có lỗi (handler gọi lệnh lặp vô tận). Lỗi do vượt giới hạn ghi giới hạn đó trong thông báo; giới hạn đọc được qua property.
+- **Giả định quy mô:** thiết kế dựa vào quy mô (duyệt tuyến tính, cấp phát theo số phần tử) thì tài liệu module ghi giả định đó.
 - **Event:** cập nhật xong toàn bộ state rồi mới phát. Lõi gọi từng handler trong `try/catch`, lỗi thì `Debug.LogException` rồi gọi tiếp handler còn lại.
 - **Source** (thứ giữ chỗ hay đóng góp vào state, như pause source, source của modifier): kiểu `object`, so sánh theo reference, `null` báo lỗi. Thêm trùng thì không làm gì, gỡ thứ không có cũng không làm gì; trả `bool` nếu nơi gọi cần biết.
 - **Restore:** kiểm tra toàn bộ snapshot trước, bị từ chối thì không đổi gì. Không phát lại event của từng thay đổi, chỉ phát một `Restored` ở cuối. Ngoại lệ: phần state mà code bên ngoài phải phản ứng để dựng lại state phụ thuộc trước khi restore tiếp (derived stat của Stats) thì vẫn phát event; ghi lý do trong tài liệu module.
 - **Dữ liệu save lệch settings:** dữ liệu hỏng (NaN, âm, trùng) thì từ chối cả snapshot. Dữ liệu chỉ lệch với settings hiện tại (đã chỉnh cân bằng game, ID đã bị xóa) thì sửa cho khớp hoặc bỏ entry đó và báo lại, để chỉnh settings không làm hỏng việc load.
+
+### Bảng trường hợp biên
+
+Tài liệu module có một bảng, mỗi lệnh public một dòng. Mỗi dòng chỉ ghi điều riêng của lệnh: giá trị trả về, gọi lại hay gọi khi đã ở trạng thái đích, chỗ làm khác mặc định ở trên. Lệnh không có gì riêng thì ghi "Mặc định". Luật chung cho cả module (gọi trong handler, constructor) có dòng riêng.
 
 ## File
 

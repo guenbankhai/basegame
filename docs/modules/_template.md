@@ -30,7 +30,7 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 
 ## Mô hình
 
-<State, giá trị tính ra, quy tắc.>
+<State, giá trị tính ra, quy tắc. Giả định quy mô nếu thiết kế dựa vào nó.>
 
 ## Event
 
@@ -42,10 +42,12 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 <API public>
 ```
 
+Mặc định theo mục "API của module" trong `coding-standard.md`; bảng chỉ ghi điều riêng của từng lệnh.
+
 | Lệnh | Quy tắc |
 |---|---|
-| Chung | <loại exception, ràng buộc chung> |
-| <…> | <đầu vào sai, gọi lại, gọi trong handler, giới hạn> |
+| Chung | <gọi trong handler; chỗ làm khác mặc định và lý do> |
+| <…> | <giá trị trả về, gọi lại, trạng thái đích, giới hạn; hoặc "Mặc định"> |
 
 ### Settings
 
@@ -59,7 +61,7 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 
 ## Quy ước cho module dùng <Module>
 
-<…>
+<Chỉ điều mà API bắt buộc nơi dùng phải làm. Câu hỏi thuộc module chưa thiết kế ghi vào `roadmap.md`.>
 
 ## Kiểm thử
 
@@ -68,3 +70,10 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 | <…> | <…> |
 
 Thử bằng tay: playground `Assets/Playground/<Experiment>/`, scene `Assets/Scenes/<Experiment>.unity`.
+
+## Kế hoạch (tạm)
+
+Giai đoạn: **<Thiết kế | Playground | Package>**. Xóa mục này khi phát hành.
+
+- Câu hỏi cho playground: <câu hỏi chơi thử mới trả lời được, hoặc "Không cần">
+- <Nên sửa đã duyệt, việc còn lại>

@@ -40,7 +40,7 @@ Game **life-sim chủ đề trường học**, không gói gọn trong trường
 ## 3. Nguyên tắc phát triển
 
 - Mỗi cơ chế là một **module độc lập, dùng lại được**; luật riêng của game nằm ngoài module.
-- Quy trình mỗi module: **thiết kế → playground → package → playground dùng package → ổn định**. Chi tiết và kinh nghiệm: [`module-workflow.md`](module-workflow.md).
+- Quy trình mỗi module: **thiết kế → playground → package → phát hành → ổn định**. Chi tiết: [`module-workflow.md`](module-workflow.md); luật review: [`review.md`](review.md).
 - Làm **từng module một**. Câu hỏi thuộc module sau thì để tới lúc làm mới quyết.
 - Unity-first: dùng Input System, Cinemachine, NavMesh, ScriptableObject… trước khi tự xây.
 
