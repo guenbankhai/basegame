@@ -1,6 +1,6 @@
 # Stats: ID của definition là tên asset
 
-`StatDefinition`, `ResourceDefinition` và `EffectDefinition` lấy ID từ tên asset, để chỉ có một nguồn sự thật và tên asset không bao giờ lệch với ID. Đổi lại, đổi tên asset là đổi ID: save cũ mất các entry đó (bị bỏ qua khi restore), và việc giữ save qua các phiên bản là việc của module Save.
+`StatDefinition`, `ResourceDefinition`, `EffectDefinition` và `EffectGroupDefinition` lấy ID từ tên asset, để chỉ có một nguồn sự thật và tên asset không bao giờ lệch với ID. Đổi lại, đổi tên asset là đổi ID: save cũ mất các entry đó (bị bỏ qua khi restore), và việc giữ save qua các phiên bản là việc của module Save. ID của group không được save, nên đổi tên group không ảnh hưởng save.
 
 ## Considered Options
 

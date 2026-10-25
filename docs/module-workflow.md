@@ -113,6 +113,7 @@ Mỗi dòng là một bài học từ module trước. Ghi chú in nghiêng là 
 - [ ] Đầu vào sai: null, NaN, vô hạn, âm, ngoài khoảng, ID không có, ID trùng.
 - [ ] Gọi lại, gọi khi đã ở trạng thái đích.
 - [ ] Gọi trong handler: được phép, xếp hàng hay bị cấm; riêng `Restore` và lệnh "chạy thời gian".
+- [ ] Constructor của lõi và dữ liệu vắng mặt trong snapshot, mỗi thứ một dòng. _Stats: resource thêm sau khi có save giữ giá trị của ván đang chơi khi load._
 - [ ] Giới hạn trên của mọi vòng lặp và cấp phát phụ thuộc đầu vào (độ dài skip, số lệnh, số stack).
 - [ ] Đối chiếu từng mục "API của module" trong `coding-standard.md`: lỗi, kẹp, event, source, restore, save lệch settings. Làm khác module trước thì ghi lý do.
 
@@ -132,6 +133,8 @@ Mỗi dòng là một bài học từ module trước. Ghi chú in nghiêng là 
 **Chạy tay**
 - [ ] Chạy từng bước mọi ví dụ trong tài liệu, nhất là trong mục "Quy ước cho module dùng …": ghi state, event và clamp sau mỗi bước. _Đây là cách bắt lỗi tương tác giữa hai quy tắc mà mỗi quy tắc riêng lẻ đều đúng._
 - [ ] Chạy thường và skip/restore ra cùng kết quả, kể cả khi ghép với module có liên quan. _Stats: effect hết hạn giữa lần skip làm lệch Needs._
+- [ ] Chạy thường đi qua cùng vòng chia đoạn với skip; mốc không rơi vào step thì chạy thường cũng cắt tại đó. _Stats: Ốm 45 phút với step 10 làm Needs tính ×2 suốt 50 phút._
+- [ ] Effect hay trạng thái sinh ra giữa một khoảng thời gian chỉ chịu phần thời gian sau lúc nó sinh ra. _Stats: Ốm áp khi đói cạn giữa lần skip bị trừ cả khoảng._
 
 **Test**
 - [ ] Mỗi quy tắc ít nhất một test; mỗi dòng bảng trường hợp biên có test.

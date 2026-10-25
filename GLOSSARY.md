@@ -18,6 +18,14 @@ _Avoid_: prototype, demo
 Bản ghép nhiều module thật trong Integration để kiểm tra chúng chạy cùng nhau.
 _Avoid_: test scene, sample
 
+**Snapshot**:
+Trạng thái của một module vừa đủ để lưu và restore.
+_Avoid_: save data
+
+**Restore**:
+Nạp lại trạng thái đã lưu của một module; thời gian trong thế giới không trôi.
+_Avoid_: load
+
 ### Calendar
 
 **Step**:
@@ -50,10 +58,6 @@ _Avoid_: jump, warp
 Thời gian trôi nhanh hơn qua nhiều frame nhưng vẫn đi qua từng step.
 _Avoid_: speed-up, time skip
 
-**Restore**:
-Nạp lại trạng thái lịch đã lưu; thời gian trong thế giới không trôi.
-_Avoid_: load
-
 **Base speed**:
 Tốc độ thời gian khi không fast-forward.
 
@@ -64,10 +68,6 @@ _Avoid_: current speed
 **Pause source**:
 Thứ đang giữ đồng hồ dừng; đồng hồ chỉ chạy khi không còn pause source nào.
 _Avoid_: pause reason
-
-**Snapshot**:
-Trạng thái lịch vừa đủ để lưu và restore.
-_Avoid_: save data
 
 **Accumulating module**:
 Module có giá trị thay đổi dần theo thời gian trôi, như đói hay cây lớn.
@@ -87,6 +87,10 @@ _Avoid_: attribute, characteristic
 **Base value**:
 Giá trị gốc của một stat trước khi áp modifier.
 _Avoid_: raw value, initial value
+
+**Derived stat**:
+Stat có giá trị phụ thuộc vào stat khác, như máu tối đa tăng theo thể lực.
+_Avoid_: computed stat, secondary stat
 
 **Modifier**:
 Một thay đổi gắn vào stat, mang source của nó; gỡ modifier thì stat trở về như cũ.

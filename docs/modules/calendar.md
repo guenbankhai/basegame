@@ -225,7 +225,7 @@ Settings chỉ là cấu hình ban đầu. Thay đổi lúc đang chạy (kể c
 
 Để chạy thường và skip luôn ra cùng một kết quả:
 
-- **Accumulating module** (Needs, Effects của Stats, Crafting, cây lớn): viết logic mô phỏng một lần thành `Advance(deltaMinutes)`, gọi từ cả `Stepped` lẫn `Skipped`. Tự xử lý đúng các ngưỡng xảy ra giữa khoảng thời gian (hết đói lúc 3h thì bị ốm từ 3h).
+- **Accumulating module** (Needs, Effects của Stats, Crafting, cây lớn): viết logic mô phỏng một lần thành `Advance(deltaMinutes)`, gọi từ cả `Stepped` lẫn `Skipped`. Tự xử lý đúng các ngưỡng xảy ra giữa khoảng thời gian (hết đói lúc 3h thì bị ốm từ 3h). Module đọc tham số mà Effects đổi (Needs) không được gọi riêng lẻ: scenario gọi chung qua một hàm `Simulate` chia đoạn theo mục "Quy ước cho module dùng Stats" trong `stats.md`.
 - **Milestone module** (Opportunities, lớp học): ở `Skipped`, tự quét khoảng `(from, to]` để không sót mốc.
 - **State-based module** (NPC Routines, cửa hàng mở hay đóng): trạng thái là hàm của thời gian, `f(lịch, thời điểm)`. Tính lại ở `Skipped` và `Restored`; khi tốc độ cao thì đặt vị trí theo thời gian thay vì đi bộ bằng NavMesh. Chi tiết quyết khi làm Schedule và NPC Routines.
 
