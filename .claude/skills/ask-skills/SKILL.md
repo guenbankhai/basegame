@@ -18,6 +18,13 @@ There is no mandatory flow. Every step below is optional: take the one the situa
 2. **Build it** with **`/implement`**, in the same context window as the thinking that produced it. It drives **`/tdd`** (one red-green slice at a time) where tests fit. Reach for **`/tdd`** on its own when you want to build one concrete behaviour test-first.
 3. **Review it** with **`/review-my-code`** when you want a review: correctness, scope against what was asked, and the project's standards, reported per axis. It reports; it fixes only what you then pick.
 
+## Module stages (BaseGame)
+
+Stage reviews follow `docs/module-workflow.md` and only report; nothing is applied until you confirm.
+
+- **`/review-my-design <module> [since <ref>]`**: stage 1. Reviews the design doc against the design checklist; blocking items come as a grilling round. Use it instead of `/grill-me` to review a design; keep `/grill-with-docs` for shaping the design.
+- **`/review-my-module <module> <playground|release> [since <ref>]`**: stage 2 or 4. Runs `/review-my-code` with the stage's scope: playground checks only what would give a wrong answer to a design question; release runs all three axes plus the release checklist.
+
 ## On-ramps
 
 - **Something's broken** → **`/diagnosing-bugs`**. For the hard ones: the bug that resists a first glance, the intermittent flake, the regression between two known-good states. It refuses to theorise until it has a **tight feedback loop** (one command that already goes red on *this* bug), then fixes with a regression test when you asked for a fix. Where the finding is that there's no good seam to lock the bug down, take that to **`/codebase-design`**.

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Review My Module"
+  short_description: "Review a module at the playground or release stage"
+policy:
+  allow_implicit_invocation: false

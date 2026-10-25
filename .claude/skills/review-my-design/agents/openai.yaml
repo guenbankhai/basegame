@@ -1,0 +1,5 @@
+interface:
+  display_name: "Review My Design"
+  short_description: "Review a module design doc against the stage checklist"
+policy:
+  allow_implicit_invocation: false

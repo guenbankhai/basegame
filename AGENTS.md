@@ -57,7 +57,7 @@ Read only when the task needs it:
 
 - `docs/structure.md`: creating or changing an experiment, scenario, package, or asmdef; naming and dependencies.
 - `docs/coding-standard.md`: before writing or reviewing C#.
-- `docs/module-workflow.md`: starting, advancing, or finishing a module stage; deciding where module docs and decisions go.
+- `docs/module-workflow.md`: starting, advancing, finishing, or reviewing a module stage; deciding where module docs and decisions go.
 
 ### Planning & Verification
 
@@ -65,3 +65,4 @@ Read only when the task needs it:
 - Code handed over must compile and follow these rules. Check compilation with `dotnet build` on the Unity-generated `.csproj`; files Unity has not yet added to it are unchecked, so say so.
 - Verify easy logic yourself; leave Unity runtime behaviour to the user. Do not run the Unity Editor or batchmode.
 - Report what the user still needs to check, with concrete steps.
+- Review module stages by `docs/module-workflow.md` (checklist, severity, pass criteria). A review only reports; apply nothing until the user confirms.
