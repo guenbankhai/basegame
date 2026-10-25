@@ -7,6 +7,18 @@
 - Theo quy ước C# của Microsoft: `PascalCase` cho type, method, property, event và public field; `camelCase` cho biến cục bộ và tham số.
 - Private field: `_camelCase` (Inspector của Unity vẫn hiện `_moveSpeed` thành "Move Speed").
 - Hằng số và field `static readonly`: `PascalCase`.
+- Không đặt type hay namespace trùng tên type hay dùng của `System` và `UnityEngine` (`Time`, `Attribute`, `Object`, `Random`, `Debug`…). Namespace `GuenBanKhai.Time` làm mọi `Time.deltaTime` trong `GuenBanKhai.*` trỏ sai; class `Attribute` làm file có `using System;` lỗi CS0104.
+
+## API của module
+
+Áp dụng cho Packages; Playground nên theo để code chuyển sang package dễ hơn. Mỗi module ghi lại các quy tắc này trong bảng trường hợp biên.
+
+- **Lỗi:** đầu vào sai (null, NaN, vô hạn, ngoài khoảng, ID không có, ID trùng) ném `ArgumentException` hoặc lớp con. Lệnh không hợp với trạng thái hiện tại (gọi trong handler bị cấm, chạm giới hạn của lõi) ném `InvalidOperationException`. Lệnh bị từ chối không làm đổi state.
+- **Giá trị ngoài khoảng:** báo lỗi, không âm thầm kẹp lại. Chỉ kẹp khi kẹp chính là luật của mô hình (giá trị hiện tại của Resource, min/max của Stat).
+- **Event:** cập nhật xong toàn bộ state rồi mới phát. Lõi gọi từng handler trong `try/catch`, lỗi thì `Debug.LogException` rồi gọi tiếp handler còn lại.
+- **Source** (thứ giữ chỗ hay đóng góp vào state, như pause source, source của modifier): kiểu `object`, so sánh theo reference, `null` báo lỗi. Thêm trùng thì không làm gì, gỡ thứ không có cũng không làm gì; trả `bool` nếu nơi gọi cần biết.
+- **Restore:** kiểm tra toàn bộ snapshot trước, bị từ chối thì không đổi gì. Không phát lại event của từng thay đổi, chỉ phát một `Restored` ở cuối. Ngoại lệ: phần state mà code bên ngoài phải phản ứng để dựng lại state phụ thuộc trước khi restore tiếp (derived stat của Stats) thì vẫn phát event; ghi lý do trong tài liệu module.
+- **Dữ liệu save lệch settings:** dữ liệu hỏng (NaN, âm, trùng) thì từ chối cả snapshot. Dữ liệu chỉ lệch với settings hiện tại (đã chỉnh cân bằng game, ID đã bị xóa) thì sửa cho khớp hoặc bỏ entry đó và báo lại, để chỉnh settings không làm hỏng việc load.
 
 ## File
 

@@ -65,5 +65,6 @@ Danh sách các module của BaseGame, để xem nhanh hiện có gì và trạn
 | Module | Mô tả | Trạng thái | Phiên bản |
 |---|---|---|---|
 | Calendar (`com.guenbankhai.calendar`) | Đồng hồ và lịch theo step: giờ, ngày, tuần, mùa, năm; tốc độ, tạm dừng, skip, fast-forward; event; snapshot để save | Đang phát triển | 0.1.1 |
+| Stats (`com.guenbankhai.stats`) | Stat có modifier ba tầng, Resource bị chặn bởi một Stat làm max, Effect có thời hạn và luật stack; snapshot để save | Thử nghiệm | — |
 
 **Trạng thái:** `Chưa bắt đầu` · `Thử nghiệm` (đang tìm hiểu, chưa có code chính thức) · `Đang phát triển` (API còn thay đổi) · `Ổn định` (đã dùng thực tế, đủ tin cậy).

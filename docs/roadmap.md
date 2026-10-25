@@ -53,7 +53,7 @@ Hầu hết module khác đều cần; làm trước.
 | Module | Làm gì | Câu hỏi nghiên cứu | Trạng thái |
 |---|---|---|---|
 | **Calendar** | Giờ, ngày, tuần, mùa, năm; tốc độ thời gian; tạm dừng; ngủ / skip / fast-forward; event khi sang giờ, ngày, tuần, mùa | Thiết kế: [`modules/calendar.md`](modules/calendar.md) | Đang phát triển |
-| **Stats** | Chỉ số và modifier (cộng, nhân %, có thời hạn) | Thứ tự áp modifier? Định nghĩa bằng ScriptableObject hay class thuần? | Chưa bắt đầu |
+| **Stats** | Stat (giá trị gốc + modifier), Resource (giá trị hiện tại bị chặn bởi một Stat làm max), Effect (gói modifier có thời hạn, luật stack) | Thiết kế: [`modules/stats.md`](modules/stats.md) | Thử nghiệm |
 | **Items** | Định nghĩa item, instance, stack, độ bền, thuộc tính | Tách dữ liệu tĩnh và trạng thái riêng từng món? ID ổn định | Chưa bắt đầu |
 | **Inventory** | Container ô slot + giới hạn khối lượng; dùng cho túi, rương, kho | Di chuyển, tách, gộp đồ; event khi thay đổi | Chưa bắt đầu |
 | **Interaction** | Phát hiện vật gần, gợi ý, thực hiện (nhặt, mở, nói chuyện, dùng) | Trigger hay overlap? Ưu tiên khi nhiều vật gần nhau | Chưa bắt đầu |
@@ -66,14 +66,13 @@ Hầu hết module khác đều cần; làm trước.
 |---|---|---|
 | **Character Movement** | Di chuyển top-down, xoay theo chuột, chạy nhanh | Chưa bắt đầu |
 | **Camera Rig** | Camera top-down/isometric trên Cinemachine | Chưa bắt đầu |
-| **Health & Damage** | Nhận sát thương, chấn thương, ngất | Chưa bắt đầu |
+| **Health & Damage** | Nhận sát thương, chấn thương, ngất; máu là Resource của Stats | Chưa bắt đầu |
 
 ### C. Sinh tồn và kinh tế
 
 | Module | Làm gì | Trạng thái |
 |---|---|---|
-| **Status Effects** | Buff/debuff theo thời gian (ốm, mệt, no…) | Chưa bắt đầu |
-| **Needs & Condition** | Đói, khát, mệt, tâm trạng; giảm theo thời gian | Chưa bắt đầu |
+| **Needs & Condition** | Đói, khát, mệt, tâm trạng; giảm theo thời gian. Mỗi nhu cầu là một Resource của Stats; ốm, no là Effect | Chưa bắt đầu |
 | **Economy** | Tiền, mua bán, cửa hàng | Chưa bắt đầu |
 | **Crafting** | Công thức, nguyên liệu, trạm chế tạo, thời gian chế tạo | Chưa bắt đầu |
 

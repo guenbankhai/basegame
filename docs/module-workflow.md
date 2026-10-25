@@ -66,9 +66,11 @@ Format, tiêu chí và cách cập nhật `GLOSSARY.md` và ADR theo skill `doma
 
 ## Kinh nghiệm
 
-Rút ra từ Calendar.
+Rút ra từ Calendar và giai đoạn thiết kế Stats.
 
 **Thiết kế**
+- Gặp lại vấn đề mà module trước đã giải (lỗi đầu vào, lệnh trong handler, restore, source) thì làm như module trước; làm khác thì ghi lý do trong tài liệu module. Grill thường bỏ sót các quy tắc chung này, nên khi lập bảng trường hợp biên phải rà mục "API của module" trong `coding-standard.md`.
+- Tên lõi của module cần kiểm tra trùng với type của `System` và `UnityEngine` trước khi chốt (Calendar: `Time`; Stats: `Attribute`).
 - Chốt trường hợp biên trong spec trước khi viết code. Lỗi ở Calendar đều nằm ở chỗ spec chưa nói: NaN và vô hạn, lệnh gọi từ handler đổi tốc độ, đầu vào quá lớn (skip hàng triệu ngày).
 - Spec và code phải nói cùng một điều. Khi đổi một quy tắc, sửa spec, code và test trong cùng một lần.
 - Viết rõ thứ tự khi nhiều việc xảy ra cùng lúc (event cùng phút, lệnh xếp hàng so với event cuối). Đây là chỗ dễ hiểu sai nhất.
@@ -76,7 +78,11 @@ Rút ra từ Calendar.
 **Kiến trúc**
 - Lõi là C# thuần, nhận settings C# thuần. ScriptableObject chỉ bọc settings cho Inspector và trả bản copy (sửa ScriptableObject lúc Play bị giữ lại sau khi Stop); MonoBehaviour chỉ là driver mỏng. Test không cần asset hay scene.
 - Settings là cấu hình ban đầu; thay đổi lúc chạy đi qua lệnh của lõi, thêm lệnh khi có nhu cầu thật thay vì một hàm "update settings" chung.
-- Gom state cần save vào một struct duy nhất, dùng luôn làm state sống: save và load không thể lệch nhau.
+- Gom state cần save vào một struct duy nhất, dùng luôn làm state sống: save và load không thể lệch nhau. Khi state sống còn gồm thứ không lưu (modifier của Stats) hoặc snapshot phải chứa mảng thì dùng class, và `CaptureSnapshot()` luôn trả object, mảng mới.
+- ID của dữ liệu authoring (ScriptableObject) là tên asset: chỉ một nguồn sự thật, đổi tên là đổi ID. Đặt tên PascalCase, không tiền tố loại. Save gặp ID không còn thì bỏ qua entry đó và báo lại; nâng phiên bản save là việc của module Save, không phải từng module.
+- Nhiều module cùng góp vào một giá trị (modifier từ đồ, effect) thì thứ tự restore giữa chúng là một phần của thiết kế, ghi trong mục "Quy ước cho module dùng …". Thử quy ước đó với một nguồn **phụ thuộc vào chính dữ liệu được restore** (Stats: derived stat phụ thuộc base): nguồn kiểu này không thể restore trước, nên Stats suýt mất máu khi load.
+- Cấu hình dùng chung cho nhiều item (policy của effect group) thì khai một chỗ, trên asset riêng được kéo thả, thay vì lặp trên từng item rồi kiểm tra cho khớp: không gõ sai được, và bỏ được cả một loại lỗi.
+- Bộ đếm chống vòng lặp phải phủ mọi đường event. Hai lớp có event riêng mà gọi lẫn nhau được (Stats và Effects) thì dùng chung một bộ đếm.
 - Không singleton, không state static (domain reload đang tắt).
 - Cho lõi trả thông tin mà UI cần (tên, số lượng), để UI không phải đọc config.
 - MonoBehaviour lấy component cùng GameObject bằng `GetComponent` trong `Awake` và `[RequireComponent]`, để giảm kéo thả trong Editor.
