@@ -66,13 +66,13 @@ Hầu hết module khác đều cần; làm trước.
 |---|---|---|
 | **Character Movement** | Di chuyển top-down, xoay theo chuột, chạy nhanh | Chưa bắt đầu |
 | **Camera Rig** | Camera top-down/isometric trên Cinemachine | Chưa bắt đầu |
-| **Health & Damage** | Nhận sát thương, chấn thương, ngất; máu là Resource của Stats | Chưa bắt đầu |
+| **Health & Damage** | Nhận sát thương, chấn thương, ngất; máu là Resource của Stats. Câu hỏi: nhận tín hiệu bắt đầu restore (để bỏ qua event lúc load) từ module Save hay từ Stats? | Chưa bắt đầu |
 
 ### C. Sinh tồn và kinh tế
 
 | Module | Làm gì | Trạng thái |
 |---|---|---|
-| **Needs & Condition** | Đói, khát, mệt, tâm trạng; giảm theo thời gian. Mỗi nhu cầu là một Resource của Stats; ốm, no là Effect | Chưa bắt đầu |
+| **Needs & Condition** | Đói, khát, mệt, tâm trạng; giảm theo thời gian. Mỗi nhu cầu là một Resource của Stats; ốm, no là Effect. Câu hỏi: nhận tín hiệu bắt đầu restore (để bỏ qua event lúc load) từ module Save hay từ Stats? | Chưa bắt đầu |
 | **Economy** | Tiền, mua bán, cửa hàng | Chưa bắt đầu |
 | **Crafting** | Công thức, nguyên liệu, trạm chế tạo, thời gian chế tạo | Chưa bắt đầu |
 
@@ -99,7 +99,7 @@ Làm sau phần life-sim cốt lõi.
 | **Melee Combat** | Đánh cận chiến mức nhẹ | Chưa bắt đầu |
 | **NPC AI** | NPC nhận biết (nhìn, nghe) và phản ứng | Chưa bắt đầu |
 | **Loot** | Bảng loot có trọng số, độ hiếm | Chưa bắt đầu |
-| **Equipment** | Ô trang bị | Chưa bắt đầu |
+| **Equipment** | Ô trang bị. Câu hỏi: đồ vừa tăng stat nguồn vừa tăng stat làm max (bị cấm theo giới hạn derived stat của Stats) có cần đưa derived stat vào lõi Stats? | Chưa bắt đầu |
 
 ### G. Để sau
 

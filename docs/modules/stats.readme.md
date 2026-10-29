@@ -209,7 +209,7 @@ Các type khác (constructor và setter public, để code và test dựng khôn
 
 **Gọi lệnh trong handler:**
 - Được phép, chạy lồng ngay (không xếp hàng), để handler derived stat đọc ngay giá trị mới. Handler derived stat ở bước `Stat.ValueChanged` chạy lồng ngay, nên handler của effect thấy giá trị đã cập nhật.
-- Event còn chờ (Stat, Resource) của giá trị mà handler lồng đã đổi tiếp thì bỏ qua; event lồng mang giá trị mới nhất, và `old` là giá trị listener nhận gần nhất (không phải giá trị tạm của event bị bỏ). Ví dụ ở mục Giới hạn của derived stat.
+- Event còn chờ (Stat, Resource) của giá trị mà handler lồng đã đổi tiếp thì bỏ qua; event lồng mang giá trị mới nhất, và `old` là giá trị listener nhận gần nhất (không phải giá trị tạm của event bị bỏ); sau khi gộp mà `old == new` thì không phát. Ví dụ ở mục Giới hạn của derived stat.
 - `StatCollection` đếm độ sâu event lồng, `EffectCollection` dùng chung bộ đếm đó. Lệnh đổi state ở độ sâu `MaxEventDepth` ném `InvalidOperationException`, không đổi gì; handler bên ngoài bắt và log, chuỗi dừng ở đó.
 - `Advance` trong handler của Stats hay Effects (cùng bộ đếm độ sâu): ném `InvalidOperationException`. Ví dụ: effect hết hạn làm `Stat.ValueChanged`, handler gọi `Advance` lần nữa trong khi `Removed`/`Resumed` của lần ngoài chưa phát.
 - `Restore` (cả hai collection) trong handler của Stats hay Effects: ném `InvalidOperationException`, vì restore thay toàn bộ state trong khi event bên ngoài vẫn đang phát. Muốn restore từ handler thì hoãn sang frame sau.
@@ -235,7 +235,7 @@ Các type khác (constructor và setter public, để code và test dựng khôn
 | `Apply(s)` | Modifier trỏ stat lạ: lỗi, không áp phần nào. Group cùng `Id` khác `Policy` với effect đang có (chỉ xảy ra khi dựng bằng code): lỗi. Đang chạy: theo `StackRule`, settings mới khác nội dung bị bỏ qua. Thua trong group `Replace`: trả `null` |
 | `Remove(id)` | Gỡ, phát `Removed(…, Removed)`, trả `true`; effect kế tiếp trong group `Suppress` có tác dụng lại. Không có thì trả `false` |
 | `Has(id)`, `TryGet(id, out e)` | Không có thì `false` |
-| `Advance(d)` | `d < 0`: lỗi; `d == 0` không làm gì. Gọi trong handler: `InvalidOperationException` |
+| `Advance(d)` | `d < 0`: lỗi; `d == 0` không làm gì. Gọi trong handler của Stats hay Effects: `InvalidOperationException` |
 | `Restore` (cả hai) | Theo mục Save |
 
 ### Stat
@@ -328,9 +328,7 @@ Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn b
 1. Nguồn modifier: `EffectCollection.Restore`, trang bị…
 2. `StatCollection.Restore` sau cùng.
 
-Ở bước 1, modifier đổi làm Resource clamp và phát event với giá trị tạm (hiếm hơn: `Depleted` khi max ≤ min); bước 2 đặt lại current. Module phản ứng nhạy với event của Resource (ngất khi máu cạn) thì bỏ qua các event này cho tới khi nhận `StatCollection.Restored`.
-
-Trong `Restore` (cả hai collection), `Stat.ValueChanged` chỉ dành cho việc dựng lại derived stat; luật game khác (áp effect, đổi resource khi stat qua ngưỡng) bỏ qua event cho tới khi nhận `StatCollection.Restored`. Không thì effect đã có trong save bị áp lại: Poison −6 Vitality đưa Vitality 10 → 4, handler "dưới 5 thì áp Weak" làm Weak còn 3 bị `Refresh` lên 10.
+Trong lúc restore, event của Stat chỉ dùng để dựng lại derived stat; event của Resource mang giá trị tạm (ở bước 1, modifier đổi làm Resource clamp, hiếm hơn là `Depleted` khi max ≤ min; bước 2 đặt lại current). Luật game (ngất khi máu cạn, áp effect khi stat qua ngưỡng) bỏ qua cả hai cho tới khi nhận `StatCollection.Restored`. Không thì effect đã có trong save bị áp lại: Poison −6 Vitality đưa Vitality 10 → 4, handler "dưới 5 thì áp Weak" làm Weak còn 3 bị `Refresh` lên 10.
 
 ## Viết module dùng Stats
 
@@ -347,7 +345,7 @@ Trong `Restore` (cả hai collection), `Stat.ValueChanged` chỉ dành cho việ
   - Chạy thường, Ốm áp lúc 0: bước 40→50 bị cắt thành 5 + 5, nên ×2 đúng 45 phút. Skip 0→60: đoạn 45 (×2), đoạn 15 (×1). Hai đường cùng tiêu 105 đói.
   - Còn 40 đói, ngủ skip 0→80, Ốm Duration 60: đoạn 40 (tới ngưỡng) → đói cạn, `Advance(40)`, rồi áp Ốm còn 60; đoạn 40 → Ốm còn 20 lúc thức dậy, giống chạy thường. Áp Ốm ngay trong handler `Depleted` thì `Advance(40)` của đoạn đầu trừ cả 40, và người chơi dậy không ốm.
 - **Derived stat:** nối bằng một modifier `Flat` có source riêng, đổi bằng `ReplaceModifier`. Vẫn đúng khi restore nhờ bước 1 của `StatCollection.Restore`. Vitality 20 → 21 với máu 140/150 → 140/155; gỡ rồi thêm sẽ clamp máu về 50 ở giữa.
-- **Giới hạn của derived stat:** handler derived chạy sau khi lệnh đã clamp Resource, nên batch của effect không phủ nó. Một lệnh vừa đổi stat nguồn vừa đổi stat làm max (effect +4 Vitality thay effect +20 `MaxHealth` trong group `Replace`) có thể clamp current theo max tạm (170/170 → 150/170), và stat làm max có thể phát `ValueChanged` hai lần. Listener vẫn nhận giá trị cuối nhờ luật bỏ event còn chờ: Vitality (đăng ký trước `MaxHealth`) base 20, giáp +4 Vitality và +10 `MaxHealth`, đang 180/180; tháo giáp → batch ra 170/170 (derived chưa cập nhật), handler Vitality lồng đưa về 150/150 và phát `MaxHealth(180,150)`, `Resource(180,150)`; event còn chờ `MaxHealth(180,170)`, `Resource(180,170)` bị bỏ. Không để một lệnh vừa đổi stat nguồn vừa đổi stat làm max của cùng resource: không đặt hai effect như vậy chung một group (`Replace` hay `Suppress`; với `Suppress`, effect +20 `MaxHealth` hết hạn và effect +4 Vitality có tác dụng lại cũng làm 170/170 → 150/170), và không đặt cả hai loại modifier trong một effect.
+- **Giới hạn của derived stat:** handler derived chạy sau khi lệnh đã clamp Resource, nên batch của effect không phủ nó. Một lệnh vừa đổi stat nguồn vừa đổi stat làm max (effect +4 Vitality thay effect +20 `MaxHealth` trong group `Replace`) có thể clamp current theo max tạm (170/170 → 150/170), và stat làm max có thể phát `ValueChanged` hai lần. Khi lỡ vi phạm luật ở cuối đoạn này, listener vẫn nhận giá trị cuối nhờ luật bỏ event còn chờ: Vitality (đăng ký trước `MaxHealth`) base 20, giáp +4 Vitality và +10 `MaxHealth`, đang 180/180; tháo giáp → batch ra 170/170 (derived chưa cập nhật), handler Vitality lồng đưa về 150/150 và phát `MaxHealth(180,150)`, `Resource(180,150)`; event còn chờ `MaxHealth(180,170)`, `Resource(180,170)` bị bỏ. Không để một lệnh vừa đổi stat nguồn vừa đổi stat làm max của cùng resource: không đặt hai effect như vậy chung một group (`Replace` hay `Suppress`; với `Suppress`, effect +20 `MaxHealth` hết hạn và effect +4 Vitality có tác dụng lại cũng làm 170/170 → 150/170), và không đặt cả hai loại modifier trong một effect.
 
 ```csharp
 // MaxHealth = 50 + Vitality * 5; other MaxHealth modifiers keep stacking normally

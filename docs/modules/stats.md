@@ -23,7 +23,7 @@ Không dùng tên `Attribute`: trùng `System.Attribute`, file có `using System
 - Cấp và XP: thuộc Skills.
 - Nối thời gian với Calendar: việc của scenario (xem Ghép với module khác).
 - Chưa có ở bản đầu, thêm khi có nhu cầu thật:
-  - Derived stat trong lõi: game tự nối bằng `ReplaceModifier`; đưa vào lõi khi giới hạn batch (xem Quyết định đi kèm) gặp trong game thật.
+  - Derived stat trong lõi: game tự nối bằng `ReplaceModifier`; đưa vào lõi khi giới hạn batch (README, mục Viết module dùng Stats) gặp trong game thật.
   - Override: ép về 0 đã làm được bằng `PercentMult` −1.
   - Resource giữ tỉ lệ khi max đổi: chưa module nào cần.
   - Effect tác động định kỳ hoặc có hook logic: thêm khi Needs hay Health cần.
