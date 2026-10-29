@@ -1,0 +1,14 @@
+{
+  "name": "com.guenbankhai.devtools",
+  "version": "0.1.0",
+  "displayName": "GuenBanKhai DevTools",
+  "description": "Editor tools for working on this repository: lets tools outside Unity run EditMode tests in the open Editor and read the results from files.",
+  "unity": "6000.6",
+  "unityRelease": "5f1",
+  "dependencies": {
+    "com.unity.test-framework": "1.8.0"
+  },
+  "author": {
+    "name": "GuenBanKhai"
+  }
+}

@@ -56,7 +56,7 @@ Mỗi review chạy trong một conversation mới, độc lập với các vòn
 - README đi theo package sang game khác, nên phải **tự đứng một mình**: không tham chiếu `docs/`, `GLOSSARY.md`, ADR hay bất kỳ file nào ngoài package. Tài liệu trong `docs/` được phép trỏ vào README, chiều ngược lại thì không.
 - Xóa code lõi của playground, dựng lại playground mỏng chỉ dùng package (overlay, đối tượng giả). Đây là chỗ thử bằng tay khi sửa package sau này.
 - Kiểm tra compile bằng `dotnet build` trên `.csproj` do Unity sinh. Nếu Unity chưa sinh csproj cho file mới, build bằng bản sao csproj trong thư mục tạm, chỉ thay danh sách file, và ghi rõ là đã kiểm tra theo cách này.
-- Chạy test EditMode trong Unity, rồi review bằng `/review-my-module <module> release`. Cập nhật trạng thái trong `roadmap.md`.
+- Chạy test EditMode (agent chạy qua `com.guenbankhai.devtools` khi Editor đang mở, hoặc user chạy trong Test Runner; kết quả ở `unity/Logs/TestResults/`), rồi review bằng `/review-my-module <module> release`. Cập nhật trạng thái trong `roadmap.md`.
 
 ### 4. Phát hành → Ổn định
 

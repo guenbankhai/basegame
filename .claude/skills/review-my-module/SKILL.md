@@ -36,7 +36,7 @@ Call the Skill tool for "review-my-code", then follow it with the overrides belo
 - Spec: the design doc plus the package `README.md`, which is the only home of the behaviour rules (API, rule table, Settings, events, save, conventions) once a package exists.
 - Standards sources: `AGENTS.md`, `docs/coding-standard.md`, `docs/structure.md`.
 - All three axes, plus the gates R1–R8.
-- Compilation: run `dotnet build` on the Unity-generated `.csproj` files (read-only check); say which files the `.csproj` does not yet include. EditMode test results come from the user running them in Unity; ask for them if not given, and report R1 as `Chưa kiểm được` until then.
+- Compilation: run `dotnet build` on the Unity-generated `.csproj` files (read-only check); say which files the `.csproj` does not yet include. EditMode test results come from `unity/Logs/TestResults/EditMode.xml`; if it is missing or older than the latest code change, run the tests through the devtools bridge (see `AGENTS.md`). If they cannot run, report R1 as `Chưa kiểm được`.
 
 ## Report
 

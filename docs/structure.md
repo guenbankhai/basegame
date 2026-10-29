@@ -32,7 +32,7 @@ Thư mục và package chỉ tạo khi cần.
 |---|---|
 | Playground | Experiment: thử, so sánh, viết lại hoặc xóa tự do (code ở đây; scene ở `Scenes/`, config ở `Configs/`) |
 | Integration | Scenario ghép nhiều module; chỉ dùng module thật |
-| Packages | Module: dùng lại được, phải đạt chuẩn chất lượng của project |
+| Packages | Module: dùng lại được, phải đạt chuẩn chất lượng của project. Riêng `com.guenbankhai.devtools` là công cụ Editor của repo, không phải module: không có tài liệu thiết kế, module không phụ thuộc vào nó |
 | validation/ | Chứng minh module cài và chạy được trong project sạch |
 
 ## Phụ thuộc

@@ -64,6 +64,7 @@ Read only when the task needs it:
 
 - Before adding files, types, or public API, propose where they go and what they expose, unless already agreed.
 - Code handed over must compile and follow these rules. Check compilation with `dotnet build` on the Unity-generated `.csproj`; files Unity has not yet added to it are unchecked, so say so.
-- Verify easy logic yourself; leave Unity runtime behaviour to the user. Do not run the Unity Editor or batchmode.
+- Verify easy logic yourself; leave Unity runtime behaviour to the user. Do not launch the Unity Editor or batchmode.
+- Run EditMode tests through the devtools test bridge in the Editor the user has open (protocol: `unity/Packages/com.guenbankhai.devtools/README.md`). If the Editor is closed or the run does not start, say so and ask the user to run the tests.
 - Report what the user still needs to check, with concrete steps.
 - Classify, report, and pass every review by `docs/review.md`; where a skill's own severity or report format differs, `docs/review.md` wins. A review only reports; apply nothing until the user confirms.

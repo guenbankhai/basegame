@@ -100,7 +100,7 @@ Báo cáo thêm: câu trả lời của từng câu hỏi; thay đổi đề xu�
 
 | # | Cổng |
 |---|---|
-| R1 | `dotnet build` trên `.csproj` do Unity sinh không lỗi; user báo test EditMode pass. Chưa có kết quả test thì `Chưa kiểm được`, chưa pass |
+| R1 | `dotnet build` trên `.csproj` do Unity sinh không lỗi; test EditMode pass theo `unity/Logs/TestResults/EditMode.xml` của lần chạy sau lần sửa code gần nhất (chạy qua devtools, hoặc user tự chạy). Chỉ đọc dòng `<test-run …>` và các test fail, theo README của devtools. Kết quả cũ hơn code thì chạy lại; không chạy được (Editor đóng) thì `Chưa kiểm được`, chưa pass |
 | R2 | API public trong code khớp khối API trong `README.md` của package; tài liệu thiết kế không còn giữ bản API riêng |
 | R3 | Code làm đúng từng câu của tài liệu thiết kế và của `README.md` của package |
 | R4 | Mỗi dòng bảng trường hợp biên và mỗi luật hành vi trong `README.md` của package có ít nhất một test, hoặc ghi "kiểm bằng tay" kèm bước kiểm (`coding-standard.md`). Dò độ phủ theo tên test; module có thời gian có test "hai đường cùng kết quả" cho B1 |
