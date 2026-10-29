@@ -68,7 +68,7 @@ Mọi giá trị khác (`Day`, `ClockMinute`, `DayOfWeek`, `DayInSeason`) tính 
 
 ## Ghép với module khác
 
-- Stats: module đọc tham số mà Effects đổi (Needs) không gọi `Advance` riêng lẻ ở `Stepped`/`Skipped`; scenario gọi chung qua một hàm `Simulate` chia đoạn theo mục "Quy ước cho module dùng Stats" trong `stats.md`.
+Không có.
 
 ## Kiểm thử
 

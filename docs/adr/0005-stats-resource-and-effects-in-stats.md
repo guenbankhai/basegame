@@ -6,4 +6,4 @@ Package Stats giữ cả Stat, Resource (giá trị hiện tại bị chặn b�
 
 - Chỉ có Stat: package nhỏ hơn, nhưng Health và Needs mỗi nơi tự viết giá trị hiện tại, clamp theo max và event chạm 0.
 - Mọi thứ đều là Stat, đổi stat chỉ qua effect (kiểu Unreal GAS): một khái niệm duy nhất, nhưng nặng, và mất cách dùng "chỉ con số có modifier".
-- Status Effects là package riêng phụ thuộc Stats: mỗi package nhỏ, nhưng thiết kế hai lần và chỗ nối dễ vụng.
+- Effects là package riêng phụ thuộc Stats: mỗi package nhỏ, nhưng thiết kế hai lần và chỗ nối dễ vụng.
