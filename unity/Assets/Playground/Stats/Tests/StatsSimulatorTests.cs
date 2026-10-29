@@ -24,7 +24,7 @@ namespace BaseGame.Playground.Stats.Tests
         [Test]
         public void SimulateSkip_StarvesMidway_SickStartsAtThreshold()
         {
-            var entity = new PlaygroundEntity(PlaygroundCatalog.CreateEffects());
+            var entity = PlaygroundEntity.Create(PlaygroundCatalog.CreateStatSettings(), PlaygroundCatalog.CreateEffects());
             entity.Stats.GetResource(PlaygroundCatalog.Hunger).Set(40f);
 
             entity.Simulator.Simulate(80);
@@ -36,7 +36,7 @@ namespace BaseGame.Playground.Stats.Tests
 
         private static PlaygroundEntity CreateSickEntity()
         {
-            var entity = new PlaygroundEntity(PlaygroundCatalog.CreateEffects());
+            var entity = PlaygroundEntity.Create(PlaygroundCatalog.CreateStatSettings(), PlaygroundCatalog.CreateEffects());
             entity.Stats.GetStat(PlaygroundCatalog.MaxHunger).SetBase(500f);
             Resource hunger = entity.Stats.GetResource(PlaygroundCatalog.Hunger);
             hunger.Set(hunger.Max);

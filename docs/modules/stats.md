@@ -54,7 +54,7 @@ com.guenbankhai.stats/
 | `*Settings` | Cấu hình C# thuần; collection kiểm tra và copy một lần |
 | `StatDefinition`, `ResourceDefinition`, `StatProfile`, `EffectDefinition`, `EffectGroupDefinition` | ScriptableObject chỉ bọc settings; `CreateSettings()` trả bản copy. ID là tên asset ([ADR 0008](../adr/0008-stats-asset-name-as-id.md)). Group khai `Policy` một chỗ trên asset riêng |
 | `StatsBehaviour` | Driver mỏng: tạo `StatCollection` từ `StatProfile` trong `Awake`; `DefaultExecutionOrder` sớm để component khác đọc `Collection` trong `Awake` |
-| `EffectsBehaviour` | Driver mỏng, `[RequireComponent(typeof(StatsBehaviour))]`, lấy `StatsBehaviour` bằng `GetComponent` trong `Awake`. Không tự gọi `Advance` |
+| `EffectsBehaviour` | Driver mỏng, `[RequireComponent(typeof(StatsBehaviour))]`, lấy `StatsBehaviour` bằng `GetComponent` trong `Awake`. `DefaultExecutionOrder` ngay sau `StatsBehaviour` để component khác đọc `Collection` trong `Awake`. Không tự gọi `Advance` |
 
 - Lấy tham chiếu: `[SerializeField] StatsBehaviour` → `.Collection`, hoặc truyền qua constructor. Không singleton, không state static.
 - Config thiếu hoặc sai: behaviour log lỗi, tự tắt, `Collection` là `null`.
@@ -118,9 +118,9 @@ Kiểm bằng tay (luật chạy qua callback của Unity):
 | `OnValidate` log warning | Tạo `StatDefinition` tên có khoảng trắng, đặt `Min > Max`; tạo hai `StatDefinition` cùng tên ở hai thư mục và đưa vào một `StatProfile`; tạo `EffectDefinition` `PercentMult` −0.5, `MaxStacks` 3. Mỗi trường hợp có warning trong Console |
 | `StatsBehaviour` gặp profile thiếu hoặc sai | Để trống profile (rồi thử profile có ID trùng), Play: có log lỗi, component bị tắt, `Collection` là `null` |
 | `EffectsBehaviour` khi `Collection` là `null` | Cùng GameObject với `StatsBehaviour` profile trống, Play: có log lỗi, `EffectsBehaviour` bị tắt |
-| `DefaultExecutionOrder` của `StatsBehaviour` | Component trên GameObject khác đọc `StatsBehaviour.Collection` trong `Awake`, Play: không `null` |
+| `DefaultExecutionOrder` của `StatsBehaviour`, `EffectsBehaviour` | Component trên GameObject khác đọc `StatsBehaviour.Collection` và `EffectsBehaviour.Collection` trong `Awake`, Play: không `null` |
 
-Playground: `Assets/Playground/Stats/`, scene `Assets/Scenes/Stats.unity` (tạo ở giai đoạn Playground).
+Playground: `Assets/Playground/Stats/`, scene `Assets/Scenes/Stats.unity`, asset trong `Assets/Configs/Stats/` (`Stats/`, `Pools/`, `Effects/`, `Groups/`, profile `TestEntity`). Asset sinh từ `PlaygroundCatalog` bằng menu `GuenBanKhai/Stats/Playground/Generate Assets` (chỉ tạo asset chưa có); `Sync Display Names` chỉ ghi lại `DisplayName` theo catalog.
 
 ## Kế hoạch (tạm) [T9]
 
@@ -128,5 +128,8 @@ Giai đoạn: **Playground**. Xóa mục này khi phát hành.
 
 - [x] User chốt tài liệu.
 - [x] Playground bước 1: lõi C# (settings dựng bằng code), overlay có nút cho mọi lệnh, thời gian chạy bằng nút của overlay hoặc bằng `GameClockDriver` của Calendar, test EditMode cho logic khó.
-- [ ] Playground bước 2: ScriptableObject (`StatDefinition`, `ResourceDefinition`, `StatProfile`, `EffectDefinition`, `EffectGroupDefinition`) và `StatsBehaviour`, `EffectsBehaviour`.
-- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không (cần bước 2); overlay debug có nút cho mọi lệnh.
+- [x] Playground bước 2: ScriptableObject (`StatDefinition`, `ResourceDefinition`, `StatProfile`, `EffectDefinition`, `EffectGroupDefinition`) và `StatsBehaviour`, `EffectsBehaviour`; overlay lấy thực thể từ hai behaviour, effect từ `EffectDefinition`. User đã chơi thử: happy case đúng.
+- [ ] Kiểm bằng tay các trường hợp lỗi (bảng "Kiểm bằng tay" ở mục Kiểm thử): warning của `OnValidate`, profile trống hoặc sai, `EffectsBehaviour` khi `Collection` là `null`.
+- [ ] Trả lời câu hỏi authoring: nhập `Infinity` cho `Min`/`Max`, toggle `Infinite` cùng `Duration`/`MaxDuration`, kéo thả `StatDefinition` vào modifier và profile, trường thiếu hay thừa.
+- [ ] Review: `/review-my-module stats playground`.
+- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không (chưa trả lời); overlay debug có nút cho mọi lệnh (đã có, gồm cả bước 2).

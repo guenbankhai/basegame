@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace BaseGame.Playground.Stats
@@ -7,18 +8,24 @@ namespace BaseGame.Playground.Stats
     {
         private readonly Dictionary<EffectId, EffectSettings> _effectsById = new Dictionary<EffectId, EffectSettings>();
 
-        public PlaygroundEntity(IEnumerable<EffectSettings> effectCatalog)
+        /// <summary>Wraps collections built elsewhere (StatsBehaviour/EffectsBehaviour); effects must share stats.</summary>
+        public PlaygroundEntity(StatCollection stats, EffectCollection effects, IEnumerable<EffectSettings> effectCatalog)
         {
+            Stats = stats ?? throw new ArgumentNullException(nameof(stats));
+            Effects = effects ?? throw new ArgumentNullException(nameof(effects));
             foreach (EffectSettings settings in effectCatalog)
             {
                 _effectsById.Add(settings.Id, settings);
             }
 
-            Stats = new StatCollection(PlaygroundCatalog.CreateStatSettings());
-            Effects = new EffectCollection(Stats);
+            if (!_effectsById.TryGetValue(PlaygroundCatalog.Sick, out EffectSettings sick))
+            {
+                throw new ArgumentException($"The effect catalog has no '{PlaygroundCatalog.Sick}'.", nameof(effectCatalog));
+            }
+
             Derived = new DerivedStatLink(Stats.GetStat(PlaygroundCatalog.Vitality), Stats.GetStat(PlaygroundCatalog.MaxHealth), 5f);
             Hunger = new FakeHunger(Stats.GetResource(PlaygroundCatalog.Hunger), Stats.GetStat(PlaygroundCatalog.HungerRate));
-            Simulator = new StatsSimulator(Effects, Hunger, _effectsById[PlaygroundCatalog.Sick]);
+            Simulator = new StatsSimulator(Effects, Hunger, sick);
 
             // Health was created against MaxHealth before the link added Vitality * 5.
             Resource health = Stats.GetResource(PlaygroundCatalog.Health);
@@ -30,6 +37,13 @@ namespace BaseGame.Playground.Stats
         public DerivedStatLink Derived { get; }
         public FakeHunger Hunger { get; }
         public StatsSimulator Simulator { get; }
+
+        /// <summary>A fresh entity with its own collections, for tests and "restore into a new entity".</summary>
+        public static PlaygroundEntity Create(StatCollectionSettings statSettings, IEnumerable<EffectSettings> effectCatalog)
+        {
+            var stats = new StatCollection(statSettings);
+            return new PlaygroundEntity(stats, new EffectCollection(stats), effectCatalog);
+        }
 
         /// <summary>The resolve callback for EffectCollection.Restore.</summary>
         public EffectSettings ResolveEffect(EffectId id) => _effectsById.TryGetValue(id, out EffectSettings settings) ? settings : null;

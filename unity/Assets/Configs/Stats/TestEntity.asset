@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb028c458d47d8047ac21777393bc8c4, type: 3}
+  m_Name: TestEntity
+  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatProfile
+  _stats:
+  - _stat: {fileID: 11400000, guid: 716c1aeae07c2104d80f9a93bfc17c7c, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  - _stat: {fileID: 11400000, guid: 2b5782af0328d6e46aea199d0f0a41ca, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  - _stat: {fileID: 11400000, guid: 34ff4b8e9ab97be4eb3c83efc4a63c02, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  - _stat: {fileID: 11400000, guid: 550289549a40312478c667d5d31732fd, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  - _stat: {fileID: 11400000, guid: 103f8e824c2dac344bb27c1c2ed0c320, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  - _stat: {fileID: 11400000, guid: b382c5e68c78cd8468b78447c2af58bc, type: 2}
+    _overrideBase: 0
+    _baseValue: 0
+  _resources:
+  - {fileID: 11400000, guid: 72d7c84bc8acecc4782d002b7445fbd8, type: 2}
+  - {fileID: 11400000, guid: 73b885394ea012a49b56ca8873f310be, type: 2}
+  - {fileID: 11400000, guid: 9e39807324d28054fb919ea6f9c235c1, type: 2}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ed2010dc61b7c4a9b94d4d7bc55bf5, type: 3}
+  m_Name: Poison
+  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectDefinition
+  _displayName: Poison -6 vitality (Extend 60)
+  _infinite: 0
+  _duration: 20
+  _maxDuration: 60
+  _stackRule: 1
+  _maxStacks: 1
+  _group: {fileID: 0}
+  _rank: 0
+  _modifiers:
+  - _stat: {fileID: 11400000, guid: 716c1aeae07c2104d80f9a93bfc17c7c, type: 2}
+    _type: 0
+    _value: -6

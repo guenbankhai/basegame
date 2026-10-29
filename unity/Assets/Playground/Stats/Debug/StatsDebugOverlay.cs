@@ -8,14 +8,19 @@ namespace BaseGame.Playground.Stats
     /// <summary>
     /// Manual test panel for one PlaygroundEntity: a button for every public command, live values and an event log.
     /// Time comes from the overlay's own buttons, or from a GameClockDriver when one is assigned (Stepped and Skipped
-    /// call Simulate, Restored does not).
+    /// call Simulate, Restored does not). The entity comes from the StatsBehaviour/EffectsBehaviour on this GameObject.
     /// </summary>
+    [RequireComponent(typeof(EffectsBehaviour))]
     public class StatsDebugOverlay : MonoBehaviour
     {
         private const int MaxLogLines = 28;
         private const double StepMinutes = 10;
         private const float PanelWidth = 560f;
 
+        [Tooltip("Same profile as the StatsBehaviour; builds the entity for \"restore into a new entity\".")]
+        [SerializeField] private StatProfile _profile = null;
+        [Tooltip("Effects the overlay can apply; must include Sick.")]
+        [SerializeField] private List<EffectDefinition> _effectDefinitions = new List<EffectDefinition>();
         [Tooltip("Optional. When set, the clock drives Simulate; otherwise the overlay's buttons do.")]
         [SerializeField] private GameClockDriver _clockDriver = null;
         [Tooltip("Real seconds between auto steps of 10 game minutes (overlay time only).")]
@@ -41,10 +46,36 @@ namespace BaseGame.Playground.Stats
         private Vector2 _rightScroll;
         private GUIStyle _richLabel;
 
+        // Reading both collections in Awake doubles as the manual check of their DefaultExecutionOrder.
         private void Awake()
         {
-            _effects = PlaygroundCatalog.CreateEffects();
-            SetEntity(new PlaygroundEntity(_effects));
+            StatCollection stats = GetComponent<StatsBehaviour>().Collection;
+            EffectCollection effects = GetComponent<EffectsBehaviour>().Collection;
+            if (stats == null || effects == null || _profile == null)
+            {
+                Debug.LogError($"{nameof(StatsDebugOverlay)} on '{name}': needs working Stats/Effects behaviours and a profile.", this);
+                enabled = false;
+                return;
+            }
+
+            try
+            {
+                _effects = new List<EffectSettings>();
+                foreach (EffectDefinition definition in _effectDefinitions)
+                {
+                    if (definition != null)
+                    {
+                        _effects.Add(definition.CreateSettings());
+                    }
+                }
+
+                SetEntity(new PlaygroundEntity(stats, effects, _effects));
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogException(e, this);
+                enabled = false;
+            }
         }
 
         private void OnEnable()
@@ -133,15 +164,15 @@ namespace BaseGame.Playground.Stats
         {
             string now = _clock != null
                 ? $"Calendar {_clock.Now.Hour:00}:{_clock.Now.Minute:00} (total {_clock.Now.TotalMinutes})"
-                : "Thời gian: nút của overlay";
-            GUILayout.Label($"<b>{now}</b>   Simulate: {_entity.Simulator.TotalMinutes:0.##} phút, lần gọi cuối {_entity.Simulator.LastSpanCount} đoạn", _richLabel);
+                : "Time: overlay buttons";
+            GUILayout.Label($"<b>{now}</b>   Simulate: {_entity.Simulator.TotalMinutes:0.##} min, last call {_entity.Simulator.LastSpanCount} span(s)", _richLabel);
 
             GUILayout.BeginHorizontal();
             if (_clock == null)
             {
                 Button("Step 10", () => _entity.Simulator.Simulate(StepMinutes));
                 Button("Skip 60", () => _entity.Simulator.Simulate(60));
-                Button("Skip 80 (ngủ)", () => _entity.Simulator.Simulate(80));
+                Button("Skip 80 (sleep)", () => _entity.Simulator.Simulate(80));
                 _autoStep = GUILayout.Toggle(_autoStep, "Auto step");
             }
             else
@@ -166,7 +197,7 @@ namespace BaseGame.Playground.Stats
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Effects.Advance trực tiếp (bỏ qua Simulate):");
+            GUILayout.Label("Effects.Advance directly (bypasses Simulate):");
             Button("Advance(1)", () => _entity.Effects.Advance(1));
             Button("Advance(10)", () => _entity.Effects.Advance(10));
             GUILayout.EndHorizontal();
@@ -210,22 +241,22 @@ namespace BaseGame.Playground.Stats
                 GUILayout.EndHorizontal();
             }
 
-            GUILayout.Label($"Đói: tới ngưỡng kế tiếp {_entity.Hunger.TimeToNextThreshold:0.##} phút");
+            GUILayout.Label($"Hunger: next threshold in {_entity.Hunger.TimeToNextThreshold:0.##} min");
         }
 
         private void DrawEquipment()
         {
-            Header("Trang bị (gỡ rồi thêm, không có batch)");
+            Header("Equipment (remove then add, no batch)");
             Stat maxHealth = _entity.Stats.GetStat(PlaygroundCatalog.MaxHealth);
             Stat vitality = _entity.Stats.GetStat(PlaygroundCatalog.Vitality);
             GUILayout.BeginHorizontal();
-            Button("Mặc áo A (+20 máu)", () => maxHealth.AddModifier(new Modifier(ModifierType.Flat, 20f, _shirtA)));
-            Button("Đổi A → B (+30)", () =>
+            Button("Wear shirt A (+20 health)", () => maxHealth.AddModifier(new Modifier(ModifierType.Flat, 20f, _shirtA)));
+            Button("Swap A → B (+30)", () =>
             {
                 _entity.Stats.RemoveAllFromSource(_shirtA);
                 maxHealth.AddModifier(new Modifier(ModifierType.Flat, 30f, _shirtB));
             });
-            Button("Tháo áo", () =>
+            Button("Take off shirt", () =>
             {
                 _entity.Stats.RemoveAllFromSource(_shirtA);
                 _entity.Stats.RemoveAllFromSource(_shirtB);
@@ -233,12 +264,12 @@ namespace BaseGame.Playground.Stats
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            Button("Giáp +4 thể lực +10 máu (vi phạm)", () =>
+            Button("Armor +4 vitality +10 health (violation)", () =>
             {
                 vitality.AddModifier(new Modifier(ModifierType.Flat, 4f, _vitalArmor));
                 maxHealth.AddModifier(new Modifier(ModifierType.Flat, 10f, _vitalArmor));
             });
-            Button("Tháo giáp", () => Log($"Tháo giáp → gỡ {_entity.Stats.RemoveAllFromSource(_vitalArmor)} modifier"));
+            Button("Take off armor", () => Log($"Take off armor → removed {_entity.Stats.RemoveAllFromSource(_vitalArmor)} modifier(s)"));
             GUILayout.EndHorizontal();
         }
 
@@ -250,17 +281,17 @@ namespace BaseGame.Playground.Stats
             {
                 _savedStats = JsonUtility.ToJson(_entity.Stats.CaptureSnapshot());
                 _savedEffects = JsonUtility.ToJson(_entity.Effects.CaptureSnapshot());
-                Log($"Capture: stats {_savedStats.Length} ký tự, effects {_savedEffects.Length} ký tự");
+                Log($"Capture: stats {_savedStats.Length} chars, effects {_savedEffects.Length} chars");
             });
 
             GUI.enabled = _savedStats != null;
             Button("Restore", () => _entity.Restore(LoadStats(), LoadEffects()));
-            Button("Restore vào thực thể mới", () =>
+            Button("Restore into new entity", () =>
             {
-                SetEntity(new PlaygroundEntity(_effects));
+                SetEntity(PlaygroundEntity.Create(_profile.CreateSettings(), _effects));
                 _entity.Restore(LoadStats(), LoadEffects());
             });
-            Button("Restore sai thứ tự", () =>
+            Button("Restore in wrong order", () =>
             {
                 _entity.Stats.Restore(LoadStats());
                 _entity.Effects.Restore(LoadEffects(), _entity.ResolveEffect);
@@ -289,7 +320,7 @@ namespace BaseGame.Playground.Stats
                 {
                     if (_entity.Effects.Apply(settings) == null)
                     {
-                        Log($"Apply {settings.Id} → null (thua trong group Replace)");
+                        Log($"Apply {settings.Id} → null (lost in a Replace group)");
                     }
                 });
                 Button("Remove", () => Log($"Remove {settings.Id} → {_entity.Effects.Remove(settings.Id)}"));
@@ -300,7 +331,7 @@ namespace BaseGame.Playground.Stats
         private void DrawLog()
         {
             Header("Event");
-            Button("Xóa log", () => _log.Clear());
+            Button("Clear log", () => _log.Clear());
             foreach (string line in _log)
             {
                 GUILayout.Label(line);
@@ -332,7 +363,7 @@ namespace BaseGame.Playground.Stats
             effects.Resumed += e => Log($"Effect Resumed {e.Id}");
             effects.Removed += (e, reason) => Log($"Effect Removed {e.Id} ({reason})");
             effects.Restored += () => Log("EffectCollection.Restored");
-            Log("Thực thể mới");
+            Log("New entity");
         }
 
         private void AddOverlayModifier(Stat stat, Modifier modifier)
@@ -409,7 +440,7 @@ namespace BaseGame.Playground.Stats
         {
             if (modifiers.Count == 0)
             {
-                return "không modifier";
+                return "no modifiers";
             }
 
             var parts = new string[modifiers.Count];

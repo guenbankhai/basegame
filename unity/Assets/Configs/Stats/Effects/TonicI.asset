@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ed2010dc61b7c4a9b94d4d7bc55bf5, type: 3}
+  m_Name: TonicI
+  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectDefinition
+  _displayName: Tonic I (Replace, r1)
+  _infinite: 0
+  _duration: 10
+  _maxDuration: 10
+  _stackRule: 0
+  _maxStacks: 1
+  _group: {fileID: 11400000, guid: e67d37d7be2922246aee6e3fa4326360, type: 2}
+  _rank: 1
+  _modifiers:
+  - _stat: {fileID: 11400000, guid: 550289549a40312478c667d5d31732fd, type: 2}
+    _type: 1
+    _value: 0.2

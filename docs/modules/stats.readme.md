@@ -58,14 +58,14 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 | `EffectInstance` | Một effect đang chạy; là `Source` của mọi modifier nó thêm |
 | `EffectSettings`, `EffectModifierSettings`, `EffectGroupSettings` | Cấu hình C# thuần của effect và group |
 | `EffectDefinition`, `EffectGroupDefinition` | ScriptableObject authoring; effect kéo thả `StatDefinition` cho modifier và `EffectGroupDefinition` cho group |
-| `EffectsBehaviour` | MonoBehaviour cần `StatsBehaviour` cùng GameObject: tạo `EffectCollection` trong `Awake`. Không tự gọi `Advance` |
+| `EffectsBehaviour` | MonoBehaviour cần `StatsBehaviour` cùng GameObject: tạo `EffectCollection` trong `Awake`, chạy ngay sau `StatsBehaviour`. Không tự gọi `Advance` |
 | `StatsSnapshot`, `EffectsSnapshot` | Snapshot `[Serializable]`, dùng được với `JsonUtility` |
 
 ## Thiết lập
 
 Điền ở giai đoạn Package. Điểm chính:
 
-- Lấy tham chiếu: `[SerializeField] StatsBehaviour` → `.Collection` từ `Awake`/`OnEnable`, hoặc truyền qua constructor. Không có singleton.
+- Lấy tham chiếu: `[SerializeField] StatsBehaviour` (hoặc `EffectsBehaviour`) → `.Collection` từ `Awake`/`OnEnable`, hoặc truyền qua constructor. Không có singleton.
 - Profile thiếu hoặc sai: `StatsBehaviour` log lỗi, tự tắt, `Collection` là `null`. `EffectsBehaviour` gặp `StatsBehaviour.Collection` là `null` cũng log lỗi và tự tắt.
 - **ID của definition là tên asset**: `MoveSpeed.asset` → `"MoveSpeed"`. Tên PascalCase, không khoảng trắng, không tiền tố loại; phân loại bằng thư mục. Không `Instantiate` definition (tên thành `"MoveSpeed(Clone)"`). Đổi tên asset là đổi ID.
 - UI lấy tên hiển thị qua `Stat.DisplayName`, `Resource.DisplayName`, `EffectInstance.DisplayName`, không đọc definition.
