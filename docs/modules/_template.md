@@ -38,6 +38,8 @@ Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ:
 
 ## API và trường hợp biên
 
+Từ giai đoạn Package: khối API, bảng dưới và bảng Settings chuyển sang `README.md` của package; mục này chỉ còn một câu trỏ sang README và các quyết định thiết kế đi kèm (giới hạn, giả định quy mô, lý do).
+
 ```csharp
 <API public>
 ```

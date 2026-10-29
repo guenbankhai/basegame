@@ -46,9 +46,9 @@ namespace BaseGame.Playground.Calendar
             _clock = null;
         }
 
-        private void OnStepped(StepInfo info)
+        private void OnStepped(CalendarDate date)
         {
-            Need.Advance(info.DeltaMinutes, info.Date.TotalMinutes);
+            Need.Advance(_clock.MinutesPerStep, date.TotalMinutes);
         }
 
         private void OnSkipped(CalendarDate from, CalendarDate to)

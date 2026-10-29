@@ -27,6 +27,7 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.AreEqual(10, settings.MinutesPerStep);
             Assert.AreEqual(7, settings.DayNames.Count);
             Assert.AreEqual(4, settings.Seasons.Count);
+            Assert.AreEqual(36500, settings.MaxSkipDays);
             Assert.AreEqual("Spring", settings.Seasons[0].Name);
             Assert.DoesNotThrow(() => new GameClock(settings));
         }

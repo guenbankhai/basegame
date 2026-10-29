@@ -19,6 +19,7 @@ basegame/
 │   └── Packages/
 │       └── com.guenbankhai.<module>/
 │           ├── package.json
+│           ├── README.md, CHANGELOG.md
 │           ├── Runtime/
 │           ├── Editor/
 │           └── Tests/

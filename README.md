@@ -60,11 +60,20 @@ Unity `6000.6.5f1` (Unity 6.6) · C# · Universal Render Pipeline · PC · Git (
 
 ## Modules
 
-Danh sách các module của BaseGame, để xem nhanh hiện có gì và trạng thái ra sao.
+Các module đã có thiết kế. Trạng thái và thứ tự làm của mọi module: [`docs/roadmap.md`](docs/roadmap.md). Version của package: `README.md` và `CHANGELOG.md` trong package.
 
-| Module | Mô tả | Trạng thái | Phiên bản |
-|---|---|---|---|
-| Calendar (`com.guenbankhai.calendar`) | Đồng hồ và lịch theo step: giờ, ngày, tuần, mùa, năm; tốc độ, tạm dừng, skip, fast-forward; event; snapshot để save | Đang phát triển | 0.1.1 |
-| Stats (`com.guenbankhai.stats`) | Stat có modifier ba tầng, Resource bị chặn bởi một Stat làm max, Effect có thời hạn và luật stack; snapshot để save | Thử nghiệm | — |
+| Module | Mô tả |
+|---|---|
+| Calendar (`com.guenbankhai.calendar`) | Đồng hồ và lịch theo step: giờ, ngày, tuần, mùa, năm; tốc độ, tạm dừng, skip, fast-forward; event; snapshot để save |
+| Stats (`com.guenbankhai.stats`) | Stat có modifier ba tầng, Resource bị chặn bởi một Stat làm max, Effect có thời hạn và luật stack; snapshot để save |
 
-**Trạng thái:** `Chưa bắt đầu` · `Thử nghiệm` (đang tìm hiểu, chưa có code chính thức) · `Đang phát triển` (API còn thay đổi) · `Ổn định` (đã dùng thực tế, đủ tin cậy).
+## Tài liệu
+
+| Muốn biết | Đọc |
+|---|---|
+| Làm module nào, theo thứ tự nào, đang ở trạng thái nào | [`docs/roadmap.md`](docs/roadmap.md) |
+| Một module đi từ ý tưởng tới phát hành ra sao; thông tin nào nằm ở đâu | [`docs/module-workflow.md`](docs/module-workflow.md) |
+| Thuật ngữ | [`GLOSSARY.md`](GLOSSARY.md) |
+| Thiết kế và lý do của từng module | [`docs/modules/`](docs/modules/), quyết định trong [`docs/adr/`](docs/adr/) |
+| Cách dùng một package, API, lịch sử version | `README.md` và `CHANGELOG.md` trong `unity/Packages/com.guenbankhai.<module>/` |
+| Luật code, cấu trúc thư mục, luật review | [`docs/coding-standard.md`](docs/coding-standard.md), [`docs/structure.md`](docs/structure.md), [`docs/review.md`](docs/review.md) |

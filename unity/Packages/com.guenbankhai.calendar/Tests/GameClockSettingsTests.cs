@@ -71,6 +71,16 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.Throws<ArgumentException>(() => new GameClock(TestCalendar.Settings(maxStepsPerFrame: maxStepsPerFrame)));
         }
 
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void NewClock_MaxSkipDaysNotPositive_Throws(int maxSkipDays)
+        {
+            var settings = TestCalendar.Settings();
+            settings.MaxSkipDays = maxSkipDays;
+
+            Assert.Throws<ArgumentException>(() => new GameClock(settings));
+        }
+
         [TestCase(float.NaN)]
         [TestCase(float.PositiveInfinity)]
         [TestCase(0f)]

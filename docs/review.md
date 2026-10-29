@@ -96,24 +96,24 @@ Báo cáo thêm: câu trả lời của từng câu hỏi; thay đổi đề xu�
 
 ## Cổng phát hành
 
-Đối tượng: package, playground dùng package, tài liệu của module (tài liệu thiết kế, ADR, `README.md` của package).
+Đối tượng: package, playground dùng package, tài liệu của module (tài liệu thiết kế, ADR, `README.md` và `CHANGELOG.md` của package).
 
 | # | Cổng |
 |---|---|
 | R1 | `dotnet build` trên `.csproj` do Unity sinh không lỗi; user báo test EditMode pass. Chưa có kết quả test thì `Chưa kiểm được`, chưa pass |
-| R2 | API public trong code khớp khối API của tài liệu thiết kế |
-| R3 | Code làm đúng từng câu của tài liệu thiết kế |
-| R4 | Mỗi dòng bảng trường hợp biên và mỗi luật của mô hình có ít nhất một test; module có thời gian có test "hai đường cùng kết quả" cho B1 |
+| R2 | API public trong code khớp khối API trong `README.md` của package; tài liệu thiết kế không còn giữ bản API riêng |
+| R3 | Code làm đúng từng câu của tài liệu thiết kế và của bảng quy tắc, bảng Settings trong `README.md` của package |
+| R4 | Mỗi dòng bảng trường hợp biên (trong `README.md` của package) và mỗi luật của mô hình có ít nhất một test; module có thời gian có test "hai đường cùng kết quả" cho B1 |
 | R5 | Code theo `coding-standard.md` |
 | R6 | `README.md` của package tự đứng một mình, có mọi type public và khớp API |
 | R7 | Playground chỉ dùng package, không còn code lõi |
-| R8 | Version trong `package.json`, `README.md` và `roadmap.md` khớp nhau; `## Kế hoạch (tạm)` đã xóa (chỉ xét khi phát hành) |
+| R8 | Version trong `package.json`, `README.md` và mục mới nhất của `CHANGELOG.md` khớp nhau; `CHANGELOG.md` ghi đủ thay đổi API public và hành vi so với version trước; trạng thái trong `roadmap.md` đúng giai đoạn; `## Kế hoạch (tạm)` đã xóa (chỉ xét khi phát hành) |
 
 ## Review code ngoài giai đoạn
 
 Dùng khi review một thay đổi bất kỳ (`/review-my-code` hay skill review khác), kể cả trên module đã phát hành.
 
-- Code trong package: cổng R1, R3, R5; thêm R2, R6 khi thay đổi đụng API public; R4 cho luật mới hay luật bị sửa.
+- Code trong package: cổng R1, R3, R5; thêm R2, R6 khi thay đổi đụng API public; R4 cho luật mới hay luật bị sửa; R8 (trừ phần Kế hoạch) khi tăng version.
 - Code trong playground: chỉ lỗi làm sai câu trả lời cho câu hỏi thiết kế.
 - Code trong scenario: R1, R5 và bất biến lõi.
 - Thu gọn chỉ xét phần code mà thay đổi đụng tới.

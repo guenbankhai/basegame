@@ -6,11 +6,13 @@ Cách một cơ chế đi từ ý tưởng tới module ổn định trong BaseG
 
 | Thông tin | Nơi duy nhất |
 |---|---|
-| Module nào, thứ tự, trạng thái | `roadmap.md` (bảng module) và bảng Modules trong `README.md`; hai bảng luôn khớp nhau |
+| Module nào, thứ tự, trạng thái | `roadmap.md` (bảng module). `README.md` gốc chỉ liệt kê module đã có thiết kế, kèm mô tả một dòng; không ghi trạng thái hay version |
 | Thuật ngữ: từ nào, nghĩa gì, tránh từ nào | `GLOSSARY.md` ở gốc repo, mỗi module một mục con |
-| Thiết kế hiện hành: phạm vi, mô hình, API, trường hợp biên, quy ước cho module khác | `docs/modules/<module>.md` (khung: `docs/modules/_template.md`) |
+| Thiết kế hiện hành: phạm vi, kiến trúc, mô hình, event, save, quy ước cho module khác, lý do | `docs/modules/<module>.md` (khung: `docs/modules/_template.md`) |
+| API public, bảng trường hợp biên, bảng Settings | Khi chưa có package: tài liệu thiết kế. Từ giai đoạn Package: `README.md` của package; tài liệu thiết kế chỉ trỏ sang |
 | Quyết định khó đảo ngược: chọn gì, vì sao, đã loại gì | `docs/adr/NNNN-<module>-<slug>.md` |
 | Cách dùng package, đủ để dùng mà không cần repo này | `README.md` của package; tự đứng một mình, không tham chiếu ra ngoài package |
+| Lịch sử version của package: mỗi version thay đổi gì (API, hành vi, đổi tên) | `CHANGELOG.md` của package, mới nhất ở trên; tự đứng một mình như `README.md` |
 | Quy trình: giai đoạn, việc cần làm | File này |
 | Luật review, cổng của từng giai đoạn, gợi ý soi | `review.md` |
 | Luật code và mặc định của API module | `coding-standard.md` |
@@ -50,18 +52,19 @@ Mỗi review chạy trong một conversation mới, độc lập với các vòn
 
 ### 3. Package
 
-- Tạo `unity/Packages/com.guenbankhai.<module>/`: `package.json`, `Runtime/`, `Tests/`, `README.md` (usage doc). Không đưa phần debug của playground vào.
+- Tạo `unity/Packages/com.guenbankhai.<module>/`: `package.json`, `Runtime/`, `Tests/`, `README.md` (usage doc), `CHANGELOG.md`. Không đưa phần debug của playground vào.
 - **Viết lại sạch**, không copy nguyên playground. Chuyển test sang; mỗi dòng bảng trường hợp biên và mỗi luật của mô hình có test.
 - `README.md` của package đi theo package sang game khác, nên phải **tự đứng một mình**: không tham chiếu `docs/`, `GLOSSARY.md`, ADR hay bất kỳ file nào ngoài package. Viết đủ để người chỉ có package vẫn dùng đúng: thiết lập, khái niệm, API chính, quy tắc quan trọng, save, quy ước cho module dùng nó. Tài liệu trong `docs/` được phép trỏ vào README, chiều ngược lại thì không.
+- Chuyển khối API, bảng trường hợp biên và bảng Settings từ tài liệu thiết kế sang README của package. Trong tài liệu thiết kế, mục API chỉ còn một câu trỏ sang README và các quyết định thiết kế đi kèm.
 - Xóa code lõi của playground, dựng lại playground mỏng chỉ dùng package (overlay, đối tượng giả). Đây là chỗ thử bằng tay khi sửa package sau này.
 - Kiểm tra compile bằng `dotnet build` trên `.csproj` do Unity sinh. Nếu Unity chưa sinh csproj cho file mới, build bằng bản sao csproj trong thư mục tạm, chỉ thay danh sách file, và ghi rõ là đã kiểm tra theo cách này.
-- Chạy test EditMode trong Unity, rồi review bằng `/review-my-module <module> release`. Cập nhật trạng thái trong `roadmap.md` và `README.md`.
+- Chạy test EditMode trong Unity, rồi review bằng `/review-my-module <module> release`. Cập nhật trạng thái trong `roadmap.md`.
 
 ### 4. Phát hành → Ổn định
 
-- Phát hành: tăng version trong `package.json` và `README.md` (bản đầu `0.1.0`), xóa mục Kế hoạch (tạm), trạng thái vẫn là `Đang phát triển`.
+- Phát hành: tăng version trong `package.json` và `README.md` (bản đầu `0.1.0`), thêm mục cho version đó trong `CHANGELOG.md`, xóa mục Kế hoạch (tạm), trạng thái vẫn là `Đang phát triển`.
 - Ổn định: module được dùng trong một scenario thật, API không còn đổi thường xuyên. Đổi trạng thái thành `Ổn định`, tăng version.
-- Sửa module đã phát hành: review thay đổi theo mục "Review code ngoài giai đoạn" của `review.md`. Đổi API public thì tăng version minor (`0.1.x` → `0.2.0`).
+- Sửa module đã phát hành: review thay đổi theo mục "Review code ngoài giai đoạn" của `review.md`. Đổi API public thì tăng version minor (`0.1.x` → `0.2.0`). Mỗi lần tăng version thì thêm mục trong `CHANGELOG.md`.
 - Giữ hay xóa playground sau khi ổn định là quyết định của user. Xóa playground thì xóa luôn scene và asset của nó.
 
 ## Môi trường

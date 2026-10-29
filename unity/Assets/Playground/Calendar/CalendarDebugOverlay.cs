@@ -171,11 +171,6 @@ namespace BaseGame.Playground.Calendar
 
             float fastForwardSpeed = Mathf.Min(PreferredFastForwardSpeed, _clock.MaxSpeed);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button($"Fast-forward (x{fastForwardSpeed:0.##})"))
-            {
-                _clock.FastForward(fastForwardSpeed);
-            }
-
             if (GUILayout.Button($"Fast-forward to 06:00 (x{fastForwardSpeed:0.##})"))
             {
                 _clock.FastForwardTo(_clock.NextOccurrence(MorningMinute), fastForwardSpeed);
@@ -248,11 +243,11 @@ namespace BaseGame.Playground.Calendar
             }
         }
 
-        private void OnStepped(StepInfo info)
+        private void OnStepped(CalendarDate date)
         {
             if (_logStepped)
             {
-                LogEvent($"Stepped +{info.DeltaMinutes} min (x{info.Speed:0.##}{(info.IsFastForwarding ? ", FF" : "")})");
+                LogEvent($"Stepped +{_clock.MinutesPerStep} min (x{_clock.Speed:0.##}{(_clock.IsFastForwarding ? ", FF" : "")})");
             }
             else
             {

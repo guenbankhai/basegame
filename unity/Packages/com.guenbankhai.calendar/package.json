@@ -1,6 +1,6 @@
 {
   "name": "com.guenbankhai.calendar",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "displayName": "GuenBanKhai Calendar",
   "description": "Step-based game clock and calendar: hours, days, weeks, seasons and years; speed, pause, skip, fast forward, events and save snapshots.",
   "unity": "6000.6",

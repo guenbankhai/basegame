@@ -15,9 +15,9 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             var events = TestCalendar.RecordAll(clock);
             var nowInHourHandler = new List<long>();
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 60)
+                if (date.TotalMinutes == 60)
                 {
                     clock.SkipTo(200);
                 }
@@ -37,9 +37,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void PauseInHandler_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.Pause(this);
                     Assert.IsFalse(clock.IsPaused, "Queued until the minute's events are done.");
@@ -59,9 +59,9 @@ namespace GuenBanKhai.Calendar.Tests
             var snapshot = clock.CaptureSnapshot();
             var restored = new List<long>();
             clock.Restored += date => restored.Add(date.TotalMinutes);
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.Restore(snapshot);
                 }
@@ -78,9 +78,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void SetSpeedInHandler_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.SetSpeed(2f);
                 }
@@ -98,10 +98,10 @@ namespace GuenBanKhai.Calendar.Tests
         public void StopFastForwardInHandler_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.FastForward(10f);
-            clock.Stepped += info =>
+            clock.FastForwardTo(TestCalendar.Minutes(1), 10f);
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.StopFastForward();
                 }
@@ -119,9 +119,9 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             var completed = new List<long>();
             clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.FastForwardTo(3, 1f);
                 }
@@ -137,10 +137,10 @@ namespace GuenBanKhai.Calendar.Tests
         public void SetSpeedInHandlerDuringFastForward_DoesNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.FastForward(10f);
-            clock.Stepped += info =>
+            clock.FastForwardTo(TestCalendar.Minutes(1), 10f);
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.SetSpeed(2f);
                 }
@@ -157,7 +157,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void SameSpeedCommandsInHandler_DoNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Stepped += info => clock.SetSpeed(1f);
+            clock.Stepped += date => clock.SetSpeed(1f);
 
             clock.Tick(10f);
 
@@ -170,9 +170,9 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings());
             object a = new object();
             object b = new object();
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.Pause(a);
                     clock.Resume(a);
@@ -200,9 +200,9 @@ namespace GuenBanKhai.Calendar.Tests
                 order.Add($"Skipped {to.TotalMinutes}");
                 clock.Pause(a);
             };
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.SkipTo(10);
                     clock.Resume(a);
@@ -264,9 +264,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void QueuedCommand_IsCheckedWhenItRuns_AndAFailureIsLoggedNotThrown()
         {
             var clock = new GameClock(TestCalendar.Settings());
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.SkipTo(10);
                     clock.SkipTo(5);
@@ -284,9 +284,9 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings());
             bool pendingInsideHandler = true;
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.AdvanceSeason();
                     pendingInsideHandler = clock.CaptureSnapshot().SeasonAdvancePending;
@@ -305,9 +305,9 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings());
             var snapshot = clock.CaptureSnapshot();
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 3)
+                if (date.TotalMinutes == 3)
                 {
                     clock.Restore(snapshot);
                     clock.AdvanceSeason();
@@ -324,9 +324,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void AdvanceSeasonAfterSkipToInHandler_ChangesTheSeasonAfterTheSkip()
         {
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(0, 0)));
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.SkipTo(TestCalendar.Minutes(2, 12));
                     clock.AdvanceSeason();
@@ -348,9 +348,9 @@ namespace GuenBanKhai.Calendar.Tests
             clock.AdvanceSeason();
             int restored = 0;
             clock.Restored += _ => restored++;
-            clock.Stepped += info =>
+            clock.Stepped += date =>
             {
-                if (info.Date.TotalMinutes == 1)
+                if (date.TotalMinutes == 1)
                 {
                     clock.Restore(new CalendarSnapshot(0, -1, 0, 0, false));
                 }

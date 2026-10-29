@@ -2,7 +2,7 @@
 
 Danh sách module định hướng phát triển cho BaseGame, xếp theo sản phẩm chính đang nhắm tới. Đây là tài liệu sống: cập nhật khi quyết định thay đổi hoặc khi một module đổi trạng thái.
 
-**Trạng thái:** `Chưa bắt đầu` · `Thử nghiệm` · `Đang phát triển` · `Ổn định` (khớp với bảng Modules trong `README.md`).
+**Trạng thái:** `Chưa bắt đầu` · `Thử nghiệm` (đang tìm hiểu, chưa có code chính thức) · `Đang phát triển` (API còn thay đổi) · `Ổn định` (đã dùng thực tế, đủ tin cậy). File này là nơi duy nhất ghi trạng thái module.
 
 ---
 

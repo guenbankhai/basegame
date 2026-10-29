@@ -37,13 +37,6 @@ namespace GuenBanKhai.Calendar
 
         private void Update()
         {
-            // Awake already logged why; re-enabling a failed driver must not throw every frame.
-            if (Clock == null)
-            {
-                enabled = false;
-                return;
-            }
-
             Clock.Tick(Time.deltaTime);
         }
     }

@@ -32,8 +32,8 @@ Call the Skill tool for "review-my-code", then follow it with the overrides belo
 
 ## Stage `release`
 
-- Target: the package, the experiment, and the module's docs (design doc, ADRs, package `README.md`).
-- Spec: the design doc.
+- Target: the package, the experiment, and the module's docs (design doc, ADRs, package `README.md` and `CHANGELOG.md`).
+- Spec: the design doc, plus the API block, rule table and Settings table in the package `README.md` (their only home once a package exists).
 - Standards sources: `AGENTS.md`, `docs/coding-standard.md`, `docs/structure.md`.
 - All three axes, plus the gates R1–R8.
 - Compilation: run `dotnet build` on the Unity-generated `.csproj` files (read-only check); say which files the `.csproj` does not yet include. EditMode test results come from the user running them in Unity; ask for them if not given, and report R1 as `Chưa kiểm được` until then.

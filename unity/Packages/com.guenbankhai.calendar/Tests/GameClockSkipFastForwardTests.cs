@@ -70,10 +70,13 @@ namespace GuenBanKhai.Calendar.Tests
         [Test]
         public void SkipTo_UpToMaxSkipDays_Works_AndFurtherThrows()
         {
-            var clock = new GameClock(TestCalendar.Settings());
-            long limit = TestCalendar.Minutes(GameClock.MaxSkipDays);
+            var settings = TestCalendar.Settings();
+            settings.MaxSkipDays = 3;
+            var clock = new GameClock(settings);
+            long limit = TestCalendar.Minutes(clock.MaxSkipDays);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(limit + 1));
+            var error = Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(limit + 1));
+            StringAssert.Contains("MaxSkipDays (3)", error.Message);
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(long.MaxValue));
             Assert.AreEqual(0, clock.Now.TotalMinutes);
 
@@ -102,14 +105,14 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             clock.Tick(15f);
-            var deltas = new List<long>();
-            clock.Stepped += info => deltas.Add(info.DeltaMinutes);
+            var stepped = new List<long>();
+            clock.Stepped += date => stepped.Add(date.TotalMinutes);
 
             clock.SkipTo(100);
             Assert.AreEqual(100.0, clock.ExactMinutes, 1e-6);
 
             clock.Tick(10f);
-            CollectionAssert.AreEqual(new[] { 10L }, deltas);
+            CollectionAssert.AreEqual(new[] { 110L }, stepped, "Time gathered before the skip is dropped.");
         }
 
         [Test]
@@ -128,9 +131,9 @@ namespace GuenBanKhai.Calendar.Tests
         public void FastForwardTo_RaisesNormalEvents_AndStopsExactlyAtTarget()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
-            var steps = new List<StepInfo>();
+            var steps = new List<(long Minutes, float Speed, bool IsFastForwarding)>();
             var completed = new List<long>();
-            clock.Stepped += steps.Add;
+            clock.Stepped += date => steps.Add((date.TotalMinutes, clock.Speed, clock.IsFastForwarding));
             clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
 
             clock.FastForwardTo(60, 20f);
@@ -154,14 +157,14 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             var seen = new List<string>();
-            clock.Stepped += info => seen.Add($"Stepped {info.Date.TotalMinutes} {info.IsFastForwarding} {clock.IsFastForwarding} {clock.Speed}");
+            clock.Stepped += date => seen.Add($"Stepped {date.TotalMinutes} {clock.IsFastForwarding} {clock.Speed}");
             clock.HourChanged += date => seen.Add($"Hour {date.TotalMinutes} {clock.IsFastForwarding} {clock.Speed}");
             clock.FastForwardCompleted += date => seen.Add($"Completed {date.TotalMinutes} {clock.IsFastForwarding} {clock.Speed}");
 
             clock.FastForwardTo(60, 20f);
             clock.Tick(10f);
 
-            Assert.AreEqual("Stepped 60 True True 20", seen[seen.Count - 3]);
+            Assert.AreEqual("Stepped 60 True 20", seen[seen.Count - 3]);
             Assert.AreEqual("Hour 60 True 20", seen[seen.Count - 2]);
             Assert.AreEqual("Completed 60 False 1", seen[seen.Count - 1]);
         }
@@ -189,8 +192,7 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.Throws<ArgumentException>(() => clock.FastForwardTo(25, 5f));
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(30, 0f));
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(30, float.NaN));
-            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForward(-1f));
-            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForward(float.NaN));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(30, -1f));
         }
 
         [Test]
@@ -198,7 +200,7 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings(maxSpeed: 5f));
 
-            clock.FastForward(5f);
+            clock.FastForwardTo(TestCalendar.Minutes(1), 5f);
             clock.Tick(1f);
 
             Assert.AreEqual(5f, clock.Speed);
@@ -211,8 +213,7 @@ namespace GuenBanKhai.Calendar.Tests
         {
             var clock = new GameClock(TestCalendar.Settings(maxSpeed: 5f));
 
-            var error = Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForward(speed));
-            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(10, speed));
+            var error = Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(10, speed));
 
             StringAssert.Contains("MaxSpeed (5)", error.Message);
             Assert.IsFalse(clock.IsFastForwarding);
@@ -338,7 +339,7 @@ namespace GuenBanKhai.Calendar.Tests
             int completed = 0;
             clock.FastForwardCompleted += _ => completed++;
 
-            clock.FastForward(10f);
+            clock.FastForwardTo(TestCalendar.Minutes(1), 10f);
             clock.SetSpeed(3f);
             Assert.AreEqual(10f, clock.Speed);
 

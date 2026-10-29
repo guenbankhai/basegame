@@ -37,6 +37,8 @@ namespace GuenBanKhai.Calendar
         [SerializeField] private float _maxSpeed = 100f;
         [Tooltip("At most this many steps per Tick() call; the rest of that call's time is dropped.")]
         [SerializeField] private int _maxStepsPerFrame = 120;
+        [Tooltip("SkipTo rejects a target further ahead than this many days, so a caller bug cannot hang the game.")]
+        [SerializeField] private int _maxSkipDays = 36500;
 
         public float SecondsPerGameMinute { get => _secondsPerGameMinute; set => _secondsPerGameMinute = value; }
         public int MinutesPerStep { get => _minutesPerStep; set => _minutesPerStep = value; }
@@ -48,6 +50,7 @@ namespace GuenBanKhai.Calendar
         public int StartMinutesIntoDay { get => _startMinutesIntoDay; set => _startMinutesIntoDay = value; }
         public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = value; }
         public int MaxStepsPerFrame { get => _maxStepsPerFrame; set => _maxStepsPerFrame = value; }
+        public int MaxSkipDays { get => _maxSkipDays; set => _maxSkipDays = value; }
 
         internal bool TryGetError(out string error)
         {
@@ -69,7 +72,7 @@ namespace GuenBanKhai.Calendar
 
             if (!IsMinuteOfDayOnStep(_dayStartMinute))
             {
-                return "DayStartMinute must be in [0, 1440) and a multiple of MinutesPerStep.";
+                return $"DayStartMinute must be in [0, {CalendarDate.MinutesPerDay}) and a multiple of MinutesPerStep.";
             }
 
             if (_dayNames == null || _dayNames.Length == 0)
@@ -115,7 +118,7 @@ namespace GuenBanKhai.Calendar
 
             if (!IsMinuteOfDayOnStep(_startMinutesIntoDay))
             {
-                return "StartMinutesIntoDay must be in [0, 1440) and a multiple of MinutesPerStep.";
+                return $"StartMinutesIntoDay must be in [0, {CalendarDate.MinutesPerDay}) and a multiple of MinutesPerStep.";
             }
 
             // The clock starts at base speed 1, which must already be allowed.
@@ -127,6 +130,11 @@ namespace GuenBanKhai.Calendar
             if (_maxStepsPerFrame <= 0)
             {
                 return "MaxStepsPerFrame must be greater than 0.";
+            }
+
+            if (_maxSkipDays <= 0)
+            {
+                return "MaxSkipDays must be greater than 0.";
             }
 
             return null;

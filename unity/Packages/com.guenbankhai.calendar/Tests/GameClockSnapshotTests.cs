@@ -93,16 +93,15 @@ namespace GuenBanKhai.Calendar.Tests
             clock.Tick(20f);
             var snapshot = clock.CaptureSnapshot();
             clock.Tick(35f);
-            var steps = new List<StepInfo>();
-            clock.Stepped += steps.Add;
+            var steps = new List<long>();
+            clock.Stepped += date => steps.Add(date.TotalMinutes);
 
             clock.Restore(snapshot);
             Assert.AreEqual(20.0, clock.ExactMinutes, 1e-6);
             clock.Tick(10f);
 
             Assert.AreEqual(1, steps.Count);
-            Assert.AreEqual(30, steps[0].Date.TotalMinutes);
-            Assert.AreEqual(10, steps[0].DeltaMinutes);
+            Assert.AreEqual(30, steps[0]);
         }
 
         [Test]

@@ -11,7 +11,7 @@ namespace GuenBanKhai.Calendar.Tests
         public TestAccumulator(GameClock clock, int start)
         {
             Value = start;
-            clock.Stepped += info => Advance(info.DeltaMinutes, info.Date.TotalMinutes);
+            clock.Stepped += date => Advance(clock.MinutesPerStep, date.TotalMinutes);
             clock.Skipped += (from, to) => Advance(to.TotalMinutes - from.TotalMinutes, to.TotalMinutes);
         }
 

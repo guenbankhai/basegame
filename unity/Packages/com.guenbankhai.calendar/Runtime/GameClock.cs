@@ -10,9 +10,6 @@ namespace GuenBanKhai.Calendar
     /// </summary>
     public class GameClock
     {
-        /// <summary>A longer skip is a caller bug; rejecting it keeps the per-day skip loop from hanging the game.</summary>
-        public const int MaxSkipDays = 36500;
-
         /// <summary>
         /// About 1.9 million years: far beyond any real game, and small enough that ExactMinutes (a double) stays precise
         /// to well under a thousandth of a minute. A whole number of days, so it is on every valid step.
@@ -20,7 +17,7 @@ namespace GuenBanKhai.Calendar
         public const long MaxTotalMinutes = 700_000_000L * CalendarDate.MinutesPerDay;
 
         /// <summary>More than this means handlers queue commands in a loop; cutting off keeps the game from hanging.</summary>
-        private const int MaxCommandsPerDrain = 1000;
+        public const int MaxCommandsPerDrain = 1000;
 
         private readonly int _minutesPerStep;
         private readonly int _dayStartMinute;
@@ -29,6 +26,7 @@ namespace GuenBanKhai.Calendar
         private readonly float _secondsPerGameMinute;
         private readonly float _maxSpeed;
         private readonly int _maxStepsPerFrame;
+        private readonly int _maxSkipDays;
 
         private readonly HashSet<object> _pauseSources = new HashSet<object>();
         private readonly Queue<Action> _commands = new Queue<Action>();
@@ -38,12 +36,11 @@ namespace GuenBanKhai.Calendar
         private float _baseSpeed = 1f;
         private bool _isFastForwarding;
         private float _fastForwardSpeed;
-        private long? _fastForwardTarget;
+        private long _fastForwardTarget;
         /// <summary>Bumped on every fast-forward start or stop, so a step can tell whether its handlers touched it.</summary>
         private int _fastForwardVersion;
 
         private double _pendingMinutes;
-        private long _lastUpdateMinutes;
         private int _dispatchDepth;
         private bool _draining;
         private bool _dropRemainder;
@@ -67,12 +64,13 @@ namespace GuenBanKhai.Calendar
             _secondsPerGameMinute = settings.SecondsPerGameMinute;
             _maxSpeed = settings.MaxSpeed;
             _maxStepsPerFrame = settings.MaxStepsPerFrame;
+            _maxSkipDays = settings.MaxSkipDays;
 
             _state = new CalendarSnapshot(settings.StartMinutesIntoDay, settings.StartYear, settings.StartSeasonIndex, 0, false);
-            _lastUpdateMinutes = _state.TotalMinutes;
         }
 
-        public event Action<StepInfo> Stepped;
+        /// <summary>Every step; each one is MinutesPerStep long. A skip reports its span through Skipped instead.</summary>
+        public event Action<CalendarDate> Stepped;
         public event Action<CalendarDate> HourChanged;
         public event Action<CalendarDate> DayChanged;
         public event Action<CalendarDate> WeekChanged;
@@ -116,6 +114,12 @@ namespace GuenBanKhai.Calendar
 
         /// <summary>Higher speeds are rejected rather than clamped, so caller bugs surface at once.</summary>
         public float MaxSpeed => _maxSpeed;
+
+        /// <summary>A longer skip is a caller bug; rejecting it keeps the per-day skip loop from hanging the game.</summary>
+        public int MaxSkipDays => _maxSkipDays;
+
+        /// <summary>Length of every step: what an accumulating module advances by on Stepped.</summary>
+        public int MinutesPerStep => _minutesPerStep;
 
         public int WeekLength => _dayNames.Length;
         public int SeasonCount => _seasons.Length;
@@ -173,17 +177,7 @@ namespace GuenBanKhai.Calendar
 
                 _pendingMinutes -= _minutesPerStep;
                 _dropRemainder = false;
-                try
-                {
-                    Step();
-                }
-                catch
-                {
-                    // Step throws only at a limit; dropping gathered time keeps ExactMinutes from running past it.
-                    _pendingMinutes = 0;
-                    throw;
-                }
-
+                Step();
                 if (_dropRemainder || IsPaused || Speed != speed)
                 {
                     _pendingMinutes = 0;
@@ -236,18 +230,6 @@ namespace GuenBanKhai.Calendar
             _pauseSources.Remove(source);
         }
 
-        /// <summary>Open-ended fast-forward: runs until StopFastForward.</summary>
-        public void FastForward(float speed)
-        {
-            if (TryEnqueue(() => FastForward(speed)))
-            {
-                return;
-            }
-
-            ValidateSpeed(speed, allowZero: false);
-            StartFastForward(speed, null);
-        }
-
         /// <summary>
         /// Stops exactly at targetMinutes and replaces any running fast-forward. A target equal to now completes at once.
         /// </summary>
@@ -258,7 +240,7 @@ namespace GuenBanKhai.Calendar
                 return;
             }
 
-            ValidateTarget(targetMinutes, nameof(targetMinutes));
+            ValidateTarget(targetMinutes);
             ValidateSpeed(speed, allowZero: false);
             if (targetMinutes == _state.TotalMinutes)
             {
@@ -292,36 +274,25 @@ namespace GuenBanKhai.Calendar
                 return;
             }
 
-            ValidateTarget(targetMinutes, nameof(targetMinutes));
-            if (targetMinutes - _state.TotalMinutes > (long)MaxSkipDays * CalendarDate.MinutesPerDay)
+            ValidateTarget(targetMinutes);
+            if (targetMinutes - _state.TotalMinutes > (long)_maxSkipDays * CalendarDate.MinutesPerDay)
             {
-                throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must be at most {MaxSkipDays} days after now.");
+                throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must be at most MaxSkipDays ({_maxSkipDays}) days after now.");
             }
 
+            StopFastForwardNow();
             if (targetMinutes == _state.TotalMinutes)
             {
-                StopFastForwardNow();
                 return;
             }
 
             var from = Now;
-            var previous = _state;
-            try
+            for (long nextBoundary = (Day + 1) * CalendarDate.MinutesPerDay; nextBoundary <= targetMinutes; nextBoundary += CalendarDate.MinutesPerDay)
             {
-                for (long nextBoundary = (Day + 1) * CalendarDate.MinutesPerDay; nextBoundary <= targetMinutes; nextBoundary += CalendarDate.MinutesPerDay)
-                {
-                    _state.TotalMinutes = nextBoundary;
-                    ProcessDayBoundary(out _, out _);
-                }
-            }
-            catch
-            {
-                // A skip that fails part-way changes nothing, like a rejected command.
-                _state = previous;
-                throw;
+                _state.TotalMinutes = nextBoundary;
+                ProcessDayBoundary(out _, out _);
             }
 
-            StopFastForwardNow();
             _state.TotalMinutes = targetMinutes;
             RestartFromNow();
             var to = Now;
@@ -352,13 +323,7 @@ namespace GuenBanKhai.Calendar
 
             ValidateOnStep(clockMinute, nameof(clockMinute));
             int ahead = (clockMinute - Now.ClockMinute + CalendarDate.MinutesPerDay) % CalendarDate.MinutesPerDay;
-            long next = _state.TotalMinutes + (ahead == 0 ? CalendarDate.MinutesPerDay : ahead);
-            if (next > MaxTotalMinutes)
-            {
-                throw new InvalidOperationException($"The next occurrence is past MaxTotalMinutes ({MaxTotalMinutes}).");
-            }
-
-            return next;
+            return _state.TotalMinutes + (ahead == 0 ? CalendarDate.MinutesPerDay : ahead);
         }
 
         public CalendarSnapshot CaptureSnapshot() => _state;
@@ -408,41 +373,24 @@ namespace GuenBanKhai.Calendar
         /// </summary>
         private void Step()
         {
-            // Same limit SkipTo and FastForwardTo enforce, so the clock's own snapshot always restores.
-            if (_state.TotalMinutes > MaxTotalMinutes - _minutesPerStep)
-            {
-                throw new InvalidOperationException($"The clock cannot run past MaxTotalMinutes ({MaxTotalMinutes}).");
-            }
-
-            var previous = _state;
             _state.TotalMinutes += _minutesPerStep;
             bool dayChanged = _state.TotalMinutes % CalendarDate.MinutesPerDay == 0;
             bool seasonChanged = false;
             bool yearChanged = false;
             if (dayChanged)
             {
-                try
-                {
-                    ProcessDayBoundary(out seasonChanged, out yearChanged);
-                }
-                catch
-                {
-                    _state = previous;
-                    throw;
-                }
+                ProcessDayBoundary(out seasonChanged, out yearChanged);
             }
 
             var now = Now;
             bool hourChanged = now.ClockMinute % CalendarDate.MinutesPerHour == 0;
             bool weekChanged = dayChanged && now.Day % _dayNames.Length == 0;
-            var info = new StepInfo(now, _state.TotalMinutes - _lastUpdateMinutes, Speed, _isFastForwarding);
-            _lastUpdateMinutes = _state.TotalMinutes;
             bool reachedTarget = _isFastForwarding && _fastForwardTarget == _state.TotalMinutes;
             int fastForwardVersion = _fastForwardVersion;
 
             Dispatch(() =>
             {
-                Raise(Stepped, info);
+                Raise(Stepped, now);
                 if (hourChanged)
                 {
                     Raise(HourChanged, now);
@@ -490,12 +438,6 @@ namespace GuenBanKhai.Calendar
                 return;
             }
 
-            // Checked before any change, so a failed boundary leaves the season as it was.
-            if (_state.SeasonIndex == _seasons.Length - 1 && _state.Year == int.MaxValue)
-            {
-                throw new InvalidOperationException($"Year cannot go past {int.MaxValue}.");
-            }
-
             seasonChanged = true;
             _state.SeasonAdvancePending = false;
             _state.SeasonStartDay = day;
@@ -508,7 +450,7 @@ namespace GuenBanKhai.Calendar
             }
         }
 
-        private void StartFastForward(float speed, long? target)
+        private void StartFastForward(float speed, long target)
         {
             _isFastForwarding = true;
             _fastForwardSpeed = speed;
@@ -519,7 +461,6 @@ namespace GuenBanKhai.Calendar
         private void StopFastForwardNow()
         {
             _isFastForwarding = false;
-            _fastForwardTarget = null;
             _fastForwardVersion++;
         }
 
@@ -531,10 +472,9 @@ namespace GuenBanKhai.Calendar
             Raise(FastForwardCompleted, now);
         }
 
-        /// <summary>After a skip or restore: DeltaMinutes counts from here; earlier gathered time is dropped.</summary>
+        /// <summary>After a skip or restore: time gathered before the jump is dropped.</summary>
         private void RestartFromNow()
         {
-            _lastUpdateMinutes = _state.TotalMinutes;
             _pendingMinutes = 0;
             _dropRemainder = true;
         }
@@ -557,20 +497,20 @@ namespace GuenBanKhai.Calendar
             }
         }
 
-        private void ValidateTarget(long targetMinutes, string paramName)
+        private void ValidateTarget(long targetMinutes)
         {
             if (targetMinutes < _state.TotalMinutes)
             {
-                throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must not be before now ({_state.TotalMinutes}).");
+                throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must not be before now ({_state.TotalMinutes}).");
             }
 
             // Past this the clock would hold a state that Restore rejects, so its own snapshot could not be restored.
             if (targetMinutes > MaxTotalMinutes)
             {
-                throw new ArgumentOutOfRangeException(paramName, targetMinutes, $"Must be at most MaxTotalMinutes ({MaxTotalMinutes}).");
+                throw new ArgumentOutOfRangeException(nameof(targetMinutes), targetMinutes, $"Must be at most MaxTotalMinutes ({MaxTotalMinutes}).");
             }
 
-            ValidateOnStep(targetMinutes, paramName);
+            ValidateOnStep(targetMinutes, nameof(targetMinutes));
         }
 
         private void ValidateOnStep(long minutes, string paramName)

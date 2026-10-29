@@ -23,12 +23,12 @@ namespace GuenBanKhai.Calendar.Tests
         public void Tick_RaisesSteppedOncePerStep_WithNowAtThatStep()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
-            var seen = new List<(long Date, long Now, long Delta)>();
-            clock.Stepped += info => seen.Add((info.Date.TotalMinutes, clock.Now.TotalMinutes, info.DeltaMinutes));
+            var seen = new List<(long Date, long Now)>();
+            clock.Stepped += date => seen.Add((date.TotalMinutes, clock.Now.TotalMinutes));
 
             clock.Tick(30f);
 
-            CollectionAssert.AreEqual(new[] { (10L, 10L, 10L), (20L, 20L, 10L), (30L, 30L, 10L) }, seen);
+            CollectionAssert.AreEqual(new[] { (10L, 10L), (20L, 20L), (30L, 30L) }, seen);
         }
 
         [TestCase(1)]
@@ -59,7 +59,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(1), weekLength: 1));
             clock.Tick(1439f);
             var order = new List<string>();
-            clock.Stepped += info => order.Add($"Step {clock.Now.Year}");
+            clock.Stepped += date => order.Add($"Step {clock.Now.Year}");
             clock.HourChanged += date => order.Add($"Hour {date.Year}");
             clock.DayChanged += date => order.Add($"Day {date.Year}");
             clock.WeekChanged += date => order.Add($"Week {date.Year}");
@@ -78,7 +78,7 @@ namespace GuenBanKhai.Calendar.Tests
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 60, seasons: TestCalendar.Seasons(1), weekLength: 1));
             var events = new List<string>();
             void Record(string name, CalendarDate date) => events.Add($"{name} {date.TotalMinutes} now {clock.Now.TotalMinutes}");
-            clock.Stepped += info => Record("Stepped", info.Date);
+            clock.Stepped += date => Record("Stepped", date);
             clock.HourChanged += date => Record("Hour", date);
             clock.DayChanged += date => Record("Day", date);
             clock.WeekChanged += date => Record("Week", date);
@@ -210,34 +210,6 @@ namespace GuenBanKhai.Calendar.Tests
             Assert.AreEqual(8 * 60, clock.Now.ClockMinute);
             Assert.AreEqual(TestCalendar.Minutes(2), clock.NextOccurrence(360));
             Assert.AreEqual(TestCalendar.Minutes(1, 3), clock.NextOccurrence(540));
-        }
-
-        [Test]
-        public void NextOccurrence_PastMaxTotalMinutes_Throws()
-        {
-            var clock = new GameClock(TestCalendar.Settings());
-            clock.Restore(new CalendarSnapshot(GameClock.MaxTotalMinutes - 1, 1, 0, 0, false));
-
-            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.NextOccurrence(0));
-            Assert.Throws<InvalidOperationException>(() => clock.NextOccurrence(10));
-        }
-
-        [Test]
-        public void Tick_PastMaxTotalMinutes_Throws_AndTheClockStaysRestorable()
-        {
-            var clock = new GameClock(TestCalendar.Settings());
-            clock.Restore(new CalendarSnapshot(GameClock.MaxTotalMinutes - 1, 1, 0, 0, false));
-            clock.Tick(1f);
-            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.Now.TotalMinutes);
-
-            Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
-            clock.FastForward(10f);
-            Assert.Throws<InvalidOperationException>(() => clock.Tick(5f));
-            Assert.IsTrue(clock.IsFastForwarding, "The limit stops the clock, not the fast-forward.");
-
-            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.Now.TotalMinutes);
-            Assert.AreEqual(GameClock.MaxTotalMinutes, clock.ExactMinutes, 1e-6, "Gathered time is dropped at the limit.");
-            Assert.DoesNotThrow(() => clock.Restore(clock.CaptureSnapshot()));
         }
 
         [Test]
