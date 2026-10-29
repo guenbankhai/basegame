@@ -2,80 +2,80 @@
 
 <Một câu: module làm gì.>
 
-Tài liệu này mô tả thiết kế hiện hành của module. Thuật ngữ: `GLOSSARY.md` (mục <Module>). Cách dùng nhanh: `README.md` của package. Trạng thái: `roadmap.md`.
+Tài liệu thiết kế: phạm vi, kiến trúc, mô hình nội bộ và lý do. Luật hành vi (API, Settings, event, save, quy ước cho module dùng nó): `<module>.readme.md`, từ giai đoạn Package là `README.md` của package. Thuật ngữ: `GLOSSARY.md` (mục <Module>). Trạng thái: `roadmap.md`.
 
 | Mục | Giá trị |
 |---|---|
 | Package | `unity/Packages/com.guenbankhai.<module>` |
 | Namespace / asmdef | `GuenBanKhai.<Module>`, `GuenBanKhai.<Module>.Tests` |
 | Phụ thuộc | <module khác, hoặc "Không có"> |
-| Quyết định | <link ADR> |
+| Quyết định | <link ADR, hoặc "Chưa có"> |
 
-## Phạm vi
+<!--
+Cách dùng:
+- Luật hành vi không viết ở đây mà ở README (khung: _readme-template.md).
+- Mục không có gì để viết thì ghi "Không có", không xóa, để review biết đã xét.
+- Luật mặc định (lỗi, kẹp, event, source, restore, save) đã có ở coding-standard.md: chỉ ghi chỗ làm khác và lý do.
+- [Tn] là cổng thiết kế trong review.md mà mục đó phải đạt.
+-->
+
+## Phạm vi [T2]
 
 **Trong module:** <…>
 
-**Ngoài module** (luật game hoặc module khác): <…>
+**Ngoài module:**
 
-## Kiến trúc
+- <việc>: <thuộc ai, hoặc lý do / điều kiện để làm sau>
+
+## Kiến trúc [T3]
 
 | Thành phần | Vai trò |
 |---|---|
 | <Lõi C# thuần> | <…> |
-| <Settings> | <…> |
+| <Settings C# thuần> | <…> |
 | <ScriptableObject config> | <…> |
 | <MonoBehaviour driver, nếu có> | <…> |
 
 - Lấy tham chiếu: <…>
+- Config thiếu hoặc sai: <…>
 
-## Mô hình
+## Mô hình nội bộ
 
-<State, giá trị tính ra, quy tắc. Giả định quy mô nếu thiết kế dựa vào nó.>
+State (nguồn sự thật duy nhất):
 
-## Event
-
-<Danh sách event, thời điểm phát, thứ tự.>
-
-## API và trường hợp biên
-
-Từ giai đoạn Package: khối API, bảng dưới và bảng Settings chuyển sang `README.md` của package; mục này chỉ còn một câu trỏ sang README và các quyết định thiết kế đi kèm (giới hạn, giả định quy mô, lý do).
-
-```csharp
-<API public>
+```text
+<field>   <ý nghĩa>
 ```
 
-Mặc định theo mục "API của module" trong `coding-standard.md`; bảng chỉ ghi điều riêng của từng lệnh.
+- Giá trị tính ra từ state: <…>
+- Cách lõi xử lý bên trong và lý do: <…>
+- Giả định quy mô: <…, hoặc "Không có">
 
-| Lệnh | Quy tắc |
-|---|---|
-| Chung | <gọi trong handler; chỗ làm khác mặc định và lý do> |
-| <…> | <giá trị trả về, gọi lại, trạng thái đích, giới hạn; hoặc "Mặc định"> |
+## Quyết định đi kèm
 
-### Settings
+<Lựa chọn nhỏ chưa đáng thành ADR, mỗi dòng kèm lý do: giới hạn, hằng số, chỗ làm khác `coding-standard.md`. Hoặc "Không có".>
 
-| Trường | Ràng buộc |
-|---|---|
-| <…> | <…> |
+## Ghép với module khác
 
-## Save
+<Quy ước khi dùng chung với một module cụ thể đã thiết kế. Hoặc "Không có".>
 
-<Gì được lưu, gì không, kiểm tra khi nạp.>
+## Kiểm thử [R4]
 
-## Quy ước cho module dùng <Module>
-
-<Chỉ điều mà API bắt buộc nơi dùng phải làm. Câu hỏi thuộc module chưa thiết kế ghi vào `roadmap.md`.>
-
-## Kiểm thử
-
-| File | Phủ |
+| File test | Phủ |
 |---|---|
 | <…> | <…> |
 
-Thử bằng tay: playground `Assets/Playground/<Experiment>/`, scene `Assets/Scenes/<Experiment>.unity`.
+Kiểm bằng tay (luật chạy qua callback của Unity):
 
-## Kế hoạch (tạm)
+| Luật | Bước kiểm |
+|---|---|
+| <…, hoặc "Không có"> | <…> |
+
+Playground: `Assets/Playground/<Experiment>/`, scene `Assets/Scenes/<Experiment>.unity`.
+
+## Kế hoạch (tạm) [T9]
 
 Giai đoạn: **<Thiết kế | Playground | Package>**. Xóa mục này khi phát hành.
 
-- Câu hỏi cho playground: <câu hỏi chơi thử mới trả lời được, hoặc "Không cần">
+- Câu hỏi cho playground: <…, hoặc "Không cần">
 - <Nên sửa đã duyệt, việc còn lại>

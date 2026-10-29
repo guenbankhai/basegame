@@ -8,10 +8,9 @@ Cách một cơ chế đi từ ý tưởng tới module ổn định trong BaseG
 |---|---|
 | Module nào, thứ tự, trạng thái | `roadmap.md` (bảng module). `README.md` gốc chỉ liệt kê module đã có thiết kế, kèm mô tả một dòng; không ghi trạng thái hay version |
 | Thuật ngữ: từ nào, nghĩa gì, tránh từ nào | `GLOSSARY.md` ở gốc repo, mỗi module một mục con |
-| Thiết kế hiện hành: phạm vi, kiến trúc, mô hình, event, save, quy ước cho module khác, lý do | `docs/modules/<module>.md` (khung: `docs/modules/_template.md`) |
-| API public, bảng trường hợp biên, bảng Settings | Khi chưa có package: tài liệu thiết kế. Từ giai đoạn Package: `README.md` của package; tài liệu thiết kế chỉ trỏ sang |
+| Thiết kế: phạm vi, kiến trúc, mô hình nội bộ, lý do, ghép với module khác, kiểm thử, kế hoạch | `docs/modules/<module>.md` (khung: `docs/modules/_template.md`) |
+| Luật hành vi và cách dùng: khái niệm, API, bảng trường hợp biên, Settings, event, save, quy ước cho module dùng nó | README của module (khung: `docs/modules/_readme-template.md`): `docs/modules/<module>.readme.md` khi chưa có package, `README.md` của package từ giai đoạn Package. Tự đứng một mình, không tham chiếu ra ngoài package |
 | Quyết định khó đảo ngược: chọn gì, vì sao, đã loại gì | `docs/adr/NNNN-<module>-<slug>.md` |
-| Cách dùng package, đủ để dùng mà không cần repo này | `README.md` của package; tự đứng một mình, không tham chiếu ra ngoài package |
 | Lịch sử version của package: mỗi version thay đổi gì (API, hành vi, đổi tên) | `CHANGELOG.md` của package, mới nhất ở trên; tự đứng một mình như `README.md` |
 | Quy trình: giai đoạn, việc cần làm | File này |
 | Luật review, cổng của từng giai đoạn, gợi ý soi | `review.md` |
@@ -37,9 +36,9 @@ Mỗi review chạy trong một conversation mới, độc lập với các vòn
 
 ### 1. Thiết kế
 
-- Tạo `docs/modules/<module>.md` từ `_template.md`. Đưa câu hỏi nghiên cứu của module trong roadmap vào đây.
+- Tạo `docs/modules/<module>.md` từ `_template.md` và `docs/modules/<module>.readme.md` từ `_readme-template.md`. Đưa câu hỏi nghiên cứu của module trong roadmap vào tài liệu thiết kế.
 - Bàn thiết kế bằng `/grill-with-docs`, để thuật ngữ vào `GLOSSARY.md` và quyết định vào ADR ngay lúc chốt. `/grill-me` chỉ dùng để bàn ý tưởng chưa thành tài liệu, không dùng để review.
-- Tài liệu giữ quyết định, mô hình, API, event, save và quy ước mà API bắt buộc. Câu hỏi chơi thử mới trả lời được thì ghi vào `## Kế hoạch (tạm)` cho playground, không cố chốt trên giấy. Câu hỏi thuộc module chưa thiết kế thì ghi vào `roadmap.md`.
+- Tài liệu thiết kế giữ phạm vi, kiến trúc, mô hình nội bộ và lý do; README giữ API, event, save và quy ước mà API bắt buộc. Câu hỏi chơi thử mới trả lời được thì ghi vào `## Kế hoạch (tạm)` cho playground, không cố chốt trên giấy. Câu hỏi thuộc module chưa thiết kế thì ghi vào `roadmap.md`.
 - Tự kiểm theo [cổng thiết kế](review.md#cổng-thiết-kế), rồi review bằng `/review-my-design <module>`.
 - Kết thúc khi review không còn Chặn và user chốt.
 
@@ -52,10 +51,9 @@ Mỗi review chạy trong một conversation mới, độc lập với các vòn
 
 ### 3. Package
 
-- Tạo `unity/Packages/com.guenbankhai.<module>/`: `package.json`, `Runtime/`, `Tests/`, `README.md` (usage doc), `CHANGELOG.md`. Không đưa phần debug của playground vào.
-- **Viết lại sạch**, không copy nguyên playground. Chuyển test sang; mỗi dòng bảng trường hợp biên và mỗi luật của mô hình có test.
-- `README.md` của package đi theo package sang game khác, nên phải **tự đứng một mình**: không tham chiếu `docs/`, `GLOSSARY.md`, ADR hay bất kỳ file nào ngoài package. Viết đủ để người chỉ có package vẫn dùng đúng: thiết lập, khái niệm, API chính, quy tắc quan trọng, save, quy ước cho module dùng nó. Tài liệu trong `docs/` được phép trỏ vào README, chiều ngược lại thì không.
-- Chuyển khối API, bảng trường hợp biên và bảng Settings từ tài liệu thiết kế sang README của package. Trong tài liệu thiết kế, mục API chỉ còn một câu trỏ sang README và các quyết định thiết kế đi kèm.
+- Tạo `unity/Packages/com.guenbankhai.<module>/`: `package.json`, `Runtime/`, `Tests/`, `CHANGELOG.md`. Di chuyển `docs/modules/<module>.readme.md` thành `README.md` của package, điền Cài đặt và Thiết lập. Không đưa phần debug của playground vào.
+- **Viết lại sạch**, không copy nguyên playground. Chuyển test sang; mỗi dòng bảng trường hợp biên và mỗi luật của mô hình có test, trừ luật kiểm bằng tay theo `coding-standard.md`.
+- README đi theo package sang game khác, nên phải **tự đứng một mình**: không tham chiếu `docs/`, `GLOSSARY.md`, ADR hay bất kỳ file nào ngoài package. Tài liệu trong `docs/` được phép trỏ vào README, chiều ngược lại thì không.
 - Xóa code lõi của playground, dựng lại playground mỏng chỉ dùng package (overlay, đối tượng giả). Đây là chỗ thử bằng tay khi sửa package sau này.
 - Kiểm tra compile bằng `dotnet build` trên `.csproj` do Unity sinh. Nếu Unity chưa sinh csproj cho file mới, build bằng bản sao csproj trong thư mục tạm, chỉ thay danh sách file, và ghi rõ là đã kiểm tra theo cách này.
 - Chạy test EditMode trong Unity, rồi review bằng `/review-my-module <module> release`. Cập nhật trạng thái trong `roadmap.md`.

@@ -74,6 +74,6 @@ Các module đã có thiết kế. Trạng thái và thứ tự làm của mọi
 | Làm module nào, theo thứ tự nào, đang ở trạng thái nào | [`docs/roadmap.md`](docs/roadmap.md) |
 | Một module đi từ ý tưởng tới phát hành ra sao; thông tin nào nằm ở đâu | [`docs/module-workflow.md`](docs/module-workflow.md) |
 | Thuật ngữ | [`GLOSSARY.md`](GLOSSARY.md) |
-| Thiết kế và lý do của từng module | [`docs/modules/`](docs/modules/), quyết định trong [`docs/adr/`](docs/adr/) |
-| Cách dùng một package, API, lịch sử version | `README.md` và `CHANGELOG.md` trong `unity/Packages/com.guenbankhai.<module>/` |
+| Thiết kế và lý do của từng module | `docs/modules/<module>.md`, quyết định trong [`docs/adr/`](docs/adr/) |
+| Cách dùng, API và luật hành vi của module; lịch sử version | `README.md` và `CHANGELOG.md` trong `unity/Packages/com.guenbankhai.<module>/` (khi chưa có package: `docs/modules/<module>.readme.md`) |
 | Luật code, cấu trúc thư mục, luật review | [`docs/coding-standard.md`](docs/coding-standard.md), [`docs/structure.md`](docs/structure.md), [`docs/review.md`](docs/review.md) |

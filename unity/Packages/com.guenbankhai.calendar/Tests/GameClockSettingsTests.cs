@@ -84,7 +84,8 @@ namespace GuenBanKhai.Calendar.Tests
         [TestCase(float.NaN)]
         [TestCase(float.PositiveInfinity)]
         [TestCase(0f)]
-        public void NewClock_NonFiniteOrZeroRates_Throws(float value)
+        [TestCase(-1f)]
+        public void NewClock_NonFiniteOrNotPositiveRates_Throws(float value)
         {
             var secondsPerMinute = TestCalendar.Settings();
             secondsPerMinute.SecondsPerGameMinute = value;
@@ -133,7 +134,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Names_ComeFromTheSettings()
+        public void GetDayNameOrGetSeasonName_ComeFromTheSettings()
         {
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, 0, 5)));
 
@@ -144,12 +145,13 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Names_OutOfRange_Throw()
+        public void GetDayNameOrGetSeasonName_OutOfRange_Throw()
         {
             var clock = new GameClock(TestCalendar.Settings());
 
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetDayName(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetDayName(7));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetSeasonName(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => clock.GetSeasonName(4));
         }
 

@@ -13,7 +13,7 @@ Every rule for classifying, reporting and passing comes from `docs/review.md`. T
 ## 1. Read
 
 - `docs/review.md`: sections "Luật chung" and "Cổng thiết kế" only.
-- The design doc `docs/modules/<module>.md`, the ADRs it links, and the module's section in `GLOSSARY.md`.
+- The design doc `docs/modules/<module>.md`, the module README (`docs/modules/<module>.readme.md`, or the package `README.md` once a package exists), the ADRs they link, and the module's section in `GLOSSARY.md`.
 - `docs/coding-standard.md`, section "API của module".
 - Other docs only where a finding depends on them.
 

@@ -25,7 +25,7 @@
 
 ### Bảng trường hợp biên
 
-Module có một bảng, mỗi lệnh public một dòng: trong tài liệu thiết kế khi chưa có package, trong `README.md` của package từ giai đoạn Package (xem `module-workflow.md`). Mỗi dòng chỉ ghi điều riêng của lệnh: giá trị trả về, gọi lại hay gọi khi đã ở trạng thái đích, chỗ làm khác mặc định ở trên. Lệnh không có gì riêng thì ghi "Mặc định". Luật chung cho cả module (gọi trong handler, constructor) có dòng riêng.
+README của module có một bảng, mỗi lệnh public một dòng (xem `module-workflow.md`). Mỗi dòng chỉ ghi điều riêng của lệnh: giá trị trả về, gọi lại hay gọi khi đã ở trạng thái đích, chỗ làm khác mặc định ở trên. Lệnh không có gì riêng thì ghi "Mặc định". Luật chung cho cả module (gọi trong handler, constructor) có dòng riêng.
 
 ## File
 
@@ -65,4 +65,6 @@ private static void ResetStatics()
 ## Test và tài liệu
 
 - Package: bắt buộc có test cho hành vi quan trọng và một usage doc ngắn.
+- Luật chỉ chạy qua callback của Unity (`Awake`, `OnValidate`…) thì không viết test EditMode; mục Kiểm thử của tài liệu thiết kế ghi nó là "kiểm bằng tay", kèm bước kiểm.
+- Tên test: `<Lệnh>_<Tình huống>_<Kết quả>`, với `<Lệnh>` đúng như cột đầu của bảng quy tắc (`SkipTo_PastOrOffStep_Throws`). Test cho nhiều lệnh thì ghép bằng `Or` (`SkipToOrFastForwardTo_…`); lệnh gọi trong handler thêm `InHandler` (`SetSpeedInHandler_…`); settings dùng `NewClock_…`; luật của mô hình bắt đầu bằng tên luật (`FixedLengthSeason_…`). Nhờ vậy độ phủ của bảng quy tắc dò được bằng tên test.
 - Playground: test và tài liệu không bắt buộc.

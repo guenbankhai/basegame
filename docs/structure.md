@@ -7,7 +7,7 @@ basegame/
 ├── AGENTS.md, README.md, GLOSSARY.md
 ├── docs/
 │   ├── roadmap.md, structure.md, coding-standard.md, module-workflow.md, review.md
-│   ├── modules/                   mỗi module một tài liệu thiết kế; _template.md
+│   ├── modules/                   <module>.md (thiết kế), <module>.readme.md (README khi chưa có package); _template.md, _readme-template.md
 │   └── adr/                       NNNN-<module>-<slug>.md
 ├── unity/                         project Unity chính
 │   ├── Assets/

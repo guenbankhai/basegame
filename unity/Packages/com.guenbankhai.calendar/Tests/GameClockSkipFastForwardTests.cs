@@ -183,7 +183,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void FastForward_InvalidArguments_Throw()
+        public void FastForwardTo_InvalidArguments_Throw()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             clock.Tick(20f);
@@ -196,7 +196,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void FastForward_AtMaxSpeed_Runs()
+        public void FastForwardTo_AtMaxSpeed_Runs()
         {
             var clock = new GameClock(TestCalendar.Settings(maxSpeed: 5f));
 
@@ -209,7 +209,7 @@ namespace GuenBanKhai.Calendar.Tests
 
         [TestCase(5.5f)]
         [TestCase(float.PositiveInfinity)]
-        public void FastForward_AboveMaxSpeed_Throws_AndDoesNotStart(float speed)
+        public void FastForwardTo_AboveMaxSpeed_Throws_AndDoesNotStart(float speed)
         {
             var clock = new GameClock(TestCalendar.Settings(maxSpeed: 5f));
 
@@ -217,6 +217,44 @@ namespace GuenBanKhai.Calendar.Tests
 
             StringAssert.Contains("MaxSpeed (5)", error.Message);
             Assert.IsFalse(clock.IsFastForwarding);
+        }
+
+        [Test]
+        public void FastForwardTo_RejectedDuringFastForward_KeepsTheOldTargetAndSpeed()
+        {
+            var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10, maxSpeed: 10f));
+            var completed = new List<long>();
+            clock.FastForwardCompleted += date => completed.Add(date.TotalMinutes);
+            clock.FastForwardTo(60, 5f);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(120, 11f));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.FastForwardTo(-10, 5f));
+            Assert.Throws<ArgumentException>(() => clock.FastForwardTo(125, 5f));
+            Assert.AreEqual(5f, clock.Speed);
+
+            clock.Tick(20f);
+
+            Assert.AreEqual(60, clock.Now.TotalMinutes, "The old target still stops the clock.");
+            CollectionAssert.AreEqual(new[] { 60L }, completed);
+        }
+
+        [Test]
+        public void SkipTo_RejectedDuringFastForward_KeepsTheFastForwardAndGatheredTime()
+        {
+            var settings = TestCalendar.Settings(minutesPerStep: 10);
+            settings.MaxSkipDays = 1;
+            var clock = new GameClock(settings);
+            clock.FastForwardTo(TestCalendar.Minutes(0, 2), 5f);
+            clock.Tick(3f);
+            Assert.AreEqual(15.0, clock.ExactMinutes, 1e-6);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(0));
+            Assert.Throws<ArgumentException>(() => clock.SkipTo(25));
+            Assert.Throws<ArgumentOutOfRangeException>(() => clock.SkipTo(TestCalendar.Minutes(2)));
+
+            Assert.IsTrue(clock.IsFastForwarding);
+            Assert.AreEqual(5f, clock.Speed);
+            Assert.AreEqual(15.0, clock.ExactMinutes, 1e-6);
         }
 
         [Test]
@@ -319,7 +357,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void FastForwardAgain_ReplacesTarget_WithoutCompletingTheOldOne()
+        public void FastForwardTo_Again_ReplacesTarget_WithoutCompletingTheOldOne()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var completed = new List<long>();

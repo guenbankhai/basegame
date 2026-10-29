@@ -157,7 +157,9 @@ double smooth = clock.ExactMinutes; // gồm phần thời gian đã tích cho s
 long next6am = clock.NextOccurrence(6 * 60);   // không bao giờ trả Now: đúng 6:00 thì trả 6:00 ngày mai
 ```
 
-Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStartMinute) % 1440`, `DayOfWeek = Day % WeekLength`. Tuần chạy liên tục qua các mùa.
+Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStartMinute) % 1440`, `DayOfWeek = Day % WeekLength`, `DayInSeason = Day - ngày bắt đầu mùa`. Tuần chạy liên tục qua các mùa.
+
+`Tick(d)` đổi giây thật ra phút game: `d × Speed / SecondsPerGameMinute`. Driver truyền `Time.deltaTime`, nên `Time.timeScale = 0` cũng dừng đồng hồ. Khi một frame cần quá `MaxStepsPerFrame` step, phần dư bị bỏ: máy quá tải thì thời gian game chậm lại, giống `Time.maximumDeltaTime`.
 
 ## Event
 
@@ -169,19 +171,21 @@ Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStar
 | `Restored(date)` | Sau restore |
 | `FastForwardCompleted(date)` | Khi fast-forward chạm đích |
 
+- Đồng hồ đi từng step một: cập nhật state tới step đó, phát event của step, chạy lệnh xếp hàng, rồi mới sang step kế. Event mốc luôn phát đúng phút xảy ra, vì step là ước của 60.
 - Cùng một phút, thứ tự phát là: Stepped → Hour → Day → Week → Season → Year → (lệnh xếp hàng) → FastForwardCompleted. State đã cập nhật xong trước khi phát.
 - Trong handler, `clock.Now` là thời điểm của chính event đó.
 - Handler ném exception: lỗi được log, các handler còn lại vẫn chạy.
 
 ### Lệnh gọi trong handler
 
-- Lệnh đổi đồng hồ (`SkipTo`, `FastForwardTo`, `StopFastForward`, `SetSpeed`, `Pause`, `Resume`, `Restore`, `AdvanceSeason`) gọi trong handler được **xếp hàng**, và chạy sau các event của step đó, đúng thứ tự gọi. Vì vậy mọi handler cùng thấy một thời điểm. Hệ quả: ví dụ gọi `Pause` xong thì `IsPaused` vẫn là `false` cho tới khi hết event của step.
+- Lệnh đổi đồng hồ (`SkipTo`, `FastForwardTo`, `StopFastForward`, `SetSpeed`, `Pause`, `Resume`, `Restore`, `AdvanceSeason`) gọi trong handler được **xếp hàng**, và chạy sau các event của step đó, đúng thứ tự gọi. Vì vậy mọi handler cùng thấy một thời điểm. Hệ quả: ví dụ gọi `Pause` xong thì `IsPaused` vẫn là `false` cho tới khi hết event của step. Lệnh đọc dùng được bất cứ lúc nào.
+- Lệnh sinh ra trong lúc đang chạy hàng đợi (ví dụ từ handler của `Skipped`, `Restored`) xếp vào cuối, không lồng nhau.
 - Nhờ xếp hàng theo thứ tự, `Restore(save); AdvanceSeason();` trong handler áp cờ vào state sau restore, còn `SkipTo(t); AdvanceSeason();` đổi mùa ở day boundary sau `t`.
 - Tham số của lệnh xếp hàng được kiểm tra lúc lệnh chạy; lệnh sai chỉ bị log.
 - Không gọi `Tick` trong handler (ném `InvalidOperationException`).
 - Một lượt chạy tối đa `GameClock.MaxCommandsPerDrain` (1000) lệnh xếp hàng; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
 
-Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích, hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi; nó chỉ làm bỏ phần dư khi hủy một fast-forward (vì running speed đổi). Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
+Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích (kể cả `FastForwardTo(Now)`), hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi; nó chỉ làm bỏ phần dư khi hủy một fast-forward (vì running speed đổi). Lệnh không đổi running speed (`SetSpeed` trong lúc fast-forward, `SetSpeed` bằng tốc độ cũ) không làm bỏ. Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
 
 ## Điều khiển
 
@@ -200,7 +204,7 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi (thông báo ghi rõ `MaxSpeed`). Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
 | `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ, kể cả khi gọi trong handler ở step chạm đích cũ. `t == Now`: hoàn thành ngay và phát `Completed`. `t < Now` hoặc `t > GameClock.MaxTotalMinutes`: lỗi. Dừng đúng tại `t` |
 | `StopFastForward()` | Về base speed, không phát `Completed` |
-| `SkipTo(t)` | Hủy fast-forward đang chạy, kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `MaxSkipDays` ngày: lỗi (thông báo ghi rõ `MaxSkipDays`). Chạy được cả khi đang tạm dừng |
+| `SkipTo(t)` | Hủy fast-forward đang chạy (không phát `Completed`), kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `MaxSkipDays` ngày: lỗi (thông báo ghi rõ `MaxSkipDays`). Chạy được cả khi đang tạm dừng |
 | `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua. Tạm dừng khi đang fast-forward thì fast-forward dừng theo; resume thì chạy tiếp |
 | `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai). `m` ngoài `[0, 1440)` hoặc không phải bội của step: lỗi |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
@@ -221,15 +225,15 @@ Trong lúc skip, fixed-length season vẫn tự chuyển; cờ `AdvanceSeason()`
 
 ### Step chạm đích fast-forward
 
-1. Phát các event của step. `IsFastForwarding` vẫn là `true`.
-2. Chạy các lệnh mà handler xếp hàng.
-3. Nếu không lệnh nào dừng, thay hoặc hủy fast-forward thì về base speed rồi phát `FastForwardCompleted`. Có lệnh như vậy thì không phát cho đích cũ.
+1. Phát các event của step. `IsFastForwarding` vẫn là `true`, `Speed` vẫn là tốc độ fast-forward.
+2. Chạy các lệnh mà handler xếp hàng; lúc này vẫn đang fast-forward.
+3. Nếu không lệnh nào dừng, thay hoặc hủy fast-forward (`StopFastForward`, `FastForwardTo`, `SkipTo`, `Restore`) thì về base speed, phát `FastForwardCompleted`, rồi chạy các lệnh mà handler của `FastForwardCompleted` xếp hàng. Có lệnh như vậy thì không phát cho đích cũ. Lệnh khác (`SetSpeed`, `Pause`) không ngăn `Completed`.
 
 Ví dụ: fast-forward tới 6:00, handler `HourChanged` lúc 6:00 gọi `FastForwardTo(7:00)` → chỉ có `Completed(7:00)`.
 
 ## Mùa
 
-Mùa chỉ đổi ở day boundary. Ở mỗi day boundary, mùa đổi khi cờ `AdvanceSeason()` đang bật **hoặc** fixed-length season đã đủ ngày; mỗi day boundary đổi tối đa một mùa. Qua mùa cuối thì sang năm mới và về mùa 0. Gọi `AdvanceSeason()` nhiều lần trong một ngày vẫn chỉ đổi một mùa.
+Mùa chỉ đổi ở day boundary. Ở mỗi day boundary, mùa đổi khi cờ `AdvanceSeason()` đang bật **hoặc** fixed-length season đã đủ ngày; mỗi day boundary đổi tối đa một mùa. Qua mùa cuối thì sang năm mới và về mùa 0. Gọi `AdvanceSeason()` nhiều lần trong một ngày vẫn chỉ đổi một mùa. `AdvanceSeason()` cũng kết thúc sớm được một fixed-length season; mùa mới đếm ngày từ day boundary đó.
 
 ## Save
 
@@ -242,6 +246,7 @@ clock.Restore(data);
 - Không lưu tốc độ, pause source, trạng thái fast-forward. `Restore` giữ nguyên base speed và pause source hiện có, hủy fast-forward đang chạy (không phát `Completed`), bỏ thời gian lẻ giữa hai step.
 - `Restore` ném `ArgumentException` nếu `TotalMinutes` âm, quá `GameClock.MaxTotalMinutes` hoặc không phải bội của step, `SeasonIndex` ngoài số mùa, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`. Snapshot bị từ chối không làm đổi gì.
 - `Restore` không tự sửa save cho khớp settings hiện tại. Đổi luật chung của lịch (số mùa, `MinutesPerStep`, `DayStartMinute`) sau khi đã có save thì game phải tự chuyển đổi save cũ trước khi gọi `Restore`; nếu không, save cũ có thể bị từ chối hoặc lệch giờ.
+- Rút ngắn một mùa sau khi đã có save: save có `DayInSeason` vượt độ dài mới vẫn nạp được, mùa tự chuyển ở day boundary kế tiếp.
 
 ## Viết module dùng Calendar
 

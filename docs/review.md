@@ -68,7 +68,7 @@ Viết tiếng Việt, theo thứ tự:
 
 ## Cổng thiết kế
 
-Đối tượng: `docs/modules/<module>.md`, các ADR nó trỏ tới, mục của module trong `GLOSSARY.md`.
+Đối tượng: tài liệu thiết kế `docs/modules/<module>.md`, README của module (`docs/modules/<module>.readme.md`, hoặc `README.md` của package nếu đã có), các ADR được trỏ tới, mục của module trong `GLOSSARY.md`. T4–T6 xét README.
 
 | # | Cổng |
 |---|---|
@@ -102,8 +102,8 @@ Báo cáo thêm: câu trả lời của từng câu hỏi; thay đổi đề xu�
 |---|---|
 | R1 | `dotnet build` trên `.csproj` do Unity sinh không lỗi; user báo test EditMode pass. Chưa có kết quả test thì `Chưa kiểm được`, chưa pass |
 | R2 | API public trong code khớp khối API trong `README.md` của package; tài liệu thiết kế không còn giữ bản API riêng |
-| R3 | Code làm đúng từng câu của tài liệu thiết kế và của bảng quy tắc, bảng Settings trong `README.md` của package |
-| R4 | Mỗi dòng bảng trường hợp biên (trong `README.md` của package) và mỗi luật của mô hình có ít nhất một test; module có thời gian có test "hai đường cùng kết quả" cho B1 |
+| R3 | Code làm đúng từng câu của tài liệu thiết kế và của `README.md` của package |
+| R4 | Mỗi dòng bảng trường hợp biên và mỗi luật hành vi trong `README.md` của package có ít nhất một test, hoặc ghi "kiểm bằng tay" kèm bước kiểm (`coding-standard.md`). Dò độ phủ theo tên test; module có thời gian có test "hai đường cùng kết quả" cho B1 |
 | R5 | Code theo `coding-standard.md` |
 | R6 | `README.md` của package tự đứng một mình, có mọi type public và khớp API |
 | R7 | Playground chỉ dùng package, không còn code lõi |
