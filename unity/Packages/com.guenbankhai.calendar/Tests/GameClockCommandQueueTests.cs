@@ -10,7 +10,7 @@ namespace GuenBanKhai.Calendar.Tests
     public class GameClockCommandQueueTests
     {
         [Test]
-        public void CommandInHandler_RunsAfterThatMinutesEvents_AndDropsRestOfTick()
+        public void CommandQueue_CommandInHandler_RunsAfterThatMinutesEvents_AndDropsRestOfTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var events = TestCalendar.RecordAll(clock);
@@ -154,7 +154,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SameSpeedCommandsInHandler_DoNotStopTheTick()
+        public void SetSpeedInHandler_SameSpeed_DoesNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Stepped += date => clock.SetSpeed(1f);
@@ -165,7 +165,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void QueuedCommands_RunInOrder()
+        public void CommandQueue_SeveralCommandsInHandler_RunInOrder()
         {
             var clock = new GameClock(TestCalendar.Settings());
             object a = new object();
@@ -190,7 +190,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void CommandsQueuedByQueuedCommands_RunAfterTheEarlierOnes()
+        public void CommandQueue_CommandsQueuedWhileDraining_RunAfterTheEarlierOnes()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var order = new List<string>();
@@ -216,7 +216,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void HandlersThatKeepQueueingCommands_AreCutOff_AndLogged()
+        public void CommandQueue_HandlersKeepQueueing_AreCutOffAndLogged()
         {
             var clock = new GameClock(TestCalendar.Settings());
             int completed = 0;
@@ -235,7 +235,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void CutOff_DropsEveryCommandStillQueued_IncludingAResume()
+        public void CommandQueue_CutOff_DropsEveryCommandStillQueuedIncludingAResume()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var source = new object();
@@ -261,7 +261,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void QueuedCommand_IsCheckedWhenItRuns_AndAFailureIsLoggedNotThrown()
+        public void CommandQueue_InvalidQueuedCommand_IsCheckedWhenItRunsAndLoggedNotThrown()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Stepped += date =>
@@ -377,7 +377,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void ThrowingHandler_IsLogged_AndOtherHandlersStillRun()
+        public void Event_ThrowingHandler_IsLoggedAndOtherHandlersStillRun()
         {
             var clock = new GameClock(TestCalendar.Settings());
             int secondCalls = 0;
@@ -393,7 +393,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void TickInsideHandler_IsRejected()
+        public void TickInHandler_Always_Throws()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Stepped += _ => clock.Tick(1f);

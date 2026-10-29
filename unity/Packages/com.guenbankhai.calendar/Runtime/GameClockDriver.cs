@@ -37,6 +37,13 @@ namespace GuenBanKhai.Calendar
 
         private void Update()
         {
+            // Re-enabled after a failed Awake.
+            if (Clock == null)
+            {
+                enabled = false;
+                return;
+            }
+
             Clock.Tick(Time.deltaTime);
         }
     }

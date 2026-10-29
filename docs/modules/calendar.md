@@ -61,7 +61,7 @@ Mọi giá trị khác (`Day`, `ClockMinute`, `DayOfWeek`, `DayInSeason`) tính 
 ## Quyết định đi kèm
 
 - `MaxTotalMinutes` là bội của 1440, nên nằm trên mọi step hợp lệ, và đủ nhỏ để `ExactMinutes` (`double`) chính xác dưới một phần nghìn phút. Chỉ dùng để kiểm tra đầu vào (`Restore`, đích của `SkipTo` và `FastForwardTo`).
-- **Giả định quy mô:** đồng hồ không chạy tới `MaxTotalMinutes` và `Year` không chạm `int.MaxValue`. Lõi không kiểm tra hai giới hạn này khi `Tick` hay khi sang năm, theo luật không thêm code cho trường hợp chỉ xảy ra khi tràn kiểu dữ liệu.
+- Giả định quy mô (mục Giới hạn trong `README.md`) không được kiểm tra khi `Tick` hay khi sang năm, theo luật không thêm code cho trường hợp chỉ xảy ra khi tràn kiểu dữ liệu.
 - `MaxSkipDays` là setting: skip xa hơn coi là bug của nơi gọi, chặn lại để vòng lặp từng ngày của skip không treo game.
 - Settings chỉ là cấu hình ban đầu. Cần đổi lúc chạy thứ chưa có lệnh (ví dụ `MaxSpeed`, độ dài ngày) thì thêm lệnh riêng khi có nhu cầu.
 - `AdvanceSeason()` cũng xếp hàng trong handler, để `Restore(save); AdvanceSeason();` không bị snapshot xóa cờ.
@@ -93,3 +93,6 @@ Kiểm bằng tay:
 | Config sai: asset log warning | Đặt `Minutes Per Step` = 7 trong `CalendarConfig.asset` → Console có warning |
 | Config thiếu: driver log lỗi, tự tắt | Bỏ trống ô Config của driver, vào Play → có lỗi, driver tắt |
 | Config sai: driver log lỗi, tự tắt | `Minutes Per Step` = 7, vào Play → có `ArgumentException`, driver tắt |
+| Driver bị bật lại khi không có `Clock` thì tự tắt | Bỏ trống ô Config, vào Play (có lỗi "has no CalendarConfig", ô enabled bị bỏ tick); trong lúc Play, tick lại ô enabled của driver → ô enabled bị bỏ tick lại ngay, Console không có `NullReferenceException` |
+| `Time.timeScale = 0` dừng đồng hồ | Vào Play, đặt `Time Scale` = 0 trong **Project Settings → Time** → giờ trên overlay đứng yên; đặt lại 1 → chạy tiếp |
+| Driver chạy trước: `Clock` có sẵn từ `Awake`/`OnEnable` | Mở scene `Calendar.unity`, vào Play → không có lỗi "has no running GameClock" từ `CalendarDebugOverlay` hay `FakeNeedListener` (hai component này đọc `Clock` trong `OnEnable`) |

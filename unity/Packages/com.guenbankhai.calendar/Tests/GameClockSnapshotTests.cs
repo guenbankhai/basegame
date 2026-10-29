@@ -30,7 +30,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void CaptureSnapshot_IsACopy()
+        public void CaptureSnapshot_ClockMovesOn_SnapshotStaysAsCaptured()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var snapshot = clock.CaptureSnapshot();
@@ -43,7 +43,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Snapshot_SurvivesJsonUtilityRoundTrip()
+        public void CaptureSnapshotOrRestore_JsonUtilityRoundTrip_KeepsTheState()
         {
             var snapshot = new CalendarSnapshot(TestCalendar.Minutes(40, 12), 3, 1, 30, true);
 

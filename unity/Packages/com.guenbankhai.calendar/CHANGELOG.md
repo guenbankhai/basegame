@@ -8,13 +8,18 @@ Mọi thay đổi của package `com.guenbankhai.calendar`, mới nhất ở tr�
 
 - Bỏ `GameClock.FastForward(float speed)` (fast-forward không đích). Dùng `FastForwardTo(targetMinutes, speed)`.
 - Bỏ kiểu `StepInfo`; `Stepped` đổi thành `Action<CalendarDate>` như các event mốc khác. Độ dài step đọc qua `GameClock.MinutesPerStep` (mới); tốc độ và trạng thái fast-forward đọc từ `Speed`, `IsFastForwarding` trong handler.
-- `MaxSkipDays` thành setting: `CalendarSettings.MaxSkipDays` (mặc định 36500, phải `> 0`), đọc qua `GameClock.MaxSkipDays`. Bỏ hằng `GameClock.MaxSkipDays`.
+- `MaxSkipDays` thành setting: `CalendarSettings.MaxSkipDays` (mặc định 36500, phải `> 0`). Hằng `GameClock.MaxSkipDays` thành property đọc giá trị của settings.
+- `GameClock.MaxTotalMinutes` đổi từ `long.MaxValue / 2` thành `700_000_000 × 1440`. `Restore`, `SkipTo` và `FastForwardTo` từ chối giá trị lớn hơn, kể cả save cũ có `TotalMinutes` trong khoảng hai giá trị này.
 
 ### Thêm
 
 - `GameClock.MaxCommandsPerDrain` (1000) thành hằng public.
+- `GameClock.MaxStepsPerFrame`: đọc lại setting cùng tên.
+- `SeasonDefinition.Name` và `SeasonDefinition.LengthInDays` có setter public.
 
 ### Đổi hành vi
+
+- Settings kiểm chặt hơn: `MaxSpeed` phải `>= 1` (trước là `> 0`); tên thứ và tên mùa không được null hoặc rỗng. Settings trước đây hợp lệ mà vi phạm các luật này giờ làm constructor `GameClock` ném `ArgumentException`.
 
 - `Tick` không còn ném `InvalidOperationException` khi chạy quá `MaxTotalMinutes`, và `NextOccurrence` không còn ném khi kết quả vượt `MaxTotalMinutes`. `MaxTotalMinutes` chỉ còn dùng để kiểm tra đầu vào của `Restore`, `SkipTo` và `FastForwardTo`.
 - Bỏ giới hạn `Year == int.MaxValue` khi sang năm (`Tick` và `SkipTo` không còn ném ở đó). Package giả định đồng hồ không chạy tới các giới hạn này.

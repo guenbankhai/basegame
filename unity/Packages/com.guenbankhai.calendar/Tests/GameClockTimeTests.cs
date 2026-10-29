@@ -33,7 +33,7 @@ namespace GuenBanKhai.Calendar.Tests
 
         [TestCase(1)]
         [TestCase(10)]
-        public void DayAndHour_FollowDayStartMinute(int step)
+        public void Tick_DayStartMinuteSet_DayAndHourFollowIt(int step)
         {
             // Day starts at 06:00: the clock shows 06:00 at TotalMinutes 0 and the day changes at the next 06:00.
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: step, dayStartMinute: 360));
@@ -53,7 +53,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SameMinute_EventsFireInOrder_AfterStateIsUpdated()
+        public void Tick_SeveralEventsInOneMinute_FireInOrderAfterStateIsUpdated()
         {
             // One-day season, one-day week: every boundary falls on minute 1440.
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(1), weekLength: 1));
@@ -72,7 +72,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void ManyStepsInOneTick_RaiseEachStepsEventsInOrder_WithNowAtThatStep()
+        public void Tick_ManySteps_RaiseEachStepsEventsInOrderWithNowAtThatStep()
         {
             // 60-minute steps, one-day seasons and weeks: 25 steps cross one day, week, season and year boundary.
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 60, seasons: TestCalendar.Seasons(1), weekLength: 1));
@@ -227,6 +227,7 @@ namespace GuenBanKhai.Calendar.Tests
         public void Tick_ProcessesAtMostMaxStepsPerFrame_AndDropsTheRest(int step)
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: step, maxStepsPerFrame: 5));
+            Assert.AreEqual(5, clock.MaxStepsPerFrame);
 
             clock.Tick(1000f);
 

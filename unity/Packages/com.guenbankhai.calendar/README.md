@@ -105,7 +105,7 @@ Lấy settings từ asset bằng `config.CreateSettings()`. Hàm này trả bả
 | `StartYear`, `StartSeasonIndex` | 1, 0 | `StartYear >= 0`; index nằm trong `Seasons` |
 | `StartMinutesIntoDay` | 360 | Trong `[0, 1440)`, bội của step |
 | `MaxSpeed` | 100 | Số hữu hạn, `>= 1` (đồng hồ bắt đầu ở base speed 1) |
-| `MaxStepsPerFrame` | 120 | > 0. Giá trị lớn kèm fast-forward nhanh có thể chạy rất nhiều step và event trong một frame, gây giật |
+| `MaxStepsPerFrame` | 120 | > 0; đọc lại qua `clock.MaxStepsPerFrame`. Giá trị lớn kèm fast-forward nhanh có thể chạy rất nhiều step và event trong một frame, gây giật |
 | `MaxSkipDays` | 36500 | > 0. `SkipTo` xa hơn số ngày này bị từ chối (coi là bug của nơi gọi); đọc lại qua `clock.MaxSkipDays` |
 
 Settings sai: constructor `GameClock` ném `ArgumentException`; trong Editor, asset log warning.
@@ -121,7 +121,7 @@ GameClock(CalendarSettings settings);
 
 CalendarDate Now { get; }  double ExactMinutes { get; }
 float Speed { get; }  float MaxSpeed { get; }  bool IsPaused { get; }  bool IsFastForwarding { get; }
-int MinutesPerStep { get; }  int MaxSkipDays { get; }  int WeekLength { get; }  int SeasonCount { get; }
+int MinutesPerStep { get; }  int MaxSkipDays { get; }  int MaxStepsPerFrame { get; }  int WeekLength { get; }  int SeasonCount { get; }
 string GetDayName(int dayOfWeek);  string GetSeasonName(int seasonIndex);
 long NextOccurrence(int clockMinute);
 
@@ -137,8 +137,7 @@ event Action<CalendarDate> Stepped, HourChanged, DayChanged, WeekChanged, Season
 event Action<CalendarDate, CalendarDate> Skipped;   // from, to
 event Action<CalendarDate> Restored, FastForwardCompleted;
 
-const long MaxTotalMinutes = 700_000_000L * 1440;
-const int MaxCommandsPerDrain = 1000;
+const long MaxTotalMinutes;  const int MaxCommandsPerDrain;   // giá trị: mục Giới hạn
 ```
 
 Các type khác:
@@ -183,7 +182,7 @@ Cách tính: `Day = TotalMinutes / 1440`, `ClockMinute = (TotalMinutes + DayStar
 - Nhờ xếp hàng theo thứ tự, `Restore(save); AdvanceSeason();` trong handler áp cờ vào state sau restore, còn `SkipTo(t); AdvanceSeason();` đổi mùa ở day boundary sau `t`.
 - Tham số của lệnh xếp hàng được kiểm tra lúc lệnh chạy; lệnh sai chỉ bị log.
 - Không gọi `Tick` trong handler (ném `InvalidOperationException`).
-- Một lượt chạy tối đa `GameClock.MaxCommandsPerDrain` (1000) lệnh xếp hàng; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
+- Một lượt chạy tối đa `GameClock.MaxCommandsPerDrain` lệnh xếp hàng; vượt quá (handler gọi lệnh lặp vô tận) thì log lỗi và bỏ phần còn lại.
 
 Sau mỗi step, phần thời gian còn lại của lần `Tick` đó bị bỏ nếu đồng hồ vừa tạm dừng, skip, restore, fast-forward chạm đích (kể cả `FastForwardTo(Now)`), hoặc đổi running speed. `SkipTo(Now)` không tính là skip vì thời gian không trôi; nó chỉ làm bỏ phần dư khi hủy một fast-forward (vì running speed đổi). Lệnh không đổi running speed (`SetSpeed` trong lúc fast-forward, `SetSpeed` bằng tốc độ cũ) không làm bỏ. Nhờ vậy đồng hồ không chạy quá chỗ bị dừng khi một frame bị giật.
 
@@ -200,6 +199,8 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | Lệnh | Quy tắc |
 |---|---|
 | Chung | Mọi mốc thời gian phải là bội của step. Sai thì ném `ArgumentException` (hoặc lớp con) |
+| Gọi trong handler | Lệnh đổi đồng hồ được xếp hàng, tham số kiểm lúc lệnh chạy, lệnh sai chỉ bị log; `Tick` ném `InvalidOperationException`. Chi tiết: mục Lệnh gọi trong handler |
+| `GameClock(settings)` | `settings == null` hoặc settings sai (bảng Settings): ném `ArgumentException` (hoặc lớp con). Settings được copy, sửa sau đó không ảnh hưởng đồng hồ |
 | `Tick(d)` | `d` âm, NaN hoặc vô hạn: lỗi. Mỗi lần chạy tối đa `MaxStepsPerFrame` step, phần dư bị bỏ |
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi (thông báo ghi rõ `MaxSpeed`). Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |
 | `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ, kể cả khi gọi trong handler ở step chạm đích cũ. `t == Now`: hoàn thành ngay và phát `Completed`. `t < Now` hoặc `t > GameClock.MaxTotalMinutes`: lỗi. Dừng đúng tại `t` |
@@ -208,6 +209,10 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua. Tạm dừng khi đang fast-forward thì fast-forward dừng theo; resume thì chạy tiếp |
 | `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai). `m` ngoài `[0, 1440)` hoặc không phải bội của step: lỗi |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
+| `AdvanceSeason()` | Gọi lại trước day boundary kế tiếp thì không thêm gì. Luật đổi mùa: mục Mùa |
+| `CaptureSnapshot()` | Trả bản copy; đồng hồ chạy tiếp không đổi snapshot đã lấy |
+| `Restore(s)` | `TotalMinutes` âm, quá `GameClock.MaxTotalMinutes` hoặc không phải bội của step, `SeasonIndex` ngoài số mùa, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`: lỗi. Hủy fast-forward đang chạy (không phát `Completed`), bỏ thời gian lẻ giữa hai step, giữ nguyên base speed và pause source |
+| `CalendarConfig.CreateSettings()` | Trả bản copy mới mỗi lần gọi; sửa bản copy không đổi asset |
 
 Tốc độ vượt `MaxSpeed` bị từ chối chứ không bị kẹp, để lỗi ở nơi gọi lộ ra ngay. UI chọn tốc độ nên giới hạn theo `clock.MaxSpeed`.
 
@@ -243,8 +248,7 @@ clock.Restore(data);
 ```
 
 - Snapshot gồm `TotalMinutes`, `Year`, `SeasonIndex`, `SeasonStartDay`, `SeasonAdvancePending`.
-- Không lưu tốc độ, pause source, trạng thái fast-forward. `Restore` giữ nguyên base speed và pause source hiện có, hủy fast-forward đang chạy (không phát `Completed`), bỏ thời gian lẻ giữa hai step.
-- `Restore` ném `ArgumentException` nếu `TotalMinutes` âm, quá `GameClock.MaxTotalMinutes` hoặc không phải bội của step, `SeasonIndex` ngoài số mùa, `Year < 0`, hoặc `SeasonStartDay` ngoài `[0, Day]`. Snapshot bị từ chối không làm đổi gì.
+- Không lưu tốc độ, pause source, trạng thái fast-forward. Lỗi và tác dụng của `Restore` lên các phần này: dòng `Restore(s)` trong bảng ở mục Điều khiển. Snapshot bị từ chối không làm đổi gì.
 - `Restore` không tự sửa save cho khớp settings hiện tại. Đổi luật chung của lịch (số mùa, `MinutesPerStep`, `DayStartMinute`) sau khi đã có save thì game phải tự chuyển đổi save cũ trước khi gọi `Restore`; nếu không, save cũ có thể bị từ chối hoặc lệch giờ.
 - Rút ngắn một mùa sau khi đã có save: save có `DayInSeason` vượt độ dài mới vẫn nạp được, mùa tự chuyển ở day boundary kế tiếp.
 

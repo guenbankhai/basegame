@@ -38,3 +38,4 @@ MonoBehaviour:
     _startMinutesIntoDay: 360
     _maxSpeed: 100
     _maxStepsPerFrame: 120
+    _maxSkipDays: 36500

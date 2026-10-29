@@ -121,6 +121,9 @@ namespace GuenBanKhai.Calendar
         /// <summary>Length of every step: what an accumulating module advances by on Stepped.</summary>
         public int MinutesPerStep => _minutesPerStep;
 
+        /// <summary>Steps one Tick runs at most; the rest of that call's time is dropped.</summary>
+        public int MaxStepsPerFrame => _maxStepsPerFrame;
+
         public int WeekLength => _dayNames.Length;
         public int SeasonCount => _seasons.Length;
 

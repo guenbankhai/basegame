@@ -456,7 +456,7 @@ namespace GuenBanKhai.Calendar.Tests
         [TestCase(1, false)]
         [TestCase(10, false)]
         [TestCase(10, true)]
-        public void FastForwardAndSkip_OverTheSameSpan_EndInTheSameState(int step, bool setSpeedEveryHour)
+        public void SkipToOrFastForwardTo_SameSpan_EndInTheSameState(int step, bool setSpeedEveryHour)
         {
             // Crosses fixed-length seasons, a year, a pending season command and the accumulator hitting zero.
             // setSpeedEveryHour checks that base-speed changes from a handler do not disturb the fast-forward.

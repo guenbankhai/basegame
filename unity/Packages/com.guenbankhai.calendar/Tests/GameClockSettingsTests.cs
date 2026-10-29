@@ -116,7 +116,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Seasons_CanBeBuiltWithSetters()
+        public void NewClock_SeasonsBuiltWithSetters_AreUsed()
         {
             var season = new SeasonDefinition { Name = "Monsoon", LengthInDays = 5 };
 
@@ -134,7 +134,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void GetDayNameOrGetSeasonName_ComeFromTheSettings()
+        public void GetDayNameOrGetSeasonName_InRange_ReturnTheConfiguredName()
         {
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(28, 0, 5)));
 
@@ -156,7 +156,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void ChangingSettingsAfterwards_DoesNotReachTheClock()
+        public void NewClock_SettingsChangedAfterwards_DoNotReachTheClock()
         {
             var settings = TestCalendar.Settings();
             var clock = new GameClock(settings);
