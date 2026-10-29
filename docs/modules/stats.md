@@ -33,6 +33,7 @@ Không dùng tên `Attribute`: trùng `System.Attribute`, file có `using System
   - Nhãn phân loại effect (khác Effect group): thêm khi UI hay luật game cần lọc effect.
   - Icon và mô tả của stat, effect: thêm khi làm UI thật.
   - Batch public: thêm khi Equipment cần đổi trang bị không bị clamp ở giữa.
+  - `Stat.RemoveAllFromSource` (gỡ theo source trên một stat): chưa module nào cần; nguồn modifier gỡ qua `StatCollection.RemoveAllFromSource`.
 
 ## Kiến trúc [T3]
 
@@ -81,10 +82,10 @@ EffectCollection
 
 ## Quyết định đi kèm
 
-- **Lệnh trong handler chạy lồng ngay, không xếp hàng như Calendar** ([ADR 0009](../adr/0009-stats-nested-handler-commands.md)). Chống lặp bằng `MaxEventDepth` = 32 (hằng số, vì chỉ chặn lỗi của code bên ngoài); `Advance` và `Restore` trong handler bị cấm. Event còn chờ mà handler lồng đã đổi tiếp thì bỏ, để listener nhận giá trị cuối (B3).
-- **Restore phát event ngoài `Restored`** (khác mặc định của `coding-standard.md`): bước 1 của `StatCollection.Restore` phát `Stat.ValueChanged`, và `EffectCollection.Restore` để stat phát `ValueChanged`, vì derived stat phụ thuộc chính base và modifier được restore nên phải cập nhật trước khi đặt current ([ADR 0007](../adr/0007-stats-save-base-values-only.md)).
+- **Lệnh trong handler chạy lồng ngay, không xếp hàng như Calendar; `MaxEventDepth` là hằng số** vì chỉ chặn lỗi của code bên ngoài ([ADR 0009](../adr/0009-stats-nested-handler-commands.md)).
+- **Restore phát event ngoài `Restored`** (khác mặc định của `coding-standard.md`) để derived stat cập nhật trước khi đặt current ([ADR 0007](../adr/0007-stats-save-base-values-only.md)).
 - **Current ngoài `[Min, Max]` khi restore thì clamp, không từ chối:** max phụ thuộc modifier của nguồn khác mà snapshot Stats không giữ; clamp là luật của Resource.
-- **Ngoại lệ B3 cho derived stat:** derived stat nối bằng handler nằm ngoài batch của effect, nên một lệnh đổi cả stat nguồn lẫn stat làm max có thể clamp current theo max tạm và phát `ValueChanged` hai lần cho stat làm max; giá trị cuối listener nhận vẫn đúng. Chấp nhận vì derived stat chưa thuộc lõi; README ghi giới hạn và cách tránh. Đưa derived stat vào lõi khi gặp trong game thật.
+- **Ngoại lệ B3 cho derived stat** nối bằng handler, chấp nhận tới khi derived stat vào lõi ([ADR 0009](../adr/0009-stats-nested-handler-commands.md)); giới hạn và cách tránh: README, mục Viết module dùng Stats.
 - **`Stat.ValueChanged` so sánh bằng `!=`, không epsilon:** giá trị luôn tính lại từ đầu nên cùng đầu vào cho cùng kết quả.
 - **Snapshot là class, không phải struct như Calendar:** struct chứa mảng khi copy vẫn dùng chung mảng.
 
@@ -98,15 +99,15 @@ EffectCollection
 |---|---|
 | `StatIdTests` | ID hợp lệ và sai, ordinal, `default` |
 | `StatFormulaTests` | Ba tầng, ví dụ trong README, clamp giá trị cuối, base ngoài khoảng |
-| `StatModifierTests` | Thêm, gỡ, thêm trùng, gỡ theo source (stat và collection), `ReplaceModifier` (vị trí, một event, các trường hợp trả `false`), event chỉ khi giá trị đổi, `RemoveAllFromSource` của collection cập nhật mọi stat rồi mới phát |
+| `StatModifierTests` | Thêm, gỡ, thêm trùng, gỡ theo source, `ReplaceModifier` (vị trí, một event, các trường hợp trả `false`), event chỉ khi giá trị đổi, `RemoveAllFromSource` của collection cập nhật mọi stat rồi mới phát |
 | `ResourceTests` | `Add`/`Set`, clamp, max đổi giữ số tuyệt đối, đổi áo A sang B, stat làm max dưới `Min`, `Normalized`, `InitialFraction`, thứ tự event, `Filled` không phát khi max giảm xuống current; derived stat qua `ReplaceModifier`: Vitality đổi, máu giữ 140 |
-| `StatCollectionTests` | Settings (null, phần tử null, trùng ID, resource trỏ stat không có), copy, `DisplayName` (mặc định là ID), `Get`/`TryGet`, wrapper chỉ đọc, lệnh và exception trong handler, event còn chờ bị bỏ khi handler lồng đổi tiếp (tháo giáp +Vitality +`MaxHealth`: listener nhận 150/150), `MaxEventDepth` |
-| `StatsSnapshotTests` | `JsonUtility`, `CaptureSnapshot` trả mảng mới, chỉ lưu base khác settings, stat vắng mặt về base trong settings, resource vắng mặt về giá trị ban đầu (thực thể mới và đang chơi cùng kết quả), ba bước restore, Resource im lặng khi restore, derived stat giữ đúng máu 140/150, từ chối từng loại dữ liệu hỏng và ID không có trong collection (state không đổi), `Restore` trong handler |
+| `StatCollectionTests` | Settings (null, phần tử null, trùng ID, resource trỏ stat không có), copy, `DisplayName` (mặc định là ID), `Get`/`TryGet`, wrapper chỉ đọc, lệnh và exception trong handler, event còn chờ bị bỏ khi handler lồng đổi tiếp (tháo giáp +Vitality +`MaxHealth`: listener nhận `(180,150)`), `MaxEventDepth` |
+| `StatsSnapshotTests` | `JsonUtility`, `CaptureSnapshot` trả mảng mới, chỉ lưu base khác settings, stat vắng mặt về base trong settings, resource vắng mặt về giá trị theo `InitialFraction` (thực thể mới và đang chơi cùng kết quả), ba bước restore, Resource im lặng khi restore, derived stat giữ đúng máu 140/150, từ chối từng loại dữ liệu hỏng và ID không có trong collection (state không đổi), `Restore` trong handler |
 | `StatDefinitionTests` | Definition và profile: mặc định, ID là tên asset, bản copy, override base, `DisplayName` |
 | `Effects/EffectApplyTests` | Bốn `StackRule`, `MaxStacks`, `MaxDuration`, `Value × Stacks` (mỗi modifier settings đúng một `Modifier`), ràng buộc stack, vô hạn, stat lạ, stack lên `MaxHealth` không mất current, `Settings` trả bản copy mới, `Has`/`TryGet` |
 | `Effects/EffectGroupTests` | `Replace`/`Suppress` (thuốc tốc độ), bằng rank (bánh mì, cơm; áp lại effect bị suppress), group trùng `Id` khác `Policy`, suppress vẫn stack, thứ tự event (Stat → Resource → Effect; thua trước thắng sau) |
 | `Effects/EffectAdvanceTests` | Hết hạn và thứ tự, resume, `TimeUntilNextExpiry` (kể cả suppress, +∞), `delta` sai, handler áp/gỡ (event chờ bị bỏ), `Advance` trong handler (của effect và của Stat), vòng lặp chỉ gồm event effect; `Advance(10)` một lần và `Advance(1)` mười lần ra cùng snapshot và giá trị stat; resume rồi hết hạn trong một lần gọi không phát `Resumed` |
-| `Effects/EffectsSnapshotTests` | `JsonUtility` với vô hạn, `CaptureSnapshot` trả mảng mới, suppress tính lại, từ chối từng loại dữ liệu hỏng và lệch settings (`resolve` trả `null`, stat lạ, số thứ tự âm hoặc trùng, `Stacks` vượt mức theo `StackRule`, `Remaining` vượt mức, cờ vô hạn khác settings, hai effect cùng group `Replace`, group cùng `Id` khác `Policy`; state không đổi), `Restore` trong handler, bộ đếm lần áp đi tiếp sau restore; restore effects rồi stats giữ đúng current |
+| `Effects/EffectsSnapshotTests` | `JsonUtility` với vô hạn, `CaptureSnapshot` trả mảng mới, suppress tính lại, từ chối từng loại dữ liệu hỏng và lệch settings (`resolve` trả `null`, settings sai hoặc khác `Id`, stat lạ, số thứ tự âm hoặc trùng, `Stacks` vượt mức theo `StackRule`, `Remaining` vượt mức, cờ vô hạn khác settings, hai effect cùng group `Replace`, group cùng `Id` khác `Policy`; state không đổi), `Restore` trong handler, bộ đếm lần áp đi tiếp sau restore; restore effects rồi stats giữ đúng current |
 | `Effects/EffectDefinitionTests` | Effect và group definition: mặc định, ID là tên asset, bản copy, `DisplayName` |
 | `Effects/EffectsAssemblyTests` | `EffectCollection` nằm trong assembly `GuenBanKhai.Stats.Effects` (bắt lỗi lỡ xóa asmdef con) |
 
