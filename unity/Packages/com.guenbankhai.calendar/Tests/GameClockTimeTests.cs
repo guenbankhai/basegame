@@ -6,6 +6,30 @@ namespace GuenBanKhai.Calendar.Tests
 {
     public class GameClockTimeTests
     {
+        /// <summary>Equal by value, so only reference comparison tells two of them apart.</summary>
+        private sealed class EqualSource
+        {
+            public override bool Equals(object obj) => obj is EqualSource;
+
+            public override int GetHashCode() => 0;
+        }
+
+        [Test]
+        public void Pause_EqualButDistinctSources_AreHeldSeparately()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            var dialog = new EqualSource();
+            var menu = new EqualSource();
+
+            clock.Pause(dialog);
+            clock.Pause(menu);
+            clock.Resume(dialog);
+
+            Assert.IsTrue(clock.IsPaused, "Resuming one source must not release another that is merely Equals.");
+            clock.Resume(menu);
+            Assert.IsFalse(clock.IsPaused);
+        }
+
         [Test]
         public void Tick_MovesOnlyInWholeSteps_AndKeepsTheRemainder()
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace GuenBanKhai.Calendar
@@ -28,7 +29,7 @@ namespace GuenBanKhai.Calendar
         private readonly int _maxStepsPerFrame;
         private readonly int _maxSkipDays;
 
-        private readonly HashSet<object> _pauseSources = new HashSet<object>();
+        private readonly HashSet<object> _pauseSources = new HashSet<object>(new ReferenceComparer());
         private readonly Queue<Action> _commands = new Queue<Action>();
 
         private CalendarSnapshot _state;
@@ -623,6 +624,14 @@ namespace GuenBanKhai.Calendar
                     Debug.LogException(e);
                 }
             }
+        }
+
+        /// <summary>Sources that are Equals but distinct objects must hold the clock separately.</summary>
+        private sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            public new bool Equals(object x, object y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
         }
     }
 }

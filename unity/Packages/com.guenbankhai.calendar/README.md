@@ -206,7 +206,7 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | `FastForwardTo(t, s)` | NaN, `s <= 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi. Gọi lại khi đang fast-forward thì thay đích cũ, không phát `Completed` cho đích cũ, kể cả khi gọi trong handler ở step chạm đích cũ. `t == Now`: hoàn thành ngay và phát `Completed`. `t < Now` hoặc `t > GameClock.MaxTotalMinutes`: lỗi. Dừng đúng tại `t` |
 | `StopFastForward()` | Về base speed, không phát `Completed` |
 | `SkipTo(t)` | Hủy fast-forward đang chạy (không phát `Completed`), kể cả khi `t == Now`. `t == Now`: không phát `Skipped`. `t < Now`, `t > GameClock.MaxTotalMinutes` hoặc xa hơn `MaxSkipDays` ngày: lỗi (thông báo ghi rõ `MaxSkipDays`). Chạy được cả khi đang tạm dừng |
-| `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua. Tạm dừng khi đang fast-forward thì fast-forward dừng theo; resume thì chạy tiếp |
+| `Pause(src)`, `Resume(src)` | `src == null`: lỗi. Source so sánh theo reference: hai object khác nhau là hai source, kể cả khi `Equals` bằng nhau. Pause hai lần cùng source tính là một; resume source không có thì bỏ qua. Tạm dừng khi đang fast-forward thì fast-forward dừng theo; resume thì chạy tiếp |
 | `NextOccurrence(m)` | Thời điểm **sau** `Now` mà `ClockMinute == m` (đang đúng 6:00 thì trả 6:00 ngày mai). `m` ngoài `[0, 1440)` hoặc không phải bội của step: lỗi |
 | `GetDayName(i)`, `GetSeasonName(i)` | `i` ngoài `[0, WeekLength)` hoặc `[0, SeasonCount)`: lỗi |
 | `AdvanceSeason()` | Gọi lại trước day boundary kế tiếp thì không thêm gì. Luật đổi mùa: mục Mùa |

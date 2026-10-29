@@ -10,6 +10,20 @@ namespace GuenBanKhai.Calendar.Tests
     public class GameClockCommandQueueTests
     {
         [Test]
+        public void SkipToInHandler_NowWithoutFastForward_DoesNotStopTheTick()
+        {
+            var clock = new GameClock(TestCalendar.Settings());
+            int skipped = 0;
+            clock.Skipped += (from, to) => skipped++;
+            clock.Stepped += date => clock.SkipTo(date.TotalMinutes);
+
+            clock.Tick(10f);
+
+            Assert.AreEqual(10, clock.Now.TotalMinutes, "No time passed and the running speed did not change.");
+            Assert.AreEqual(0, skipped);
+        }
+
+        [Test]
         public void CommandQueue_CommandInHandler_RunsAfterThatMinutesEvents_AndDropsRestOfTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
