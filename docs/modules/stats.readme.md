@@ -35,8 +35,9 @@ Chỉ số có modifier (Stat), giá trị tiêu và hồi bị chặn bởi m�
 | **Resource** | Giá trị bị tiêu và hồi trực tiếp, luôn nằm giữa một min cố định và một max là stat, như máu hay độ đói |
 | **Depleted** / **Filled** | Resource vừa chạm min từ trên xuống / vừa chạm max từ dưới lên |
 | **Effect** | Gói modifier áp lên thực thể trong một thời hạn, hoặc vô hạn tới khi bị gỡ, như "Ăn sáng no" hay "Ốm" |
-| **Stack**, **Stack rule**, **Stack mode** | Số lần effect chồng lên chính nó; luật khi áp lại effect đang chạy; cách các stack thành modifier |
+| **Stack**, **Stack rule** | Số lần effect chồng lên chính nó; luật khi áp lại effect đang chạy |
 | **Effect group**, **Rank** | Tập effect loại trừ nhau; mỗi lúc chỉ effect có rank cao nhất trong group có tác dụng |
+| **Group policy** | Luật cho effect thua trong group: bị gỡ (`Replace`) hay bị suppress (`Suppress`) |
 | **Suppressed** | Effect vẫn chạy thời hạn nhưng không có tác dụng vì thua trong group |
 | **Derived stat** | Stat phụ thuộc stat khác, như máu tối đa tăng theo thể lực; game tự nối (xem Viết module dùng Stats) |
 
@@ -74,11 +75,12 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 
 | Trường | Mặc định | Ràng buộc |
 |---|---|---|
+| `StatCollectionSettings.Stats`, `Resources` | Rỗng | Không null, không có phần tử null |
 | `StatSettings.Id` | — | ID hợp lệ |
 | `StatSettings.BaseValue` | — | Hữu hạn |
 | `StatSettings.Min`, `Max` | −∞, +∞ | Không NaN, `Min <= Max` |
 | `ResourceSettings.Id` | — | ID hợp lệ |
-| `ResourceSettings.MaxStat` | — | Stat đã có trong collection |
+| `ResourceSettings.MaxStat` | — | Stat có trong cùng `StatCollectionSettings` |
 | `ResourceSettings.Min` | 0 | Hữu hạn |
 | `ResourceSettings.InitialFraction` | 1 | Trong `[0, 1]` |
 | `DisplayName` (stat, resource, effect) | `Id.Value` | Tùy ý; `null`, rỗng hay chỉ khoảng trắng thì lấy `Id.Value` |
@@ -86,15 +88,14 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 | `Duration` | +∞ (vô hạn) | `> 0` |
 | `MaxDuration` | +∞ | `>= Duration`; dùng khi `Extend` |
 | `StackRule` | — | Enum hợp lệ |
-| `StackMode` | `Sum` | Enum hợp lệ |
-| `MaxStacks` | — | `>= 1`; dùng khi `Stack` |
+| `MaxStacks` | 1 | `>= 1`; dùng khi `Stack` |
 | `Group` | `null` (chồng tự do) | `null` hoặc hợp lệ |
 | `Rank` | 0 | Số nguyên |
 | `EffectGroupSettings.Id` | — | Không null, rỗng hay chỉ khoảng trắng |
 | `EffectGroupSettings.Policy` | `Replace` | Enum hợp lệ |
-| `Modifiers` | — | Không null, có thể rỗng (effect chỉ làm nhãn); mỗi phần tử có `Stat` hợp lệ và `Value` theo luật `Modifier`; với `StackMode.Sum`: `Value × MaxStacks >= −1` với mọi `PercentMult` |
+| `Modifiers` | — | Không null, có thể rỗng (effect chỉ làm nhãn); mỗi phần tử có `Stat` hợp lệ, `Type` hợp lệ và `Value` theo luật `Modifier`; ràng buộc stack: `Value × MaxStacks >= −1` với mọi `PercentMult`, kiểm bằng đúng phép nhân `float` dùng để tính modifier, nên settings qua kiểm tra thì stack `MaxStacks` không ném |
 
-Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của ScriptableObject log warning khi: tên asset có khoảng trắng, `Min > Max`, profile có ID trùng (hay gặp: hai asset cùng tên ở hai thư mục), vi phạm ràng buộc `Sum`.
+Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của ScriptableObject log warning khi: tên asset có khoảng trắng, `Min > Max`, profile có ID trùng (hay gặp: hai asset cùng tên ở hai thư mục), vi phạm ràng buộc stack.
 
 ## API [T4]
 
@@ -136,7 +137,6 @@ public sealed class StatCollection
     public const int MaxEventDepth = 32;
     public StatCollection(StatCollectionSettings settings);
     public IReadOnlyList<Stat> Stats { get; }  public IReadOnlyList<Resource> Resources { get; }
-    public Stat AddStat(StatSettings settings);  public Resource AddResource(ResourceSettings settings);
     public Stat GetStat(StatId id);  public bool TryGetStat(StatId id, out Stat stat);
     public Resource GetResource(ResourceId id);  public bool TryGetResource(ResourceId id, out Resource resource);
     public int RemoveAllFromSource(object source);
@@ -148,7 +148,6 @@ public sealed class StatCollection
 // GuenBanKhai.Stats.Effects
 public readonly struct EffectId : IEquatable<EffectId> { public EffectId(string value); public string Value { get; } }
 public enum StackRule { Refresh, Extend, Ignore, Stack }
-public enum StackMode { Sum, Repeat }
 public enum GroupPolicy { Replace, Suppress }
 public enum EffectRemovalReason { Expired, Removed, Replaced }
 
@@ -177,6 +176,18 @@ public sealed class EffectCollection
 
 ID có so sánh bằng và `ToString`. `Stats`, `Resources`, `Modifiers`, `Instances` là wrapper chỉ đọc, không ép kiểu về `List` được.
 
+Các type khác (constructor và setter public, để code và test dựng không cần asset; field và ràng buộc: mục Settings):
+- `StatCollectionSettings`: `List<StatSettings> Stats`, `List<ResourceSettings> Resources`.
+- `StatSettings(StatId id, float baseValue)`: `Id`, `DisplayName`, `BaseValue`, `Min`, `Max`.
+- `ResourceSettings(ResourceId id, StatId maxStat)`: `Id`, `DisplayName`, `MaxStat`, `Min`, `InitialFraction`.
+- `EffectSettings(EffectId id, StackRule stackRule)`: `Id`, `DisplayName`, `double Duration`, `double MaxDuration`, `StackRule`, `int MaxStacks`, `EffectGroupSettings Group`, `int Rank`, `List<EffectModifierSettings> Modifiers`.
+- `EffectModifierSettings(StatId stat, ModifierType type, float value)`: `Stat`, `Type`, `Value`.
+- `EffectGroupSettings(string id, GroupPolicy policy)`: `Id`, `Policy`.
+- `StatDefinition.CreateSettings()` → `StatSettings`; `ResourceDefinition.CreateSettings()` → `ResourceSettings`; `StatProfile.CreateSettings()` → `StatCollectionSettings` (đã gồm override base); `EffectDefinition.CreateSettings()` → `EffectSettings`; `EffectGroupDefinition.CreateSettings()` → `EffectGroupSettings`.
+- `StatsBehaviour.Collection` (`StatCollection`), `EffectsBehaviour.Collection` (`EffectCollection`): `null` khi component tự tắt vì config sai.
+- `StatsSnapshot`: `StatEntry[] Stats` (`string Id`, `float BaseValue`), `ResourceEntry[] Resources` (`string Id`, `float Current`).
+- `EffectsSnapshot`: `EffectEntry[] Effects` (`string Id`, `int Stacks`, `double Remaining`, `bool IsInfinite`, `int LastApplySequence`).
+
 ## Event [T5]
 
 | Event | Khi nào |
@@ -199,6 +210,7 @@ ID có so sánh bằng và `ToString`. `Stats`, `Resources`, `Modifiers`, `Insta
 
 **Gọi lệnh trong handler:**
 - Được phép, chạy lồng ngay (không xếp hàng), để handler derived stat đọc ngay giá trị mới. Handler derived stat ở bước `Stat.ValueChanged` chạy lồng ngay, nên handler của effect thấy giá trị đã cập nhật.
+- Event còn chờ (Stat, Resource) của giá trị mà handler lồng đã đổi tiếp thì bỏ qua; event lồng đã mang giá trị mới nhất. Ví dụ ở mục Giới hạn của derived stat.
 - `StatCollection` đếm độ sâu event lồng, `EffectCollection` dùng chung bộ đếm đó. Lệnh đổi state ở độ sâu `MaxEventDepth` ném `InvalidOperationException`, không đổi gì; handler bên ngoài bắt và log, chuỗi dừng ở đó.
 - `Advance` trong bất kỳ handler nào: ném `InvalidOperationException`. Ví dụ: effect hết hạn làm `Stat.ValueChanged`, handler gọi `Advance` lần nữa trong khi `Removed`/`Resumed` của lần ngoài chưa phát.
 - `Restore` (cả hai collection) trong bất kỳ handler nào: ném `InvalidOperationException`, vì restore thay toàn bộ state trong khi event bên ngoài vẫn đang phát. Muốn restore từ handler thì hoãn sang frame sau.
@@ -217,8 +229,8 @@ ID có so sánh bằng và `ToString`. `Stats`, `Resources`, `Modifiers`, `Insta
 | `Resource.Add(d)` | Clamp, trả lượng thực sự áp dụng (đang 5, `Add(−20)` trả −5); `d == 0` không làm gì |
 | `Resource.Set(v)` | Clamp rồi đặt |
 | `GetStat`, `GetResource` | ID chưa đăng ký: lỗi. `TryGet*` trả `false` |
-| `StatCollection(settings)` | Stat tạo trước resource, mỗi phần tử theo luật của `AddStat`/`AddResource`; một phần tử sai thì không tạo collection |
-| `AddStat`, `AddResource` | Resource trỏ stat chưa có: lỗi. Không có lệnh xóa stat hay resource |
+| `StatCollection(settings)` | Một phần tử sai (kể cả resource trỏ stat không có): lỗi, không tạo collection. Không thêm hay xóa stat, resource sau khi tạo |
+| `CreateSettings()` (mọi definition) | Luôn trả bản copy mới; không kiểm tra, collection kiểm tra khi nhận |
 | `CaptureSnapshot()` (cả hai) | Luôn trả object và mảng mới |
 | `EffectCollection(stats)` | Mặc định |
 | `Apply(s)` | Modifier trỏ stat lạ: lỗi, không áp phần nào. Group cùng `Id` khác `Policy` với effect đang có (chỉ xảy ra khi dựng bằng code): lỗi. Đang chạy: theo `StackRule`, settings mới khác nội dung bị bỏ qua. Thua trong group `Replace`: trả `null` |
@@ -247,7 +259,7 @@ Value     = clamp(unclamped, Min, Max)
 ### Resource
 
 - Luôn `Min <= Current <= Max`, với `Min` là hằng số và `Max` = `max(MaxStat.Value, Min)`: stat làm max xuống dưới `Min` thì khoảng là `[Min, Min]`.
-- Max đổi thì current **giữ số tuyệt đối**, chỉ clamp khi vượt: 80/100 mặc áo +20 → 80/120; 110/120 tháo áo → 100/100. Đổi áo A (+20) sang áo B (+30) là tháo rồi mặc: 110/120 → 100/100 → 100/130. Không có batch public để tránh.
+- Max đổi thì current **giữ số tuyệt đối**, chỉ clamp khi vượt: 80/100 mặc áo +20 → 80/120; 110/120 tháo áo → 100/100.
 - Resource clamp theo max **trước** khi handler `ValueChanged` của stat làm max chạy.
 - `Normalized` = `(Current − Min) / (Max − Min)`, bằng 1 khi `Max == Min`.
 - Giá trị ban đầu `Min + InitialFraction × (Max − Min)`, tính theo max lúc tạo. Tạo 100/100 rồi mặc áo +20 → 100/120; muốn đầy thì `Set(Max)`.
@@ -256,7 +268,7 @@ Value     = clamp(unclamped, Min, Max)
 ### Effect
 
 - Mỗi `EffectId` có tối đa một `EffectInstance`. Instance giữ bản copy settings lúc áp lần đầu, `Stacks`, `Remaining` (+∞ là vô hạn), `IsSuppressed`.
-- Mỗi phần tử trong `Modifiers` của settings sinh đúng một `Modifier`, giá trị tính theo `Stacks` và `StackMode`.
+- Mỗi phần tử trong `Modifiers` của settings sinh đúng một `Modifier` có giá trị `Value × Stacks`, kể cả `PercentMult`: Kiệt sức `PercentMult −0.2`, 3 stack → `PercentMult −0.6` (×0.4).
 - Instance có tác dụng thì có modifier trên stat; bị suppress thì không. Mỗi lệnh của `EffectCollection` đổi modifier trong một batch: mỗi stat tính lại một lần, Resource clamp theo max cuối của batch. Effect +20 `MaxHealth` đang 115/120 lên stack 2 → 115/140, không bị clamp về 100 ở giữa. Batch không phủ derived stat nối bằng handler (xem Viết module dùng Stats).
 - Thời gian theo đơn vị do game quy ước (phút, giây, lượt), dùng chung cho `Duration` và `delta`.
 
@@ -270,15 +282,6 @@ Value     = clamp(unclamped, Min, Max)
 | `Stack` | Dưới `MaxStacks`: `Stacks + 1`, `Remaining = Duration`; đủ rồi: chỉ `Remaining = Duration`. Mọi stack chung một đồng hồ | `Stacked` / `Refreshed` |
 
 Effect vô hạn: `Refresh`, `Extend` không đổi thời gian nhưng vẫn phát `Refreshed`.
-
-`StackMode` quyết định `n` stack thành modifier thế nào; chỉ khác nhau với `PercentMult`:
-
-| `StackMode` | Modifier | Kiệt sức `PercentMult −0.2`, 3 stack |
-|---|---|---|
-| `Sum` | Một modifier `Value × n` | ×0.4 |
-| `Repeat` | Như áp `n` lần riêng: `PercentMult` thành `(1 + Value)^n − 1`; loại khác vẫn `Value × n` | ×0.512 |
-
-Ràng buộc `Sum` (`Value × MaxStacks >= −1`) được kiểm bằng đúng phép nhân `float` dùng để tính modifier, nên settings qua kiểm tra thì stack `MaxStacks` không ném.
 
 **Với effect khác cùng group:**
 - `Group` so sánh theo `Id`; `null` là chồng tự do. Group chỉ có hiệu lực trong một `EffectCollection`; mỗi `StatCollection` chỉ nên có một `EffectCollection`.
@@ -300,42 +303,40 @@ Ràng buộc `Sum` (`Value × MaxStacks >= −1`) được kiểm bằng đúng 
 
 - Event còn chờ của instance mà handler đã gỡ hay đổi trạng thái thì bỏ qua. Effect áp trong handler không bị trừ `delta` của lần này.
 - `TimeUntilNextExpiry` là `Remaining` nhỏ nhất trong các effect có thời hạn, kể cả effect bị suppress; +∞ nếu không có.
-- `Advance(10)` một lần và `Advance(1)` mười lần cho cùng kết quả khi `delta` biểu diễn chính xác trong `double` (đơn vị nguyên như phút, lượt). Với giây thật, sai số làm tròn có thể làm effect hết hạn trễ một lần gọi.
+- `Advance(10)` một lần và `Advance(1)` mười lần cho cùng state khi `delta` biểu diễn chính xác trong `double` (đơn vị nguyên như phút, lượt). Với giây thật, sai số làm tròn có thể làm effect hết hạn trễ một lần gọi. Event có thể khác: effect có tác dụng lại rồi hết hạn trong cùng một lần gọi thì không phát `Resumed` (Thuốc II còn 5, Thuốc I bị suppress còn 10, `Advance(10)`: chỉ có hai `Removed`). Muốn đủ event thì cắt `delta` theo `TimeUntilNextExpiry`, như `Simulate` ở mục Viết module dùng Stats.
 
 ## Save [T6]
 
 Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn bộ snapshot trước; bị từ chối thì ném `ArgumentException` và không đổi gì. Lõi không tự sửa save cho khớp settings: đổi settings (xóa hay đổi tên asset, giảm `MaxStacks`…) sau khi đã có save thì game tự nâng cấp save trước khi gọi `Restore`, hoặc chấp nhận save cũ bị từ chối.
 
 **`StatsSnapshot`**
-- Lưu: base của stat nào khác base trong settings, current của mọi resource. Không lưu modifier: mỗi nguồn modifier tự áp lại khi restore. Không lưu base trùng settings, để chỉnh base trong profile có tác dụng với save cũ; người chơi đổi base đúng bằng mặc định cũ thì khi restore nhận mặc định mới. "Base trong settings" là giá trị sau override của profile, hoặc `StatSettings` truyền vào `AddStat`; so sánh bằng `!=`.
+- Lưu: base của stat nào khác base trong settings, current của mọi resource. Không lưu modifier: mỗi nguồn modifier tự áp lại khi restore. Không lưu base trùng settings, để chỉnh base trong profile có tác dụng với save cũ; người chơi đổi base đúng bằng mặc định cũ thì khi restore nhận mặc định mới. "Base trong settings" là `BaseValue` trong `StatCollectionSettings` (đã gồm override của profile); so sánh bằng `!=`.
 - Từ chối: mảng hay entry `null`; ID sai hoặc trùng; base hay current là NaN hoặc vô hạn; ID không có trong collection.
 - Vắng mặt: stat → base trong settings; resource (save cũ trước khi thêm Thirst) → giá trị ban đầu theo `InitialFraction`, tính theo max sau bước 1, để restore vào thực thể mới hay đang chơi cũng ra cùng kết quả.
 - `Restore` chạy ba bước:
   1. Đặt mọi base, phát `Stat.ValueChanged` cho stat đổi giá trị, để handler derived stat cập nhật max.
-  2. Đặt mọi current (resource vắng mặt về giá trị ban đầu), clamp theo max cuối.
+  2. Đặt mọi current (resource vắng mặt về giá trị ban đầu), clamp vào `[Min, Max]` theo max cuối.
   3. Phát `StatCollection.Restored`.
 - Trong suốt `Restore`, Resource không phát event nào. Clamp ở bước 1 chỉ là trạng thái tạm, bước 2 ghi đè. Bước 1 phát event vì derived stat phụ thuộc chính base được restore: không phát thì với MaxHealth = 50 + Vitality × 5 và Vitality mặc định 10, save có Vitality 20, máu 140/150 sẽ ra 100/150.
 
 **`EffectsSnapshot`**
 - Lưu: mọi effect (kể cả bị suppress) theo thứ tự áp lần đầu: `EffectId`, `Stacks`, `Remaining` (vô hạn lưu bằng cờ `IsInfinite`), số thứ tự lần áp gần nhất. Không lưu settings (tra qua `resolve`) và `IsSuppressed` (tính lại từ group).
-- Từ chối: `resolve == null`; `EffectId` trùng; số thứ tự không hợp lệ; `Stacks < 1`; `Remaining <= 0`, NaN hay +∞ với effect có thời hạn; `resolve` trả `null`; modifier trỏ stat không có trong collection; `Stacks > MaxStacks`; `Remaining` vượt mức effect đạt được khi chơi (`MaxDuration` nếu `Extend`, còn lại `Duration`); cờ `IsInfinite` khác settings; hai effect cùng group `Replace`.
+- Từ chối: `resolve == null`; `EffectId` trùng; số thứ tự âm hoặc trùng giữa hai effect; `Stacks < 1`; `Remaining <= 0`, NaN hay +∞ với effect có thời hạn; `resolve` trả `null`; modifier trỏ stat không có trong collection; `Stacks` vượt mức effect đạt được khi chơi (`MaxStacks` nếu `Stack`, còn lại 1); `Remaining` vượt mức effect đạt được khi chơi (`MaxDuration` nếu `Extend`, còn lại `Duration`); cờ `IsInfinite` khác settings; hai effect cùng group `Replace`; hai effect có group cùng `Id` khác `Policy`.
 - Gỡ effect đang chạy, áp lại theo snapshot trong một batch, phát `Restored`. Stat vẫn phát `ValueChanged` do modifier đổi, mỗi stat tối đa một lần, để handler derived stat cập nhật.
 - Bộ đếm lần áp đi tiếp từ số lớn nhất trong snapshot, để effect áp sau khi restore luôn được coi là áp gần nhất.
 
 **Thứ tự restore** (bắt buộc):
-1. Dựng lại stat thêm lúc chạy (`AddStat`), do module đã thêm chúng làm.
-2. Nguồn modifier: `EffectCollection.Restore`, trang bị…
-3. `StatCollection.Restore` sau cùng.
+1. Nguồn modifier: `EffectCollection.Restore`, trang bị…
+2. `StatCollection.Restore` sau cùng.
 
-Ở bước 2, modifier đổi làm Resource clamp và phát event với giá trị tạm (hiếm hơn: `Depleted` khi max ≤ min); bước 3 đặt lại current. Module phản ứng nhạy với event của Resource (ngất khi máu cạn) thì bỏ qua các event này cho tới khi nhận `StatCollection.Restored`.
+Ở bước 1, modifier đổi làm Resource clamp và phát event với giá trị tạm (hiếm hơn: `Depleted` khi max ≤ min); bước 2 đặt lại current. Module phản ứng nhạy với event của Resource (ngất khi máu cạn) thì bỏ qua các event này cho tới khi nhận `StatCollection.Restored`.
 
 ## Viết module dùng Stats
 
 - **Giá trị tiêu và hồi** (máu, đói): mỗi cái là một `Resource`; nghe `Depleted` cho chạm đáy.
 - **Tham số là Stat:** tham số mà effect hay trang bị có thể đổi (tốc độ giảm đói, tốc độ hồi máu) là Stat, không phải hằng số. "Ốm: đói nhanh gấp đôi" là effect `PercentAdd +1` lên `HungerRate`.
 - **Source:** mỗi nguồn dùng object riêng làm source và tự `RemoveAllFromSource` khi hết hiệu lực, kể cả trong `OnDisable`/`OnDestroy`.
-- **Stat thêm lúc chạy:** module nào `AddStat` thì tự dựng lại trước khi restore.
-- **Đổi trang bị:** gỡ rồi thêm nên current bị clamp ở giữa (110/120 → 100/130); effect thay effect trong group `Replace` thì không (110/120 → 110/130) nhờ batch.
+- **Đổi trang bị:** gỡ rồi thêm nên current bị clamp ở giữa: áo A (+20) sang áo B (+30), 110/120 → 100/100 → 100/130; không có batch public để tránh. Effect thay effect trong group `Replace` thì không (110/120 → 110/130) nhờ batch.
 - **Thời gian:** game có **một** hàm `Simulate(delta)` cho cả chạy thường lẫn skip; không gọi `Advance` của Effects hay của module dùng tham số thẳng từ nhiều event. `Simulate` lặp tới hết `delta`, mỗi đoạn `d = min(phần còn lại, TimeUntilNextExpiry, thời gian tới ngưỡng kế tiếp của module dùng tham số)`, kể cả khi chạy thường (mốc hết hạn không rơi vào bước của đồng hồ):
   1. Module dùng tham số `Advance(d)`; tham số không đổi trong cả đoạn.
   2. `EffectCollection.Advance(d)`; effect hết hạn đúng ở cuối đoạn.
@@ -345,7 +346,7 @@ Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn b
   - Chạy thường, Ốm áp lúc 0: bước 40→50 bị cắt thành 5 + 5, nên ×2 đúng 45 phút. Skip 0→60: đoạn 45 (×2), đoạn 15 (×1). Hai đường cùng tiêu 105 đói.
   - Còn 40 đói, ngủ skip 0→80, Ốm Duration 60: đoạn 40 (tới ngưỡng) → đói cạn, `Advance(40)`, rồi áp Ốm còn 60; đoạn 40 → Ốm còn 20 lúc thức dậy, giống chạy thường. Áp Ốm ngay trong handler `Depleted` thì `Advance(40)` của đoạn đầu trừ cả 40, và người chơi dậy không ốm.
 - **Derived stat:** nối bằng một modifier `Flat` có source riêng, đổi bằng `ReplaceModifier`. Vẫn đúng khi restore nhờ bước 1 của `StatCollection.Restore`. Vitality 20 → 21 với máu 140/150 → 140/155; gỡ rồi thêm sẽ clamp máu về 50 ở giữa.
-- **Giới hạn của derived stat:** handler derived chạy sau khi lệnh đã clamp Resource, nên batch của effect không phủ nó. Một lệnh vừa đổi stat nguồn vừa đổi stat làm max (effect +4 Vitality thay effect +20 `MaxHealth` trong group `Replace`) có thể clamp current theo max tạm (170/170 → 150/170), và stat làm max phát `ValueChanged` hai lần. Tránh đặt effect đổi stat nguồn và effect đổi stat làm max của cùng resource vào cùng một group `Replace`.
+- **Giới hạn của derived stat:** handler derived chạy sau khi lệnh đã clamp Resource, nên batch của effect không phủ nó. Một lệnh vừa đổi stat nguồn vừa đổi stat làm max (effect +4 Vitality thay effect +20 `MaxHealth` trong group `Replace`) có thể clamp current theo max tạm (170/170 → 150/170), và stat làm max có thể phát `ValueChanged` hai lần. Listener vẫn nhận giá trị cuối nhờ luật bỏ event còn chờ: Vitality (đăng ký trước `MaxHealth`) base 20, giáp +4 Vitality và +10 `MaxHealth`, đang 180/180; tháo giáp → batch ra 170/170 (derived chưa cập nhật), handler Vitality lồng đưa về 150/150 và phát `MaxHealth(170,150)`, `Resource(170,150)`; event còn chờ `MaxHealth(180,170)`, `Resource(180,170)` bị bỏ. Tránh đặt effect đổi stat nguồn và effect đổi stat làm max của cùng resource vào cùng một group `Replace`.
 
 ```csharp
 // MaxHealth = 50 + Vitality * 5; other MaxHealth modifiers keep stacking normally
@@ -366,6 +367,6 @@ vitality.ValueChanged += (_, value) =>
 | Hằng số / setting | Giá trị | Ý nghĩa |
 |---|---|---|
 | `StatCollection.MaxEventDepth` | 32 | Độ sâu event lồng tối đa; chống handler gọi lệnh lặp vô tận |
-| `MaxStacks` (settings) | ≥ 1, không giới hạn trên | `Repeat` tính bằng lũy thừa, không lặp theo số stack |
+| `MaxStacks` (settings) | ≥ 1, không giới hạn trên | Modifier tính bằng một phép nhân, không lặp theo số stack |
 
 Giả định quy mô: mỗi thực thể tới vài chục stat và resource, vài modifier mỗi stat, tới vài chục effect. Mọi lệnh duyệt tuyến tính theo số stat, resource, modifier hay instance.

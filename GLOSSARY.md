@@ -136,13 +136,13 @@ _Avoid_: charge, level
 Luật quyết định điều gì xảy ra khi áp lại một effect đang chạy: làm mới, kéo dài, bỏ qua hay thêm stack.
 _Avoid_: stacking policy, merge rule
 
-**Stack mode**:
-Cách các stack của một effect biến thành modifier: cộng dồn thành một, hay mỗi stack áp riêng.
-_Avoid_: stack formula
-
 **Effect group**:
 Tập các effect khác nhau loại trừ lẫn nhau, như các loại thuốc tốc độ; mỗi lúc chỉ một effect trong group có tác dụng.
 _Avoid_: category, tag, exclusive set
+
+**Group policy**:
+Luật cho effect thua trong một effect group: bị gỡ hẳn (Replace) hay vẫn chạy thời hạn nhưng bị suppress (Suppress).
+_Avoid_: group mode, exclusivity rule
 
 **Rank**:
 Độ mạnh của một effect trong group, dùng để chọn effect có tác dụng.
