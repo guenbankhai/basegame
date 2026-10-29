@@ -120,7 +120,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void Restore_KeepsPauseSourcesAndBaseSpeed()
+        public void Restore_PausedWithBaseSpeed_KeepsThem()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var snapshot = clock.CaptureSnapshot();

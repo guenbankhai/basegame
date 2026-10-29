@@ -20,7 +20,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void CreateSettings_ReturnsTheDefaults()
+        public void CreateSettings_NewAsset_ReturnsTheDefaults()
         {
             var settings = _config.CreateSettings();
 

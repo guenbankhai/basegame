@@ -6,7 +6,7 @@ namespace GuenBanKhai.Calendar.Tests
     public class GameClockSettingsTests
     {
         [Test]
-        public void NewClock_StartsAtConfiguredPoint()
+        public void NewClock_ValidSettings_StartsAtConfiguredPoint()
         {
             var settings = TestCalendar.Settings(dayStartMinute: 360, startMinutesIntoDay: 120);
             settings.StartYear = 3;

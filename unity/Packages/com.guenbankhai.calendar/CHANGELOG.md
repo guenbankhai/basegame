@@ -20,7 +20,6 @@ Mọi thay đổi của package `com.guenbankhai.calendar`, mới nhất ở tr�
 ### Đổi hành vi
 
 - Settings kiểm chặt hơn: `MaxSpeed` phải `>= 1` (trước là `> 0`); tên thứ và tên mùa không được null hoặc rỗng. Settings trước đây hợp lệ mà vi phạm các luật này giờ làm constructor `GameClock` ném `ArgumentException`.
-
 - `Tick` không còn ném `InvalidOperationException` khi chạy quá `MaxTotalMinutes`, và `NextOccurrence` không còn ném khi kết quả vượt `MaxTotalMinutes`. `MaxTotalMinutes` chỉ còn dùng để kiểm tra đầu vào của `Restore`, `SkipTo` và `FastForwardTo`.
 - Bỏ giới hạn `Year == int.MaxValue` khi sang năm (`Tick` và `SkipTo` không còn ném ở đó). Package giả định đồng hồ không chạy tới các giới hạn này.
 

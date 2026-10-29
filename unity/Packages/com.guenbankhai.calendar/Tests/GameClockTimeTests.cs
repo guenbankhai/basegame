@@ -191,7 +191,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void NextOccurrence_ReturnsTheNextTimeTheClockShowsThatMinute()
+        public void NextOccurrence_ValidMinute_ReturnsTheNextTimeTheClockShowsIt()
         {
             // Day starts at 06:00, so the clock shows 06:00 at TotalMinutes 0.
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10, dayStartMinute: 360));

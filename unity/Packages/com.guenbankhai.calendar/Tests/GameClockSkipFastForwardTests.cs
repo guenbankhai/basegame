@@ -22,7 +22,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SkipTo_AppliesFixedLengthSeasonsAcrossYears()
+        public void SkipTo_AcrossYears_AppliesFixedLengthSeasons()
         {
             // Years are 5 days long (2 + 3). Day 23 is day 1 of season 1 in Year 1 + 4.
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(2, 3)));
@@ -116,7 +116,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SkipTo_RunsWhilePaused()
+        public void SkipTo_WhilePaused_Runs()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Pause(this);
@@ -314,7 +314,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SkipToInCompletedHandler_RunsAfterCompleted_AndSkipsFromTheTarget()
+        public void SkipToInHandler_OfCompleted_RunsAfterCompletedAndSkipsFromTheTarget()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             var seen = new List<string>();
@@ -333,7 +333,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void FastForwardToInCompletedHandler_StartsANewFastForward()
+        public void FastForwardToInHandler_OfCompleted_StartsANewFastForward()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));
             var completed = new List<long>();
@@ -403,7 +403,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SkipToNow_CancelsFastForward_WithoutCompletingOrSkipping()
+        public void SkipTo_NowDuringFastForward_CancelsWithoutCompletingOrSkipping()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var events = TestCalendar.RecordAll(clock);

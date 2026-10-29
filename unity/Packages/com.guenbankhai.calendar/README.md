@@ -199,7 +199,7 @@ clock.AdvanceSeason();                                // đổi mùa ở day bou
 | Lệnh | Quy tắc |
 |---|---|
 | Chung | Mọi mốc thời gian phải là bội của step. Sai thì ném `ArgumentException` (hoặc lớp con) |
-| Gọi trong handler | Lệnh đổi đồng hồ được xếp hàng, tham số kiểm lúc lệnh chạy, lệnh sai chỉ bị log; `Tick` ném `InvalidOperationException`. Chi tiết: mục Lệnh gọi trong handler |
+| Gọi trong handler | Lệnh đổi đồng hồ được xếp hàng; xem mục Lệnh gọi trong handler |
 | `GameClock(settings)` | `settings == null` hoặc settings sai (bảng Settings): ném `ArgumentException` (hoặc lớp con). Settings được copy, sửa sau đó không ảnh hưởng đồng hồ |
 | `Tick(d)` | `d` âm, NaN hoặc vô hạn: lỗi. Mỗi lần chạy tối đa `MaxStepsPerFrame` step, phần dư bị bỏ |
 | `SetSpeed(s)` | NaN, `s < 0` hoặc `s > MaxSpeed` (kể cả +∞): lỗi (thông báo ghi rõ `MaxSpeed`). Đặt base speed; đổi trong lúc fast-forward thì áp dụng sau khi fast-forward xong |

@@ -34,7 +34,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void PauseInHandler_StopsTheRestOfTheTick()
+        public void PauseInHandler_MidTick_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Stepped += date =>
@@ -53,7 +53,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void RestoreInHandler_StopsTheRestOfTheTick()
+        public void RestoreInHandler_MidTick_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var snapshot = clock.CaptureSnapshot();
@@ -75,7 +75,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SetSpeedInHandler_StopsTheRestOfTheTick()
+        public void SetSpeedInHandler_MidTick_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Stepped += date =>
@@ -95,7 +95,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void StopFastForwardInHandler_StopsTheRestOfTheTick()
+        public void StopFastForwardInHandler_MidTick_StopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.FastForwardTo(TestCalendar.Minutes(1), 10f);
@@ -114,7 +114,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void FastForwardToNowInHandler_CompletesAndStopsTheRestOfTheTick()
+        public void FastForwardToInHandler_Now_CompletesAndStopsTheRestOfTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var completed = new List<long>();
@@ -134,7 +134,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void SetSpeedInHandlerDuringFastForward_DoesNotStopTheTick()
+        public void SetSpeedInHandler_DuringFastForward_DoesNotStopTheTick()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.FastForwardTo(TestCalendar.Minutes(1), 10f);
@@ -301,7 +301,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void AdvanceSeasonAfterRestoreInHandler_AppliesToTheRestoredState()
+        public void AdvanceSeasonInHandler_AfterRestore_AppliesToTheRestoredState()
         {
             var clock = new GameClock(TestCalendar.Settings());
             var snapshot = clock.CaptureSnapshot();
@@ -321,7 +321,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void AdvanceSeasonAfterSkipToInHandler_ChangesTheSeasonAfterTheSkip()
+        public void AdvanceSeasonInHandler_AfterSkipTo_ChangesTheSeasonAfterTheSkip()
         {
             var clock = new GameClock(TestCalendar.Settings(seasons: TestCalendar.Seasons(0, 0)));
             clock.Stepped += date =>
@@ -342,7 +342,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void InvalidRestoreInHandler_IsLogged_AndChangesNothing()
+        public void RestoreInHandler_InvalidSnapshot_IsLoggedAndChangesNothing()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.AdvanceSeason();
@@ -366,7 +366,7 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
-        public void CommandInSkippedHandler_RunsBeforeSkipToReturns()
+        public void CommandQueue_CommandInSkippedHandler_RunsBeforeSkipToReturns()
         {
             var clock = new GameClock(TestCalendar.Settings());
             clock.Skipped += (from, to) => clock.Pause(this);
