@@ -20,6 +20,19 @@ namespace GuenBanKhai.Calendar.Tests
         }
 
         [Test]
+        public void Tick_SecondsPerGameMinuteSet_ConvertsRealSecondsToGameMinutes()
+        {
+            var settings = TestCalendar.Settings(maxSpeed: 5f);
+            settings.SecondsPerGameMinute = 0.5f;
+            var clock = new GameClock(settings);
+            clock.SetSpeed(2f);
+
+            clock.Tick(5f);
+
+            Assert.AreEqual(20, clock.Now.TotalMinutes, "5 s x speed 2 / 0.5 s per minute.");
+        }
+
+        [Test]
         public void Tick_RaisesSteppedOncePerStep_WithNowAtThatStep()
         {
             var clock = new GameClock(TestCalendar.Settings(minutesPerStep: 10));

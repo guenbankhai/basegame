@@ -61,7 +61,7 @@ Mọi giá trị khác (`Day`, `ClockMinute`, `DayOfWeek`, `DayInSeason`) tính 
 ## Quyết định đi kèm
 
 - `MaxTotalMinutes` là bội của 1440, nên nằm trên mọi step hợp lệ, và đủ nhỏ để `ExactMinutes` (`double`) chính xác dưới một phần nghìn phút. Chỉ dùng để kiểm tra đầu vào (`Restore`, đích của `SkipTo` và `FastForwardTo`).
-- Giả định quy mô (mục Giới hạn trong `README.md`) không được kiểm tra khi `Tick` hay khi sang năm, theo luật không thêm code cho trường hợp chỉ xảy ra khi tràn kiểu dữ liệu.
+- Giả định quy mô (mục Giới hạn trong `README.md`) không có code kiểm tra, theo luật không thêm code cho trường hợp chỉ xảy ra khi tràn kiểu dữ liệu.
 - `MaxSkipDays` là setting: skip xa hơn coi là bug của nơi gọi, chặn lại để vòng lặp từng ngày của skip không treo game.
 - Settings chỉ là cấu hình ban đầu. Cần đổi lúc chạy thứ chưa có lệnh (ví dụ `MaxSpeed`, độ dài ngày) thì thêm lệnh riêng khi có nhu cầu.
 - `AdvanceSeason()` cũng xếp hàng trong handler, để `Restore(save); AdvanceSeason();` không bị snapshot xóa cờ.

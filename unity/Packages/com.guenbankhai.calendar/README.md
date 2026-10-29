@@ -40,11 +40,11 @@ Test EditMode nằm trong `Tests/`. Package embedded chạy test được ngay. 
 |---|---|
 | `GameClock` | Lõi C# thuần: giữ state, tốc độ, pause source, fast-forward; phát event |
 | `CalendarSettings` | Cấu hình ban đầu, C# thuần. `GameClock` kiểm tra và copy một lần lúc tạo |
-| `SeasonDefinition` | Một mùa trong `CalendarSettings.Seasons`: `new SeasonDefinition(name, lengthInDays)`, có `Name` và `LengthInDays` (setter public) |
+| `SeasonDefinition` | Một mùa trong `CalendarSettings.Seasons`: tên và độ dài |
 | `CalendarConfig` | ScriptableObject giữ một `CalendarSettings` để chỉnh trong Inspector |
 | `GameClockDriver` | MonoBehaviour gọi `Clock.Tick(Time.deltaTime)` mỗi frame |
 | `CalendarDate` | Một thời điểm, chỉ đọc, do `GameClock` tạo: `TotalMinutes`, `Day`, `Hour`, `Minute`, `ClockMinute`, `DayOfWeek`, `DayInSeason`, `SeasonIndex`, `Year` |
-| `CalendarSnapshot` | Snapshot của state để save, struct `[Serializable]`. Có constructor public `CalendarSnapshot(totalMinutes, year, seasonIndex, seasonStartDay, seasonAdvancePending)` để hệ thống save dựng lại |
+| `CalendarSnapshot` | Snapshot của state để save, struct `[Serializable]` |
 
 Không có singleton, không có state static.
 
@@ -142,8 +142,8 @@ const long MaxTotalMinutes;  const int MaxCommandsPerDrain;   // giá trị: m�
 
 Các type khác:
 - `CalendarDate`: `const int MinutesPerDay = 1440`; `TotalMinutes`, `Day`, `Hour`, `Minute`, `ClockMinute`, `DayOfWeek`, `DayInSeason`, `SeasonIndex`, `Year`; so sánh bằng và `ToString` để debug. Constructor `internal`: chỉ `GameClock` tạo.
-- `CalendarSnapshot`: constructor public `CalendarSnapshot(totalMinutes, year, seasonIndex, seasonStartDay, seasonAdvancePending)`; các property cùng tên chỉ đọc; so sánh bằng và `ToString`.
-- `CalendarSettings`, `SeasonDefinition`: constructor và setter public, để code và test dựng settings không cần asset.
+- `CalendarSnapshot`: constructor public `CalendarSnapshot(totalMinutes, year, seasonIndex, seasonStartDay, seasonAdvancePending)` để hệ thống save dựng lại; các property cùng tên chỉ đọc; so sánh bằng và `ToString`.
+- `CalendarSettings`, `SeasonDefinition`: constructor và setter public, để code và test dựng settings không cần asset. `SeasonDefinition(name, lengthInDays)` có `Name`, `LengthInDays`.
 - `CalendarConfig.CreateSettings()`, `GameClockDriver.Clock`: xem mục Thiết lập.
 
 ## Đọc thời gian
