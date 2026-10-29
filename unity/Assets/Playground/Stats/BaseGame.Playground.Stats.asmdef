@@ -1,0 +1,16 @@
+{
+    "name": "BaseGame.Playground.Stats",
+    "rootNamespace": "BaseGame.Playground.Stats",
+    "references": [
+        "GuenBanKhai.Calendar"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -124,7 +124,9 @@ Playground: `Assets/Playground/Stats/`, scene `Assets/Scenes/Stats.unity` (tạo
 
 ## Kế hoạch (tạm) [T9]
 
-Giai đoạn: **Thiết kế**, kết thúc khi user chốt tài liệu này. Xóa mục này khi phát hành.
+Giai đoạn: **Playground**. Xóa mục này khi phát hành.
 
-- [ ] User chốt tài liệu.
-- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không; overlay debug có nút cho mọi lệnh.
+- [x] User chốt tài liệu.
+- [x] Playground bước 1: lõi C# (settings dựng bằng code), overlay có nút cho mọi lệnh, thời gian chạy bằng nút của overlay hoặc bằng `GameClockDriver` của Calendar, test EditMode cho logic khó.
+- [ ] Playground bước 2: ScriptableObject (`StatDefinition`, `ResourceDefinition`, `StatProfile`, `EffectDefinition`, `EffectGroupDefinition`) và `StatsBehaviour`, `EffectsBehaviour`.
+- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không (cần bước 2); overlay debug có nút cho mọi lệnh.
