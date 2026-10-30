@@ -259,7 +259,7 @@ namespace BaseGame.Playground.Stats
             }
         }
 
-        private static bool TryGetError(StatCollectionSettings settings, out string error)
+        internal static bool TryGetError(StatCollectionSettings settings, out string error)
         {
             if (settings.Stats == null || settings.Resources == null)
             {

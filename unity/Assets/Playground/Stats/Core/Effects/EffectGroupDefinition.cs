@@ -6,6 +6,7 @@ namespace BaseGame.Playground.Stats
     [CreateAssetMenu(menuName = "GuenBanKhai/Stats/Effect Group Definition", fileName = "NewEffectGroup")]
     public sealed class EffectGroupDefinition : ScriptableObject
     {
+        [Tooltip("Replace: the loser is removed. Suppress: the loser pauses and resumes once it is the highest rank again.")]
         [SerializeField] private GroupPolicy _policy = GroupPolicy.Replace;
 
         /// <summary>A new copy on every call; not validated here.</summary>

@@ -11,10 +11,14 @@ namespace BaseGame.Playground.Stats
         [SerializeField] private List<StatEntry> _stats = new List<StatEntry>();
         [SerializeField] private List<ResourceDefinition> _resources = new List<ResourceDefinition>();
 
-        /// <summary>A new copy on every call, overrides applied; not validated here.</summary>
+        /// <summary>
+        /// A new copy on every call, overrides applied; not validated here. A resource's MaxStat missing from the
+        /// stat list is added after the listed stats with its definition's base; listing it is only for overriding.
+        /// </summary>
         public StatCollectionSettings CreateSettings()
         {
             var settings = new StatCollectionSettings();
+            var statIds = new HashSet<StatId>();
             foreach (StatEntry entry in _stats)
             {
                 // Empty slots become null elements so the collection rejects them instead of silently dropping them.
@@ -25,35 +29,32 @@ namespace BaseGame.Playground.Stats
                 }
 
                 settings.Stats.Add(stat);
+                if (stat != null)
+                {
+                    statIds.Add(stat.Id);
+                }
             }
 
             foreach (ResourceDefinition resource in _resources)
             {
                 settings.Resources.Add(resource != null ? resource.CreateSettings() : null);
+                // An empty MaxStat stays missing, so the collection rejects the resource.
+                StatDefinition maxStat = resource != null ? resource.MaxStat : null;
+                if (maxStat != null && maxStat.Id.IsValid && statIds.Add(maxStat.Id))
+                {
+                    settings.Stats.Add(maxStat.CreateSettings());
+                }
             }
 
             return settings;
         }
 
+        // Runs the core's own check, so the Inspector warns about exactly what StatsBehaviour would reject in Play.
         private void OnValidate()
         {
-            // Usual cause: two assets with the same name in different folders.
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (StatEntry entry in _stats)
+            if (StatCollection.TryGetError(CreateSettings(), out string error))
             {
-                if (entry != null && entry.Stat != null && !seen.Add(entry.Stat.name))
-                {
-                    Debug.LogWarning($"{nameof(StatProfile)} '{name}': stat ID '{entry.Stat.name}' appears more than once.", this);
-                }
-            }
-
-            seen.Clear();
-            foreach (ResourceDefinition resource in _resources)
-            {
-                if (resource != null && !seen.Add(resource.name))
-                {
-                    Debug.LogWarning($"{nameof(StatProfile)} '{name}': resource ID '{resource.name}' appears more than once.", this);
-                }
+                Debug.LogWarning($"{nameof(StatProfile)} '{name}': {error}", this);
             }
         }
 

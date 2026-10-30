@@ -103,24 +103,25 @@ EffectCollection
 | `ResourceTests` | `Add`/`Set`, clamp, max đổi giữ số tuyệt đối, đổi áo A sang B, stat làm max dưới `Min`, `Normalized`, `InitialFraction`, thứ tự event, `Filled` không phát khi max giảm xuống current; derived stat qua `ReplaceModifier`: Vitality đổi, máu giữ 140 |
 | `StatCollectionTests` | Settings (null, phần tử null, trùng ID, resource trỏ stat không có), copy, `DisplayName` (mặc định là ID), `Get`/`TryGet`, wrapper chỉ đọc, lệnh và exception trong handler, event còn chờ bị bỏ khi handler lồng đổi tiếp (tháo giáp +Vitality +`MaxHealth`: listener nhận `(180,150)`), `MaxEventDepth` |
 | `StatsSnapshotTests` | `JsonUtility`, `CaptureSnapshot` trả mảng mới, chỉ lưu base khác settings, stat vắng mặt về base trong settings, resource vắng mặt về giá trị theo `InitialFraction` (thực thể mới và đang chơi cùng kết quả), ba bước restore, Resource im lặng khi restore, derived stat giữ đúng máu 140/150, từ chối từng loại dữ liệu hỏng và ID không có trong collection (state không đổi), `Restore` trong handler |
-| `StatDefinitionTests` | Definition và profile: mặc định, ID là tên asset, bản copy, override base, `DisplayName` |
-| `Effects/EffectApplyTests` | Bốn `StackRule`, `MaxStacks`, `MaxDuration`, `Value × Stacks` (mỗi modifier settings đúng một `Modifier`), ràng buộc stack, vô hạn, stat lạ, stack lên `MaxHealth` không mất current, `Settings` trả bản copy mới, `Has`/`TryGet` |
+| `StatDefinitionTests` | Definition và profile: mặc định, ID là tên asset, bản copy, override base, `MaxStat` tự thêm (không liệt kê thì lấy base của definition, liệt kê có override thì dòng liệt kê thắng, để trống thì bị từ chối), `DisplayName` |
+| `Effects/EffectApplyTests` | Bốn `StackRule`, `MaxStacks`, `MaxDuration`, rule khác bỏ qua `MaxStacks`/`MaxDuration`, `Value × Stacks` (mỗi modifier settings đúng một `Modifier`), ràng buộc stack, vô hạn, stat lạ, stack lên `MaxHealth` không mất current, `Settings` trả bản copy mới, `Has`/`TryGet` |
 | `Effects/EffectGroupTests` | `Replace`/`Suppress` (thuốc tốc độ), bằng rank (bánh mì, cơm; áp lại effect bị suppress), group trùng `Id` khác `Policy`, suppress vẫn stack, thứ tự event (Stat → Resource → Effect; thua trước thắng sau) |
 | `Effects/EffectAdvanceTests` | Hết hạn và thứ tự, resume, `TimeUntilNextExpiry` (kể cả suppress, +∞), `delta` sai, handler áp/gỡ (event chờ bị bỏ), `Advance` trong handler (của effect và của Stat), vòng lặp chỉ gồm event effect; `Advance(10)` một lần và `Advance(1)` mười lần ra cùng snapshot và giá trị stat; resume rồi hết hạn trong một lần gọi không phát `Resumed` |
 | `Effects/EffectsSnapshotTests` | `JsonUtility` với vô hạn, `CaptureSnapshot` trả mảng mới, suppress tính lại, từ chối từng loại dữ liệu hỏng và lệch settings (`resolve` trả `null`, settings sai hoặc khác `Id`, stat lạ, số thứ tự âm hoặc trùng, `Stacks` vượt mức theo `StackRule`, `Remaining` vượt mức, cờ vô hạn khác settings, hai effect cùng group `Replace`, group cùng `Id` khác `Policy`; state không đổi), `Restore` trong handler, bộ đếm lần áp đi tiếp sau restore; restore effects rồi stats giữ đúng current |
-| `Effects/EffectDefinitionTests` | Effect và group definition: mặc định, ID là tên asset, bản copy, `DisplayName` |
+| `Effects/EffectDefinitionTests` | Effect và group definition: mặc định, ID là tên asset, bản copy, `DisplayName`, tên field mà Inspector ẩn theo điều kiện vẫn tồn tại |
 | `Effects/EffectsAssemblyTests` | `EffectCollection` nằm trong assembly `GuenBanKhai.Stats.Effects` (bắt lỗi lỡ xóa asmdef con) |
 
 Kiểm bằng tay (luật chạy qua callback của Unity):
 
 | Luật | Bước kiểm |
 |---|---|
-| `OnValidate` log warning | Tạo `StatDefinition` tên có khoảng trắng, đặt `Min > Max`; tạo hai `StatDefinition` cùng tên ở hai thư mục và đưa vào một `StatProfile`; tạo `EffectDefinition` `PercentMult` −0.5, `MaxStacks` 3. Mỗi trường hợp có warning trong Console |
+| `OnValidate` log warning | Lần lượt tạo: `StatDefinition` tên có khoảng trắng; `StatDefinition` có `Min > Max`; hai `StatDefinition` cùng tên ở hai thư mục, đưa vào một `StatProfile`; resource để trống `MaxStat` trong profile; `EffectDefinition` `Extend` có `MaxDuration < Duration`. Mỗi trường hợp có warning trong Console, và trừ trường hợp khoảng trắng, nội dung warning đúng câu lỗi của lõi |
 | `StatsBehaviour` gặp profile thiếu hoặc sai | Để trống profile (rồi thử profile có ID trùng), Play: có log lỗi, component bị tắt, `Collection` là `null` |
 | `EffectsBehaviour` khi `Collection` là `null` | Cùng GameObject với `StatsBehaviour` profile trống, Play: có log lỗi, `EffectsBehaviour` bị tắt |
+| Inspector của `EffectDefinition` | Đổi lần lượt bốn `StackRule`: `Max Duration` chỉ hiện khi `Extend`, `Max Stacks` chỉ hiện khi `Stack`, dòng mô tả dưới `Stack Rule` đổi theo rule. Bật `Infinite`: ẩn `Duration`, `Max Duration`, dòng mô tả có thêm câu về vô hạn. Bỏ `Group`: ẩn `Rank`. Chọn hai effect khác rule cùng lúc: hiện đủ mọi trường, không có dòng mô tả. Đổi rule rồi đổi lại: giá trị cũ vẫn còn |
 | `DefaultExecutionOrder` của `StatsBehaviour`, `EffectsBehaviour` | Component trên GameObject khác đọc `StatsBehaviour.Collection` và `EffectsBehaviour.Collection` trong `Awake`, Play: không `null` |
 
-Playground: `Assets/Playground/Stats/`, scene `Assets/Scenes/Stats.unity`, asset trong `Assets/Configs/Stats/` (`Stats/`, `Pools/`, `Effects/`, `Groups/`, profile `TestEntity`). Asset sinh từ `PlaygroundCatalog` bằng menu `GuenBanKhai/Stats/Playground/Generate Assets` (chỉ tạo asset chưa có); `Sync Display Names` chỉ ghi lại `DisplayName` theo catalog.
+Playground: `Assets/Playground/Stats/`, scene `Assets/Scenes/Stats.unity`, asset trong `Assets/Configs/Stats/` (`Stats/`, `Pools/`, `Effects/`, `Groups/`, profile `TestEntity`). Asset sinh từ `PlaygroundCatalog` bằng menu `GuenBanKhai/Stats/Playground/Generate Assets` (chỉ tạo asset chưa có). Generator ghi asset giống cách designer tạo tay: profile không liệt kê `MaxStat` của resource; effect chỉ có các trường mà rule và group của nó dùng.
 
 ## Kế hoạch (tạm) [T9]
 
@@ -130,6 +131,14 @@ Giai đoạn: **Playground**. Xóa mục này khi phát hành.
 - [x] Playground bước 1: lõi C# (settings dựng bằng code), overlay có nút cho mọi lệnh, thời gian chạy bằng nút của overlay hoặc bằng `GameClockDriver` của Calendar, test EditMode cho logic khó.
 - [x] Playground bước 2: ScriptableObject (`StatDefinition`, `ResourceDefinition`, `StatProfile`, `EffectDefinition`, `EffectGroupDefinition`) và `StatsBehaviour`, `EffectsBehaviour`; overlay lấy thực thể từ hai behaviour, effect từ `EffectDefinition`. User đã chơi thử: happy case đúng.
 - [ ] Kiểm bằng tay các trường hợp lỗi (bảng "Kiểm bằng tay" ở mục Kiểm thử): warning của `OnValidate`, profile trống hoặc sai, `EffectsBehaviour` khi `Collection` là `null`.
-- [ ] Trả lời câu hỏi authoring: nhập `Infinity` cho `Min`/`Max`, toggle `Infinite` cùng `Duration`/`MaxDuration`, kéo thả `StatDefinition` vào modifier và profile, trường thiếu hay thừa.
+- [x] Trả lời câu hỏi authoring. User đã chơi thử:
+  - Nhập `Infinity` cho `Min`/`Max` dùng được và rõ ràng, giữ nguyên.
+  - Toggle `Infinite` để `Duration`/`MaxDuration` vẫn hiện nhưng không gây nhầm.
+  - Đã sửa ba chỗ: rule bỏ qua hẳn trường nó không dùng (`MaxDuration` chỉ cho `Extend`, `MaxStacks` chỉ cho `Stack`); `OnValidate` chạy đúng phép kiểm của lõi; profile tự thêm `MaxStat` của resource.
+  - Chống hiểu lầm: Inspector của `EffectDefinition` chỉ hiện trường mà lựa chọn hiện tại dùng tới, kèm dòng mô tả rule; thêm tooltip cho đơn vị thời gian, `Value` của modifier, `Rank`, `Policy`, và `Min` của stat so với `Min` của resource; enum lưu trong asset có số cố định.
+- [ ] Kiểm bằng tay dòng "Inspector của `EffectDefinition`" trong bảng "Kiểm bằng tay".
 - [ ] Review: `/review-my-module stats playground`.
-- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không (chưa trả lời); overlay debug có nút cho mọi lệnh (đã có, gồm cả bước 2).
+- Để lúc lên Package:
+  - `EffectDefinitionEditor` vào asmdef `GuenBanKhai.Stats.Editor`. Khi đó quyết lớp Effects có cần asmdef Editor riêng không.
+  - Mỗi definition hiện ID ở đầu Inspector, kèm cảnh báo đổi tên asset là đổi ID và save cũ sẽ không khớp.
+- Câu hỏi cho playground: authoring `StatProfile`/`EffectDefinition` trong Inspector có tiện không (đã trả lời ở trên); overlay debug có nút cho mọi lệnh (đã có, gồm cả bước 2).

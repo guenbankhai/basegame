@@ -9,7 +9,9 @@ namespace BaseGame.Playground.Stats
         [Tooltip("Empty falls back to the ID (asset name).")]
         [SerializeField] private string _displayName = "";
         [SerializeField] private float _baseValue = 0f;
+        [Tooltip("Clamps the final value, after modifiers. A resource's floor is the resource's own Min.")]
         [SerializeField] private float _min = float.NegativeInfinity;
+        [Tooltip("Clamps the final value, after modifiers.")]
         [SerializeField] private float _max = float.PositiveInfinity;
 
         // Empty name gives the invalid default ID, so CreateSettings never throws and the collection reports it.
@@ -23,12 +25,14 @@ namespace BaseGame.Playground.Stats
             Max = _max,
         };
 
+        // Runs the core's own check on this stat alone; profile-level checks run in StatProfile.
         private void OnValidate()
         {
             DefinitionNames.WarnIfWhitespace(this);
-            if (_min > _max)
+            var settings = new StatCollectionSettings { Stats = { CreateSettings() } };
+            if (StatCollection.TryGetError(settings, out string error))
             {
-                Debug.LogWarning($"{nameof(StatDefinition)} '{name}': Min {_min} > Max {_max}.", this);
+                Debug.LogWarning($"{nameof(StatDefinition)} '{name}': {error}", this);
             }
         }
     }

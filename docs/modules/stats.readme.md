@@ -52,7 +52,7 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 | `Modifier` | Class bất biến: `Type`, `Value`, `Source` |
 | `StatId`, `ResourceId`, `EffectId` | Struct bọc chuỗi, so sánh ordinal; key khi save |
 | `StatCollectionSettings`, `StatSettings`, `ResourceSettings` | Cấu hình C# thuần |
-| `StatDefinition`, `ResourceDefinition`, `StatProfile` | ScriptableObject authoring. Profile liệt kê stat và resource của một loại thực thể, có thể override base |
+| `StatDefinition`, `ResourceDefinition`, `StatProfile` | ScriptableObject authoring. Profile liệt kê stat và resource của một loại thực thể, có thể override base; `MaxStat` của resource tự có |
 | `StatsBehaviour` | MonoBehaviour tạo `StatCollection` từ `StatProfile` trong `Awake`, chạy trước component khác |
 | `EffectCollection` | Lõi của lớp Effects, mỗi thực thể một cái, giữ `StatCollection`: áp, gỡ, `Advance`, snapshot |
 | `EffectInstance` | Một effect đang chạy; là `Source` của mọi modifier nó thêm |
@@ -70,6 +70,8 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 - **ID của definition là tên asset**: `MoveSpeed.asset` → `"MoveSpeed"`. Tên PascalCase, không khoảng trắng, không tiền tố loại; phân loại bằng thư mục. Không `Instantiate` definition (tên thành `"MoveSpeed(Clone)"`). Đổi tên asset là đổi ID.
 - UI lấy tên hiển thị qua `Stat.DisplayName`, `Resource.DisplayName`, `EffectInstance.DisplayName`, không đọc definition.
 - Settings và snapshot có constructor và setter public để dựng không cần asset.
+- Inspector của `EffectDefinition` chỉ hiện trường mà lựa chọn hiện tại dùng tới: `Max Duration` khi `Extend`, `Max Stacks` khi `Stack`; bật `Infinite` thì ẩn thời gian; không có `Group` thì ẩn `Rank`. Ngay dưới `Stack Rule` có một dòng mô tả rule đang chọn. Trường bị ẩn vẫn giữ giá trị trong asset, lõi bỏ qua giá trị đó.
+- Enum lưu trong asset (`StackRule`, `ModifierType`, `GroupPolicy`) được lưu bằng số cố định. Version sau chỉ thêm giá trị mới ở cuối, không đổi số của giá trị đã có.
 
 ### Settings
 
@@ -86,16 +88,18 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 | `DisplayName` (stat, resource, effect) | `Id.Value` | Tùy ý; `null`, rỗng hay chỉ khoảng trắng thì lấy `Id.Value` |
 | `EffectSettings.Id` | — | ID hợp lệ |
 | `Duration` | +∞ (vô hạn) | `> 0` |
-| `MaxDuration` | +∞ | `>= Duration`; dùng khi `Extend` |
+| `MaxDuration` | +∞ | Chỉ `Extend` dùng và kiểm: `>= Duration`. Rule khác bỏ qua hẳn |
 | `StackRule` | — | Enum hợp lệ |
-| `MaxStacks` | 1 | `>= 1`; dùng khi `Stack` |
+| `MaxStacks` | 1 | Chỉ `Stack` dùng và kiểm: `>= 1`. Rule khác bỏ qua hẳn, số stack tối đa là 1 |
 | `Group` | `null` (chồng tự do) | `null` hoặc hợp lệ |
 | `Rank` | 0 | Số nguyên |
 | `EffectGroupSettings.Id` | — | Không null, rỗng hay chỉ khoảng trắng |
 | `EffectGroupSettings.Policy` | `Replace` | Enum hợp lệ |
-| `Modifiers` | — | Không null, có thể rỗng (effect chỉ làm nhãn); mỗi phần tử có `Stat` hợp lệ, `Type` hợp lệ và `Value` theo luật `Modifier`; ràng buộc stack: `Value × MaxStacks >= −1` với mọi `PercentMult`, kiểm bằng đúng phép nhân `float` dùng để tính modifier, nên settings qua kiểm tra thì stack `MaxStacks` không ném |
+| `Modifiers` | — | Không null, có thể rỗng (effect chỉ làm nhãn); mỗi phần tử có `Stat` hợp lệ, `Type` hợp lệ và `Value` theo luật `Modifier`; ràng buộc stack: `Value × số stack tối đa >= −1` với mọi `PercentMult`, kiểm bằng đúng phép nhân `float` dùng để tính modifier, nên settings qua kiểm tra thì stack tới mức tối đa không ném |
 
-Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của ScriptableObject log warning khi: tên asset có khoảng trắng, `Min > Max`, profile có ID trùng (hay gặp: hai asset cùng tên ở hai thư mục), vi phạm ràng buộc stack.
+Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của definition và profile chạy đúng phép kiểm của lõi trên settings mà asset dựng ra, rồi log warning với câu lỗi đó (mỗi lần một lỗi đầu tiên). Riêng tên asset có khoảng trắng thì có warning riêng. ID trùng thường là do hai asset cùng tên ở hai thư mục. Effect trỏ tới stat mà thực thể không có thì chỉ báo lúc `Apply`, vì effect không gắn với profile nào.
+
+Profile: resource kéo vào profile tự mang theo `MaxStat`. Profile thêm stat đó sau các stat đã liệt kê, với base của `StatDefinition`. Chỉ liệt kê `MaxStat` khi cần override base; khi đó dòng trong danh sách được dùng.
 
 ## API [T4]
 
@@ -182,7 +186,7 @@ Các type khác (constructor và setter public, để code và test dựng khôn
 - `EffectSettings(EffectId id, StackRule stackRule)`: `Id`, `DisplayName`, `double Duration`, `double MaxDuration`, `StackRule`, `int MaxStacks`, `EffectGroupSettings Group`, `int Rank`, `List<EffectModifierSettings> Modifiers`.
 - `EffectModifierSettings(StatId stat, ModifierType type, float value)`: `Stat`, `Type`, `Value`.
 - `EffectGroupSettings(string id, GroupPolicy policy)`: `Id`, `Policy`.
-- `StatDefinition.CreateSettings()` → `StatSettings`; `ResourceDefinition.CreateSettings()` → `ResourceSettings`; `StatProfile.CreateSettings()` → `StatCollectionSettings` (đã gồm override base); `EffectDefinition.CreateSettings()` → `EffectSettings`; `EffectGroupDefinition.CreateSettings()` → `EffectGroupSettings`.
+- `StatDefinition.CreateSettings()` → `StatSettings`; `ResourceDefinition.CreateSettings()` → `ResourceSettings`; `StatProfile.CreateSettings()` → `StatCollectionSettings` (đã gồm override base và `MaxStat` tự thêm); `EffectDefinition.CreateSettings()` → `EffectSettings`; `EffectGroupDefinition.CreateSettings()` → `EffectGroupSettings`.
 - `StatsBehaviour.Collection` (`StatCollection`), `EffectsBehaviour.Collection` (`EffectCollection`): `null` khi component tự tắt vì config sai.
 - `StatsSnapshot`: `StatEntry[] Stats` (`string Id`, `float BaseValue`), `ResourceEntry[] Resources` (`string Id`, `float Current`).
 - `EffectsSnapshot`: `EffectEntry[] Effects` (`string Id`, `int Stacks`, `double Remaining`, `bool IsInfinite`, `int LastApplySequence`).

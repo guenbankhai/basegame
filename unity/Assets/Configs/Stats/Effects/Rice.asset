@@ -15,12 +15,12 @@ MonoBehaviour:
   _displayName: Rice
   _infinite: 0
   _duration: 180
-  _maxDuration: 180
   _stackRule: 0
+  _maxDuration: Infinity
   _maxStacks: 1
-  _group: {fileID: 11400000, guid: 12fbc5b00dba0ba408d7a0604ad5faaa, type: 2}
+  _group: {fileID: 11400000, guid: 0cf3fa9744d50b648aa4a936083cd484, type: 2}
   _rank: 1
   _modifiers:
-  - _stat: {fileID: 11400000, guid: 34ff4b8e9ab97be4eb3c83efc4a63c02, type: 2}
+  - _stat: {fileID: 11400000, guid: 01acee425e0f8694f8aafb6839465156, type: 2}
     _type: 0
     _value: 20

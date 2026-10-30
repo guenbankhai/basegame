@@ -45,13 +45,29 @@ namespace BaseGame.Playground.Stats
                 }));
             }
 
+            // Max stats come with their resource, so the profile lists only the others, as a designer would.
+            var maxStats = new HashSet<StatId>();
+            foreach (ResourceSettings resource in statSettings.Resources)
+            {
+                maxStats.Add(resource.MaxStat);
+            }
+
+            var listed = new List<StatDefinition>();
+            foreach (StatSettings stat in statSettings.Stats)
+            {
+                if (!maxStats.Contains(stat.Id))
+                {
+                    listed.Add(stats[stat.Id]);
+                }
+            }
+
             LoadOrCreate<StatProfile>($"{Root}/TestEntity.asset", created, so =>
             {
                 SerializedProperty statList = so.FindProperty("_stats");
-                statList.arraySize = statSettings.Stats.Count;
-                for (int i = 0; i < statSettings.Stats.Count; i++)
+                statList.arraySize = listed.Count;
+                for (int i = 0; i < listed.Count; i++)
                 {
-                    statList.GetArrayElementAtIndex(i).FindPropertyRelative("_stat").objectReferenceValue = stats[statSettings.Stats[i].Id];
+                    statList.GetArrayElementAtIndex(i).FindPropertyRelative("_stat").objectReferenceValue = listed[i];
                 }
 
                 SerializedProperty resourceList = so.FindProperty("_resources");
@@ -74,19 +90,30 @@ namespace BaseGame.Playground.Stats
 
                 LoadOrCreate<EffectDefinition>($"{Root}/Effects/{effect.Id.Value}.asset", created, so =>
                 {
+                    // Writes only the fields the rule and group use, matching what the Inspector shows.
                     bool infinite = double.IsPositiveInfinity(effect.Duration);
                     so.FindProperty("_displayName").stringValue = effect.DisplayName;
                     so.FindProperty("_infinite").boolValue = infinite;
+                    so.FindProperty("_stackRule").intValue = (int)effect.StackRule;
                     if (!infinite)
                     {
                         so.FindProperty("_duration").doubleValue = effect.Duration;
-                        so.FindProperty("_maxDuration").doubleValue = effect.MaxDuration;
+                        if (effect.StackRule == StackRule.Extend)
+                        {
+                            so.FindProperty("_maxDuration").doubleValue = effect.MaxDuration;
+                        }
                     }
 
-                    so.FindProperty("_stackRule").intValue = (int)effect.StackRule;
-                    so.FindProperty("_maxStacks").intValue = effect.MaxStacks;
-                    so.FindProperty("_group").objectReferenceValue = group != null ? groups[group.Id] : null;
-                    so.FindProperty("_rank").intValue = effect.Rank;
+                    if (effect.StackRule == StackRule.Stack)
+                    {
+                        so.FindProperty("_maxStacks").intValue = effect.MaxStacks;
+                    }
+
+                    if (group != null)
+                    {
+                        so.FindProperty("_group").objectReferenceValue = groups[group.Id];
+                        so.FindProperty("_rank").intValue = effect.Rank;
+                    }
 
                     SerializedProperty modifierList = so.FindProperty("_modifiers");
                     modifierList.arraySize = effect.Modifiers.Count;
@@ -105,45 +132,6 @@ namespace BaseGame.Playground.Stats
             Debug.Log(created.Count == 0
                 ? $"Stats playground: every asset already exists under {Root}, nothing created."
                 : $"Stats playground: created {created.Count} asset(s) under {Root}:\n{string.Join("\n", created)}");
-        }
-
-        /// <summary>Overwrites only DisplayName, found by asset name anywhere under Root, so GUIDs and scene links stay.</summary>
-        [MenuItem("GuenBanKhai/Stats/Playground/Sync Display Names")]
-        private static void SyncDisplayNames()
-        {
-            StatCollectionSettings statSettings = PlaygroundCatalog.CreateStatSettings();
-            var names = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (StatSettings stat in statSettings.Stats)
-            {
-                names[stat.Id.Value] = stat.DisplayName;
-            }
-
-            foreach (ResourceSettings resource in statSettings.Resources)
-            {
-                names[resource.Id.Value] = resource.DisplayName;
-            }
-
-            foreach (EffectSettings effect in PlaygroundCatalog.CreateEffects())
-            {
-                names[effect.Id.Value] = effect.DisplayName;
-            }
-
-            int updated = 0;
-            foreach (string guid in AssetDatabase.FindAssets("t:ScriptableObject", new[] { Root }))
-            {
-                var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(AssetDatabase.GUIDToAssetPath(guid));
-                var serialized = asset != null ? new SerializedObject(asset) : null;
-                SerializedProperty displayName = serialized?.FindProperty("_displayName");
-                if (displayName != null && names.TryGetValue(asset.name, out string value) && displayName.stringValue != value)
-                {
-                    displayName.stringValue = value;
-                    serialized.ApplyModifiedPropertiesWithoutUndo();
-                    updated++;
-                }
-            }
-
-            AssetDatabase.SaveAssets();
-            Debug.Log($"Stats playground: updated DisplayName on {updated} asset(s) under {Root}.");
         }
 
         private static T LoadOrCreate<T>(string path, List<string> created, Action<SerializedObject> fill) where T : ScriptableObject

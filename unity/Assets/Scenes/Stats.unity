@@ -392,10 +392,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1555216843}
+  - component: {fileID: 1555216847}
   - component: {fileID: 1555216846}
   - component: {fileID: 1555216845}
   - component: {fileID: 1555216844}
-  - component: {fileID: 1555216847}
   m_Layer: 0
   m_Name: Stats
   m_TagString: Untagged
@@ -427,23 +427,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1555216841}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc40a999d2d020544bf11fd29459204c, type: 3}
+  m_Script: {fileID: 11500000, guid: f79e0c997151c894cafe3c6ca2821605, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectsBehaviour
+  m_EditorClassIdentifier: GuenBanKhai.Calendar::GuenBanKhai.Calendar.GameClockDriver
+  _config: {fileID: 11400000, guid: 9833f4346066d6b4e9e1d84dbca3e531, type: 2}
 --- !u!114 &1555216845
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1555216841}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23089176018c34443aef06159e49418a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatsBehaviour
-  _profile: {fileID: 11400000, guid: 309bc01e39252344b88f5ba310332993, type: 2}
---- !u!114 &1555216846
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -455,24 +443,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bfd611db3ae8ba4bb1ffb60b81a245f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatsDebugOverlay
-  _profile: {fileID: 11400000, guid: 309bc01e39252344b88f5ba310332993, type: 2}
+  _profile: {fileID: 11400000, guid: 41c0da43213dbbb4db19157ce7fc2a81, type: 2}
   _effectDefinitions:
-  - {fileID: 11400000, guid: 630d2da7074cab2428a1f5fbc0a39ca3, type: 2}
-  - {fileID: 11400000, guid: 64e9f0f7deadf374189078a1bc9b6cb4, type: 2}
-  - {fileID: 11400000, guid: 077147a64fc7efe43a0bdd59e9bd0b97, type: 2}
-  - {fileID: 11400000, guid: 2fea9a432c3b0c64f8c97485ba02f133, type: 2}
-  - {fileID: 11400000, guid: 9707778361eeb9f4bb649167e767827a, type: 2}
-  - {fileID: 11400000, guid: 6bc886cafce979542862f7761fb08644, type: 2}
-  - {fileID: 11400000, guid: c04f8d3fc9247e5449d6f87725ebf9af, type: 2}
-  - {fileID: 11400000, guid: 1be9c8689be74d84ab4b9047f061a02f, type: 2}
-  - {fileID: 11400000, guid: f239638e23d9fbd4c94411ae632f02ad, type: 2}
-  - {fileID: 11400000, guid: 570ee880d414e6448a4fe26bfe6dc1cd, type: 2}
-  - {fileID: 11400000, guid: 62af5141a61994043970c18e827281b6, type: 2}
-  - {fileID: 11400000, guid: 86c1e4fb121bae041853236662239ce1, type: 2}
-  - {fileID: 11400000, guid: 49d76f8af7d65a94e86af50e12e95690, type: 2}
-  - {fileID: 11400000, guid: e314ee0f8b415344d930418762b68e20, type: 2}
-  _clockDriver: {fileID: 1555216847}
+  - {fileID: 11400000, guid: d4ab9a5ee52c7254794c259c69cc3a5c, type: 2}
+  - {fileID: 11400000, guid: e1ec7db1033d2694b8966b18d3c1a2b9, type: 2}
+  - {fileID: 11400000, guid: 0aa6a0168149f244896b362174ccb809, type: 2}
+  - {fileID: 11400000, guid: 527ef53848cfefd45b6dfbbe39c3cb27, type: 2}
+  - {fileID: 11400000, guid: 13dbafbfa9cb6084291a9e0f42f65781, type: 2}
+  - {fileID: 11400000, guid: e90efd579125a99489ee273d641bde79, type: 2}
+  - {fileID: 11400000, guid: a6f8338cdf13a5b4e9c1eb225275123a, type: 2}
+  - {fileID: 11400000, guid: 5624c7287246fb646836b4e97a19133f, type: 2}
+  - {fileID: 11400000, guid: 899972f0b9c90a84d84a08714fd5b3bb, type: 2}
+  - {fileID: 11400000, guid: f42b1f3faf70a684da1aa1582683ec47, type: 2}
+  - {fileID: 11400000, guid: 4a236af0ea6ded444aa1caa434759844, type: 2}
+  - {fileID: 11400000, guid: b417c3739a0f8be45a7cd452cad5d144, type: 2}
+  - {fileID: 11400000, guid: 8fb799bf185acb141b8360c0f2f90c8c, type: 2}
+  - {fileID: 11400000, guid: f4bc8e833d43294439f76d58e3b941e0, type: 2}
+  _clockDriver: {fileID: 1555216844}
   _autoStepSeconds: 0.5
+--- !u!114 &1555216846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555216841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc40a999d2d020544bf11fd29459204c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectsBehaviour
 --- !u!114 &1555216847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -482,10 +482,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1555216841}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f79e0c997151c894cafe3c6ca2821605, type: 3}
+  m_Script: {fileID: 11500000, guid: 23089176018c34443aef06159e49418a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GuenBanKhai.Calendar::GuenBanKhai.Calendar.GameClockDriver
-  _config: {fileID: 11400000, guid: 9833f4346066d6b4e9e1d84dbca3e531, type: 2}
+  m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatsBehaviour
+  _profile: {fileID: 11400000, guid: 41c0da43213dbbb4db19157ce7fc2a81, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -15,12 +15,12 @@ MonoBehaviour:
   _displayName: Tonic I (Replace, r1)
   _infinite: 0
   _duration: 10
-  _maxDuration: 10
   _stackRule: 0
+  _maxDuration: Infinity
   _maxStacks: 1
-  _group: {fileID: 11400000, guid: e67d37d7be2922246aee6e3fa4326360, type: 2}
+  _group: {fileID: 11400000, guid: 92ed18e2e59090d4096c5398a20f99da, type: 2}
   _rank: 1
   _modifiers:
-  - _stat: {fileID: 11400000, guid: 550289549a40312478c667d5d31732fd, type: 2}
+  - _stat: {fileID: 11400000, guid: 35a1a1a5c57b8cd44bada0e418195d75, type: 2}
     _type: 1
     _value: 0.2

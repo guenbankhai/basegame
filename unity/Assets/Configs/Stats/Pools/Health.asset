@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Health
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.ResourceDefinition
   _displayName: Health
-  _maxStat: {fileID: 11400000, guid: 2b5782af0328d6e46aea199d0f0a41ca, type: 2}
+  _maxStat: {fileID: 11400000, guid: 59892244ee0ed374892ffe1e2951d20c, type: 2}
   _min: 0
   _initialFraction: 1

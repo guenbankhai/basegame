@@ -78,7 +78,7 @@ namespace BaseGame.Playground.Stats
             {
                 DisplayName = displayName,
                 Duration = duration,
-                MaxDuration = double.IsPositiveInfinity(maxDuration) ? duration : maxDuration,
+                MaxDuration = maxDuration,
                 MaxStacks = maxStacks,
                 Group = group,
                 Rank = rank,

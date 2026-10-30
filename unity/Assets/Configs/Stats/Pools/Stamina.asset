@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Stamina
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.ResourceDefinition
   _displayName: Stamina
-  _maxStat: {fileID: 11400000, guid: 34ff4b8e9ab97be4eb3c83efc4a63c02, type: 2}
+  _maxStat: {fileID: 11400000, guid: 01acee425e0f8694f8aafb6839465156, type: 2}
   _min: 0
   _initialFraction: 1

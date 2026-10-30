@@ -15,12 +15,12 @@ MonoBehaviour:
   _displayName: Vigor +4 vitality (Body r1, violation)
   _infinite: 0
   _duration: 10
-  _maxDuration: 10
   _stackRule: 0
+  _maxDuration: Infinity
   _maxStacks: 1
-  _group: {fileID: 11400000, guid: 9f081c69953be8a4e9266e6b74b33dba, type: 2}
+  _group: {fileID: 11400000, guid: 1841ec201ba369f469bad80bf1ca5f51, type: 2}
   _rank: 1
   _modifiers:
-  - _stat: {fileID: 11400000, guid: 716c1aeae07c2104d80f9a93bfc17c7c, type: 2}
+  - _stat: {fileID: 11400000, guid: 8a12acaee346a5f4b9dea1b5a06dbc14, type: 2}
     _type: 0
     _value: 4

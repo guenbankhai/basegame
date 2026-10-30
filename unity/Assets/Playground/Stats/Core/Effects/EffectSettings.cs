@@ -31,6 +31,10 @@ namespace BaseGame.Playground.Stats
         public List<EffectModifierSettings> Modifiers { get; set; } = new List<EffectModifierSettings>();
 
         internal bool IsInfinite => double.IsPositiveInfinity(Duration);
+        /// <summary>Most stacks the instance can reach; only Stack goes past 1.</summary>
+        internal int StackCap => StackRule == StackRule.Stack ? MaxStacks : 1;
+        /// <summary>Most Remaining the instance can reach; only Extend goes past Duration.</summary>
+        internal double RemainingCap => StackRule == StackRule.Extend ? MaxDuration : Duration;
 
         internal EffectSettings Clone()
         {
@@ -75,19 +79,20 @@ namespace BaseGame.Playground.Stats
                 return $"Effect '{Id}': Duration must be > 0, got {Duration}.";
             }
 
-            if (!(MaxDuration >= Duration))
-            {
-                return $"Effect '{Id}': MaxDuration must be >= Duration, got {MaxDuration}.";
-            }
-
             if (!Enum.IsDefined(typeof(StackRule), StackRule))
             {
                 return $"Effect '{Id}': unknown StackRule {StackRule}.";
             }
 
-            if (MaxStacks < 1)
+            // MaxDuration and MaxStacks only mean something to their own rule; other rules ignore them entirely.
+            if (StackRule == StackRule.Extend && !(MaxDuration >= Duration))
             {
-                return $"Effect '{Id}': MaxStacks must be >= 1, got {MaxStacks}.";
+                return $"Effect '{Id}': MaxDuration must be >= Duration for Extend, got {MaxDuration}.";
+            }
+
+            if (StackRule == StackRule.Stack && MaxStacks < 1)
+            {
+                return $"Effect '{Id}': MaxStacks must be >= 1 for Stack, got {MaxStacks}.";
             }
 
             if (Group != null && (string.IsNullOrWhiteSpace(Group.Id) || !Enum.IsDefined(typeof(GroupPolicy), Group.Policy)))
@@ -108,10 +113,10 @@ namespace BaseGame.Playground.Stats
                     return $"Effect '{Id}': a modifier is null or has an invalid stat, type or value.";
                 }
 
-                // Same float multiply the instance uses, so settings that pass never throw at MaxStacks.
-                if (modifier.Type == ModifierType.PercentMult && (modifier.Value < -1f || modifier.Value * MaxStacks < -1f))
+                // Same float multiply the instance uses, so settings that pass never throw at the stack cap.
+                if (modifier.Type == ModifierType.PercentMult && (modifier.Value < -1f || modifier.Value * StackCap < -1f))
                 {
-                    return $"Effect '{Id}': PercentMult {modifier.Value} x MaxStacks {MaxStacks} must be >= -1.";
+                    return $"Effect '{Id}': PercentMult {modifier.Value} x {StackCap} stack(s) must be >= -1.";
                 }
             }
 

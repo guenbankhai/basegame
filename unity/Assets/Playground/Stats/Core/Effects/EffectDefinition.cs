@@ -12,14 +12,17 @@ namespace BaseGame.Playground.Stats
         [SerializeField] private string _displayName = "";
         [Tooltip("Lasts until removed; Duration and Max Duration are ignored.")]
         [SerializeField] private bool _infinite = false;
+        [Tooltip("Same unit as the delta the game passes to Advance.")]
         [SerializeField] private double _duration = 60d;
+        // Declared right after the rule so the Inspector shows each rule's own fields under it.
+        [SerializeField] private StackRule _stackRule = StackRule.Refresh;
         [Tooltip("Cap for Extend; must be >= Duration.")]
         [SerializeField] private double _maxDuration = double.PositiveInfinity;
-        [SerializeField] private StackRule _stackRule = StackRule.Refresh;
-        [Tooltip("Used by Stack.")]
+        [Tooltip("Cap for Stack.")]
         [SerializeField] private int _maxStacks = 1;
         [Tooltip("Empty stacks freely with every other effect.")]
         [SerializeField] private EffectGroupDefinition _group = null;
+        [Tooltip("Highest rank in the group takes effect; ties go to the latest apply.")]
         [SerializeField] private int _rank = 0;
         [SerializeField] private List<ModifierEntry> _modifiers = new List<ModifierEntry>();
 
@@ -48,16 +51,13 @@ namespace BaseGame.Playground.Stats
             return settings;
         }
 
+        // Runs the core's own check, so the Inspector warns about exactly what Apply would reject.
         private void OnValidate()
         {
             DefinitionNames.WarnIfWhitespace(this);
-            foreach (ModifierEntry entry in _modifiers)
+            if (CreateSettings().TryGetError(out string error))
             {
-                // Same float multiply EffectSettings checks with.
-                if (entry.Type == ModifierType.PercentMult && (entry.Value < -1f || entry.Value * _maxStacks < -1f))
-                {
-                    Debug.LogWarning($"{nameof(EffectDefinition)} '{name}': PercentMult {entry.Value} x MaxStacks {_maxStacks} must be >= -1.", this);
-                }
+                Debug.LogWarning($"{nameof(EffectDefinition)} '{name}': {error}", this);
             }
         }
 
@@ -66,6 +66,7 @@ namespace BaseGame.Playground.Stats
         {
             [SerializeField] private StatDefinition _stat = null;
             [SerializeField] private ModifierType _type = ModifierType.Flat;
+            [Tooltip("Flat: added as is. PercentAdd 0.1 = +10%. PercentMult -0.2 = x0.8.")]
             [SerializeField] private float _value = 0f;
 
             public StatDefinition Stat => _stat;

@@ -48,6 +48,28 @@ namespace BaseGame.Playground.Stats.Tests
         }
 
         [Test]
+        public void Apply_RefreshWithStaleMaxDurationAndMaxStacks_IgnoresThem()
+        {
+            EffectSettings slow = Effect("Slow", StackRule.Refresh, 180, null, 0, Speed, ModifierType.PercentMult, -0.5f);
+            slow.MaxDuration = 120;
+            slow.MaxStacks = 3;
+
+            _effects.Apply(slow);
+
+            Assert.That(_stats.GetStat(Speed).Value, Is.EqualTo(2.5f));
+        }
+
+        [Test]
+        public void Apply_ExtendWithMaxDurationBelowDuration_Throws()
+        {
+            EffectSettings poison = Effect("Poison", StackRule.Extend, 90, null, 0, Speed, ModifierType.Flat, -1f);
+            poison.MaxDuration = 60;
+
+            Assert.Throws<System.ArgumentException>(() => _effects.Apply(poison));
+            Assert.That(_effects.Instances, Is.Empty);
+        }
+
+        [Test]
         public void Apply_SuppressedSameRankReapplied_LoserFirstThenWinner()
         {
             var food = new EffectGroupSettings("Food", GroupPolicy.Suppress);

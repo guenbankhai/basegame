@@ -580,7 +580,7 @@ namespace BaseGame.Playground.Stats
                     return true;
                 }
 
-                int maxStacks = settings.StackRule == StackRule.Stack ? settings.MaxStacks : 1;
+                int maxStacks = settings.StackCap;
                 if (entry.Stacks < 1 || entry.Stacks > maxStacks)
                 {
                     error = $"Snapshot effect '{id}': Stacks {entry.Stacks} is outside [1, {maxStacks}].";
@@ -593,7 +593,7 @@ namespace BaseGame.Playground.Stats
                     return true;
                 }
 
-                double maxRemaining = settings.StackRule == StackRule.Extend ? settings.MaxDuration : settings.Duration;
+                double maxRemaining = settings.RemainingCap;
                 if (!entry.IsInfinite && !(entry.Remaining > 0 && entry.Remaining <= maxRemaining))
                 {
                     error = $"Snapshot effect '{id}': Remaining {entry.Remaining} is outside (0, {maxRemaining}].";

@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Hunger
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.ResourceDefinition
   _displayName: Fullness
-  _maxStat: {fileID: 11400000, guid: b382c5e68c78cd8468b78447c2af58bc, type: 2}
+  _maxStat: {fileID: 11400000, guid: 53d4342f5754efa4ebaf27a82e0b1c28, type: 2}
   _min: 0
   _initialFraction: 1

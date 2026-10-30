@@ -15,12 +15,12 @@ MonoBehaviour:
   _displayName: Fortify +20 health (stack 2)
   _infinite: 0
   _duration: 30
-  _maxDuration: 30
   _stackRule: 3
+  _maxDuration: Infinity
   _maxStacks: 2
   _group: {fileID: 0}
   _rank: 0
   _modifiers:
-  - _stat: {fileID: 11400000, guid: 2b5782af0328d6e46aea199d0f0a41ca, type: 2}
+  - _stat: {fileID: 11400000, guid: 59892244ee0ed374892ffe1e2951d20c, type: 2}
     _type: 0
     _value: 20
