@@ -95,9 +95,9 @@ namespace BaseGame.Playground.Stats
                 return $"Effect '{Id}': MaxStacks must be >= 1 for Stack, got {MaxStacks}.";
             }
 
-            if (Group != null && (string.IsNullOrWhiteSpace(Group.Id) || !Enum.IsDefined(typeof(GroupPolicy), Group.Policy)))
+            if (Group != null && (!IdFormat.IsValid(Group.Id) || !Enum.IsDefined(typeof(GroupPolicy), Group.Policy)))
             {
-                return $"Effect '{Id}': group needs a non-empty Id and a valid Policy.";
+                return $"Effect '{Id}': group needs a valid Policy, and its Id {IdFormat.Rule} (got '{Group.Id}').";
             }
 
             if (Modifiers == null)

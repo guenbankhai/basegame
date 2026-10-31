@@ -25,6 +25,7 @@ namespace BaseGame.Playground.Stats
             {
                 stats[stat.Id] = LoadOrCreate<StatDefinition>($"{Root}/Stats/{stat.Id.Value}.asset", created, so =>
                 {
+                    so.FindProperty(DefinitionEditor.IdField).stringValue = stat.Id.Value;
                     so.FindProperty("_displayName").stringValue = stat.DisplayName;
                     so.FindProperty("_baseValue").floatValue = stat.BaseValue;
                     so.FindProperty("_min").floatValue = stat.Min;
@@ -38,6 +39,7 @@ namespace BaseGame.Playground.Stats
             {
                 resources.Add(LoadOrCreate<ResourceDefinition>($"{Root}/Pools/{resource.Id.Value}.asset", created, so =>
                 {
+                    so.FindProperty(DefinitionEditor.IdField).stringValue = resource.Id.Value;
                     so.FindProperty("_displayName").stringValue = resource.DisplayName;
                     so.FindProperty("_maxStat").objectReferenceValue = stats[resource.MaxStat];
                     so.FindProperty("_min").floatValue = resource.Min;
@@ -85,13 +87,17 @@ namespace BaseGame.Playground.Stats
                 if (group != null && !groups.ContainsKey(group.Id))
                 {
                     groups[group.Id] = LoadOrCreate<EffectGroupDefinition>($"{Root}/Groups/{group.Id}.asset", created, so =>
-                        so.FindProperty("_policy").intValue = (int)group.Policy);
+                    {
+                        so.FindProperty(DefinitionEditor.IdField).stringValue = group.Id;
+                        so.FindProperty("_policy").intValue = (int)group.Policy;
+                    });
                 }
 
                 LoadOrCreate<EffectDefinition>($"{Root}/Effects/{effect.Id.Value}.asset", created, so =>
                 {
                     // Writes only the fields the rule and group use, matching what the Inspector shows.
                     bool infinite = double.IsPositiveInfinity(effect.Duration);
+                    so.FindProperty(DefinitionEditor.IdField).stringValue = effect.Id.Value;
                     so.FindProperty("_displayName").stringValue = effect.DisplayName;
                     so.FindProperty("_infinite").boolValue = infinite;
                     so.FindProperty("_stackRule").intValue = (int)effect.StackRule;

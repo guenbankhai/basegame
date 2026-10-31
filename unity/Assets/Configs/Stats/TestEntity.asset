@@ -16,13 +16,13 @@ MonoBehaviour:
   - _stat: {fileID: 11400000, guid: 8a12acaee346a5f4b9dea1b5a06dbc14, type: 2}
     _overrideBase: 0
     _baseValue: 0
-  - _stat: {fileID: 11400000, guid: 35a1a1a5c57b8cd44bada0e418195d75, type: 2}
+  - _stat: {fileID: 11400000, guid: 5f46d4b5c99e6fd46b1d594e95cc04f9, type: 2}
     _overrideBase: 0
     _baseValue: 0
-  - _stat: {fileID: 11400000, guid: 5f46d4b5c99e6fd46b1d594e95cc04f9, type: 2}
+  - _stat: {fileID: 11400000, guid: 35a1a1a5c57b8cd44bada0e418195d75, type: 2}
     _overrideBase: 0
     _baseValue: 0
   _resources:
   - {fileID: 11400000, guid: 43879dce11c74504898f320747787765, type: 2}
-  - {fileID: 11400000, guid: 3267dc39f2b7ed0439fac37b1ebfb4b9, type: 2}
   - {fileID: 11400000, guid: c781d770d8161014db94b29591ea1a56, type: 2}
+  - {fileID: 11400000, guid: 3267dc39f2b7ed0439fac37b1ebfb4b9, type: 2}

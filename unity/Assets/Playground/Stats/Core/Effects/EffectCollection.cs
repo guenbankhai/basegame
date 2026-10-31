@@ -537,7 +537,7 @@ namespace BaseGame.Playground.Stats
             var replaceGroupsSeen = new HashSet<string>();
             foreach (EffectsSnapshot.EffectEntry entry in snapshot.Effects)
             {
-                if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
+                if (entry == null || !IdFormat.IsValid(entry.Id))
                 {
                     error = "Snapshot has a null entry or an invalid effect ID.";
                     return true;

@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dab52b83fe359cc41a9247ac9c68bbc1, type: 3}
   m_Name: Body
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectGroupDefinition
+  _id: Body
   _policy: 1

@@ -7,9 +7,9 @@ namespace BaseGame.Playground.Stats
     {
         public StatId(string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            if (!IdFormat.IsValid(value))
             {
-                throw new ArgumentException("Stat ID must not be null, empty or whitespace.", nameof(value));
+                throw new ArgumentException($"Stat ID '{value}' {IdFormat.Rule}.", nameof(value));
             }
 
             Value = value;

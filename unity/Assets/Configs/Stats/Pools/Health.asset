@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98d258250e52c4d40a345abc56c36ae3, type: 3}
   m_Name: Health
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.ResourceDefinition
+  _id: Health
   _displayName: Health
   _maxStat: {fileID: 11400000, guid: 59892244ee0ed374892ffe1e2951d20c, type: 2}
   _min: 0

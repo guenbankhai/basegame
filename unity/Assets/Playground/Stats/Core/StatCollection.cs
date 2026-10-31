@@ -359,7 +359,7 @@ namespace BaseGame.Playground.Stats
 
             foreach (StatsSnapshot.StatEntry entry in snapshot.Stats)
             {
-                if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
+                if (entry == null || !IdFormat.IsValid(entry.Id))
                 {
                     error = "Snapshot has a null stat entry or an invalid stat ID.";
                     return true;
@@ -389,7 +389,7 @@ namespace BaseGame.Playground.Stats
 
             foreach (StatsSnapshot.ResourceEntry entry in snapshot.Resources)
             {
-                if (entry == null || string.IsNullOrWhiteSpace(entry.Id))
+                if (entry == null || !IdFormat.IsValid(entry.Id))
                 {
                     error = "Snapshot has a null resource entry or an invalid resource ID.";
                     return true;

@@ -10,7 +10,7 @@ namespace BaseGame.Playground.Stats
     /// </summary>
     [CustomEditor(typeof(EffectDefinition))]
     [CanEditMultipleObjects]
-    public sealed class EffectDefinitionEditor : Editor
+    public sealed class EffectDefinitionEditor : DefinitionEditor
     {
         // Field names of EffectDefinition; a test checks they still exist, since a rename would silently stop hiding.
         public const string InfiniteField = "_infinite";
@@ -21,40 +21,12 @@ namespace BaseGame.Playground.Stats
         public const string GroupField = "_group";
         public const string RankField = "_rank";
 
-        public override void OnInspectorGUI()
+        protected override HashSet<string> GetHiddenFields()
         {
-            serializedObject.Update();
             SerializedProperty rule = serializedObject.FindProperty(StackRuleField);
             SerializedProperty infinite = serializedObject.FindProperty(InfiniteField);
-            HashSet<string> hidden = GetHiddenFields(rule, infinite, serializedObject.FindProperty(GroupField));
+            SerializedProperty group = serializedObject.FindProperty(GroupField);
 
-            // Same walk DrawPropertiesExcluding does, so the rule's help box can sit right under the rule.
-            SerializedProperty property = serializedObject.GetIterator();
-            bool enterChildren = true;
-            while (property.NextVisible(enterChildren))
-            {
-                enterChildren = false;
-                if (hidden.Contains(property.name))
-                {
-                    continue;
-                }
-
-                using (new EditorGUI.DisabledScope(property.name == "m_Script"))
-                {
-                    EditorGUILayout.PropertyField(property, true);
-                }
-
-                if (property.name == StackRuleField && !rule.hasMultipleDifferentValues)
-                {
-                    EditorGUILayout.HelpBox(Describe((StackRule)rule.intValue, infinite), MessageType.None);
-                }
-            }
-
-            serializedObject.ApplyModifiedProperties();
-        }
-
-        private static HashSet<string> GetHiddenFields(SerializedProperty rule, SerializedProperty infinite, SerializedProperty group)
-        {
             var hidden = new HashSet<string>();
             if (!rule.hasMultipleDifferentValues)
             {
@@ -82,6 +54,16 @@ namespace BaseGame.Playground.Stats
             }
 
             return hidden;
+        }
+
+        protected override void DrawAfterField(SerializedProperty property)
+        {
+            SerializedProperty rule = serializedObject.FindProperty(StackRuleField);
+            if (property.name == StackRuleField && !rule.hasMultipleDifferentValues)
+            {
+                SerializedProperty infinite = serializedObject.FindProperty(InfiniteField);
+                EditorGUILayout.HelpBox(Describe((StackRule)rule.intValue, infinite), MessageType.None);
+            }
         }
 
         private static string Describe(StackRule rule, SerializedProperty infinite)

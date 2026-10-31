@@ -4,11 +4,15 @@ using UnityEngine;
 
 namespace BaseGame.Playground.Stats
 {
-    /// <summary>Authoring wrapper for EffectSettings; the ID is the asset name. Time unit is the game's own.</summary>
+    /// <summary>
+    /// Authoring wrapper for EffectSettings. The ID lives in _id; renaming the asset does not change it. Time unit is
+    /// the game's own.
+    /// </summary>
     [CreateAssetMenu(menuName = "GuenBanKhai/Stats/Effect Definition", fileName = "NewEffect")]
     public sealed class EffectDefinition : ScriptableObject
     {
-        [Tooltip("Empty falls back to the ID (asset name).")]
+        [SerializeField] private string _id = "";
+        [Tooltip("Empty falls back to the ID.")]
         [SerializeField] private string _displayName = "";
         [Tooltip("Lasts until removed; Duration and Max Duration are ignored.")]
         [SerializeField] private bool _infinite = false;
@@ -26,7 +30,7 @@ namespace BaseGame.Playground.Stats
         [SerializeField] private int _rank = 0;
         [SerializeField] private List<ModifierEntry> _modifiers = new List<ModifierEntry>();
 
-        internal EffectId Id => string.IsNullOrWhiteSpace(name) ? default : new EffectId(name);
+        internal EffectId Id => IdFormat.IsValid(_id) ? new EffectId(_id) : default;
 
         /// <summary>A new copy on every call; not validated here.</summary>
         public EffectSettings CreateSettings()
@@ -54,8 +58,7 @@ namespace BaseGame.Playground.Stats
         // Runs the core's own check, so the Inspector warns about exactly what Apply would reject.
         private void OnValidate()
         {
-            DefinitionNames.WarnIfWhitespace(this);
-            if (CreateSettings().TryGetError(out string error))
+            if (DefinitionIds.Check(this, _id) && CreateSettings().TryGetError(out string error))
             {
                 Debug.LogWarning($"{nameof(EffectDefinition)} '{name}': {error}", this);
             }

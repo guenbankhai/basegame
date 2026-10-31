@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98d258250e52c4d40a345abc56c36ae3, type: 3}
   m_Name: Hunger
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.ResourceDefinition
+  _id: Hunger
   _displayName: Fullness
   _maxStat: {fileID: 11400000, guid: 53d4342f5754efa4ebaf27a82e0b1c28, type: 2}
   _min: 0

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bce488622eb65ad48908479caee78c23, type: 3}
   m_Name: HungerRate
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatDefinition
+  _id: HungerRate
   _displayName: Hunger rate (/min)
   _baseValue: 1
   _min: 0

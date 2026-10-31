@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85ed2010dc61b7c4a9b94d4d7bc55bf5, type: 3}
   m_Name: Bread
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.EffectDefinition
+  _id: Bread
   _displayName: Bread
   _infinite: 0
   _duration: 120

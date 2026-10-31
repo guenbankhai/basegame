@@ -62,7 +62,7 @@ Thư mục và package chỉ tạo khi cần.
 
 ## Ghi chú thiết lập
 
-- **Scene và config của experiment**: để phẳng trong `Assets/Scenes/` và `Assets/Configs/`, đặt tên theo experiment (`Calendar.unity`, `CalendarConfig.asset`). Product phát triển ở project riêng, nên các thư mục này chỉ chứa đồ của experiment. Xóa experiment thì xóa luôn scene và config của nó. Ngoại lệ: module lấy tên asset làm ID (như Stats) thì asset của experiment để trong `Assets/Configs/<Experiment>/`, tên asset là ID. Không đặt thư mục con tên `Resources` (Unity đưa cả thư mục vào build).
+- **Scene và config của experiment**: để phẳng trong `Assets/Scenes/` và `Assets/Configs/`, đặt tên theo experiment (`Calendar.unity`, `CalendarConfig.asset`). Product phát triển ở project riêng, nên các thư mục này chỉ chứa đồ của experiment. Xóa experiment thì xóa luôn scene và config của nó. Ngoại lệ: experiment có nhiều asset dữ liệu (như Stats) thì để trong `Assets/Configs/<Experiment>/`. Không đặt thư mục con tên `Resources` (Unity đưa cả thư mục vào build).
 - **`Assets/Settings/`**: chỉ chứa cấu hình render pipeline (URP Global Settings, volume profile, URP Asset nếu có). Còn cài package URP thì URP tự tạo lại Global Settings khi thiếu, nên không xóa thư mục này. Không để đồ của experiment ở đây.
 - **Experiment**: một asmdef ở gốc experiment. Chỉ reference asmdef của module và assembly của package Unity mà nó dùng (ví dụ `Unity.InputSystem`). Code không có asmdef sẽ vào `Assembly-CSharp`, mà asmdef không reference được assembly này.
 - **Test của experiment** (không bắt buộc): asmdef `Tests/` tên `BaseGame.Playground.<Experiment>.Tests`, chỉ cho platform Editor, reference asmdef của experiment và test framework. Không thêm asmdef nào khác.

@@ -67,7 +67,8 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 
 - Lấy tham chiếu: `[SerializeField] StatsBehaviour` (hoặc `EffectsBehaviour`) → `.Collection` từ `Awake`/`OnEnable`, hoặc truyền qua constructor. Không có singleton.
 - Profile thiếu hoặc sai: `StatsBehaviour` log lỗi, tự tắt, `Collection` là `null`. `EffectsBehaviour` gặp `StatsBehaviour.Collection` là `null` cũng log lỗi và tự tắt.
-- **ID của definition là tên asset**: `MoveSpeed.asset` → `"MoveSpeed"`. Tên PascalCase, không khoảng trắng, không tiền tố loại; phân loại bằng thư mục. Không `Instantiate` definition (tên thành `"MoveSpeed(Clone)"`). Đổi tên asset là đổi ID.
+- **ID của definition là field `ID` trên Inspector**, chuẩn PascalCase: bắt đầu bằng chữ hoa, sau đó chỉ gồm chữ và số ASCII (`MoveSpeed`, `TonicII`). Tên file đặt tùy ý; đổi tên file không đổi ID. Đổi ID là save cũ không khớp.
+- Inspector tự điền ID đang trống bằng tên asset nếu tên đúng chuẩn; xóa trống ID là lấy lại theo tên asset. Tên sai chuẩn thì ID để trống và báo lỗi. Inspector cũng báo lỗi khi asset cùng loại trùng ID; duplicate asset thì nhớ đổi ID. Lúc chạy không dùng tên asset: ID trống hay sai chuẩn bị từ chối.
 - UI lấy tên hiển thị qua `Stat.DisplayName`, `Resource.DisplayName`, `EffectInstance.DisplayName`, không đọc definition.
 - Settings và snapshot có constructor và setter public để dựng không cần asset.
 - Inspector của `EffectDefinition` chỉ hiện trường mà lựa chọn hiện tại dùng tới: `Max Duration` khi `Extend`, `Max Stacks` khi `Stack`; bật `Infinite` thì ẩn thời gian; không có `Group` thì ẩn `Rank`. Ngay dưới `Stack Rule` có một dòng mô tả rule đang chọn. Trường bị ẩn vẫn giữ giá trị trong asset, lõi bỏ qua giá trị đó.
@@ -93,11 +94,11 @@ Hai assembly: lõi không biết Effects; game không dùng effect thì không r
 | `MaxStacks` | 1 | Chỉ `Stack` dùng và kiểm: `>= 1`. Rule khác bỏ qua hẳn, số stack tối đa là 1 |
 | `Group` | `null` (chồng tự do) | `null` hoặc hợp lệ |
 | `Rank` | 0 | Số nguyên |
-| `EffectGroupSettings.Id` | — | Không null, rỗng hay chỉ khoảng trắng |
+| `EffectGroupSettings.Id` | — | ID hợp lệ |
 | `EffectGroupSettings.Policy` | `Replace` | Enum hợp lệ |
 | `Modifiers` | — | Không null, có thể rỗng (effect chỉ làm nhãn); mỗi phần tử có `Stat` hợp lệ, `Type` hợp lệ và `Value` theo luật `Modifier`; ràng buộc stack: `Value × số stack tối đa >= −1` với mọi `PercentMult`, kiểm bằng đúng phép nhân `float` dùng để tính modifier, nên settings qua kiểm tra thì stack tới mức tối đa không ném |
 
-Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của definition và profile chạy đúng phép kiểm của lõi trên settings mà asset dựng ra, rồi log warning với câu lỗi đó (mỗi lần một lỗi đầu tiên). Riêng tên asset có khoảng trắng thì có warning riêng. ID trùng thường là do hai asset cùng tên ở hai thư mục. Effect trỏ tới stat mà thực thể không có thì chỉ báo lúc `Apply`, vì effect không gắn với profile nào.
+Settings sai: `ArgumentException`, không tạo gì. `OnValidate` của definition và profile chạy đúng phép kiểm của lõi trên settings mà asset dựng ra, rồi log warning với câu lỗi đó (mỗi lần một lỗi đầu tiên). Definition có ID trống thì `OnValidate` không log, vì asset mới luôn qua trạng thái này: lỗi hiện trên Inspector, và lõi từ chối lúc chạy. ID trùng trong một profile thường là do duplicate asset mà quên đổi ID. Effect trỏ tới stat mà thực thể không có thì chỉ báo lúc `Apply`, vì effect không gắn với profile nào.
 
 Profile: resource kéo vào profile tự mang theo `MaxStat`. Profile thêm stat đó sau các stat đã liệt kê, với base của `StatDefinition`. Chỉ liệt kê `MaxStat` khi cần override base; khi đó dòng trong danh sách được dùng.
 
@@ -223,7 +224,7 @@ Các type khác (constructor và setter public, để code và test dựng khôn
 | Lệnh | Quy tắc |
 |---|---|
 | Chung | Đầu vào sai (null, NaN, vô hạn, ngoài khoảng, ID không có, ID trùng) ném `ArgumentException`; gọi trong handler bị cấm hoặc ở độ sâu `MaxEventDepth` ném `InvalidOperationException`. Lệnh bị từ chối không đổi state |
-| `new StatId`/`ResourceId`/`EffectId` | Chuỗi null, rỗng, chỉ khoảng trắng: lỗi. ID `default` truyền vào lệnh: lỗi |
+| `new StatId`/`ResourceId`/`EffectId` | Chuỗi không đúng chuẩn PascalCase (null, rỗng, có khoảng trắng, ký tự đặc biệt, chữ đầu thường): lỗi. ID `default` truyền vào lệnh: lỗi |
 | `new Modifier(t, v, src)` | `PercentMult` với `v < −1`: lỗi |
 | `SetBase(v)` | Đặt tự do, kể cả ngoài `[Min, Max]` |
 | `AddModifier(m)`, `RemoveModifier(m)` | Đã có / không có thì trả `false` |
@@ -310,7 +311,7 @@ Effect vô hạn: `Refresh`, `Extend` không đổi thời gian nhưng vẫn ph�
 
 ## Save [T6]
 
-Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn bộ snapshot trước; bị từ chối thì ném `ArgumentException` và không đổi gì. Lõi không tự sửa save cho khớp settings: đổi settings (xóa hay đổi tên asset, giảm `MaxStacks`…) sau khi đã có save thì game tự nâng cấp save trước khi gọi `Restore`, hoặc chấp nhận save cũ bị từ chối.
+Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn bộ snapshot trước; bị từ chối thì ném `ArgumentException` và không đổi gì. Lõi không tự sửa save cho khớp settings: đổi settings (xóa asset, đổi ID, giảm `MaxStacks`…) sau khi đã có save thì game tự nâng cấp save trước khi gọi `Restore`, hoặc chấp nhận save cũ bị từ chối.
 
 **`StatsSnapshot`**
 - Lưu: base của stat nào khác base trong settings, current của mọi resource. Không lưu modifier: mỗi nguồn modifier tự áp lại khi restore. Không lưu base trùng settings, để chỉnh base trong profile có tác dụng với save cũ; người chơi đổi base đúng bằng mặc định cũ thì khi restore nhận mặc định mới. "Base trong settings" là `BaseValue` trong `StatCollectionSettings` (đã gồm override của profile); so sánh bằng `!=`.

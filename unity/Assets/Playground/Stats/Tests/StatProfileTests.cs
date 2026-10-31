@@ -16,13 +16,16 @@ namespace BaseGame.Playground.Stats.Tests
         [SetUp]
         public void SetUp()
         {
-            _maxHealth = Create<StatDefinition>("MaxHealth");
+            // Asset names differ from the IDs on purpose: only _id may count.
+            _maxHealth = Create<StatDefinition>("Stat_Max Health");
             var stat = new SerializedObject(_maxHealth);
+            stat.FindProperty(DefinitionEditor.IdField).stringValue = "MaxHealth";
             stat.FindProperty("_baseValue").floatValue = 100f;
             stat.ApplyModifiedPropertiesWithoutUndo();
 
-            _health = Create<ResourceDefinition>("Health");
+            _health = Create<ResourceDefinition>("Pool_Health");
             var resource = new SerializedObject(_health);
+            resource.FindProperty(DefinitionEditor.IdField).stringValue = "Health";
             resource.FindProperty("_maxStat").objectReferenceValue = _maxHealth;
             resource.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -67,6 +70,19 @@ namespace BaseGame.Playground.Stats.Tests
             var resource = new SerializedObject(_health);
             resource.FindProperty("_maxStat").objectReferenceValue = null;
             resource.ApplyModifiedPropertiesWithoutUndo();
+            StatProfile profile = Profile(overrideMaxHealth: null);
+
+            Assert.Throws<System.ArgumentException>(() => new StatCollection(profile.CreateSettings()));
+        }
+
+        [TestCase("")]
+        [TestCase("max health")]
+        public void CreateSettings_BadId_NoFallbackToAssetName_CollectionRejects(string id)
+        {
+            var stat = new SerializedObject(_maxHealth);
+            stat.FindProperty(DefinitionEditor.IdField).stringValue = id;
+            stat.ApplyModifiedPropertiesWithoutUndo();
+            _maxHealth.name = "ValidAssetName";
             StatProfile profile = Profile(overrideMaxHealth: null);
 
             Assert.Throws<System.ArgumentException>(() => new StatCollection(profile.CreateSettings()));

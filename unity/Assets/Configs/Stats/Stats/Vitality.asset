@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bce488622eb65ad48908479caee78c23, type: 3}
   m_Name: Vitality
   m_EditorClassIdentifier: BaseGame.Playground.Stats::BaseGame.Playground.Stats.StatDefinition
+  _id: Vitality
   _displayName: Vitality
   _baseValue: 10
   _min: 0
