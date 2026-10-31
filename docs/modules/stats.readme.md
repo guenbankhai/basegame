@@ -237,7 +237,7 @@ Các type khác (constructor và setter public, để code và test dựng khôn
 | `CreateSettings()` (mọi definition) | Luôn trả bản copy mới; không kiểm tra, collection kiểm tra khi nhận |
 | `CaptureSnapshot()` (cả hai) | Luôn trả object và mảng mới |
 | `EffectCollection(stats)` | Mặc định |
-| `Apply(s)` | Modifier trỏ stat lạ: lỗi, không áp phần nào. Group cùng `Id` khác `Policy` với effect đang có (chỉ xảy ra khi dựng bằng code): lỗi. Đang chạy: theo `StackRule`, settings mới khác nội dung bị bỏ qua. Thua trong group `Replace`: trả `null` |
+| `Apply(s)` | Modifier trỏ stat mà collection không có: bỏ qua modifier đó (xem Effect). Group cùng `Id` khác `Policy` với effect đang có (chỉ xảy ra khi dựng bằng code): lỗi. Đang chạy: theo `StackRule`, settings mới khác nội dung bị bỏ qua. Thua trong group `Replace`: trả `null` |
 | `Remove(id)` | Gỡ, phát `Removed(…, Removed)`, trả `true`; effect kế tiếp trong group `Suppress` có tác dụng lại. Không có thì trả `false` |
 | `Has(id)`, `TryGet(id, out e)` | Không có thì `false` |
 | `Advance(d)` | `d < 0`: lỗi; `d == 0` không làm gì. Gọi trong handler của Stats hay Effects: `InvalidOperationException` |
@@ -273,6 +273,7 @@ Value     = clamp(unclamped, Min, Max)
 
 - Mỗi `EffectId` có tối đa một `EffectInstance`. Instance giữ bản copy settings lúc áp lần đầu, `Stacks`, `Remaining` (+∞ là vô hạn), `IsSuppressed`.
 - Mỗi phần tử trong `Modifiers` của settings sinh đúng một `Modifier` có giá trị `Value × Stacks`, kể cả `PercentMult`: Kiệt sức `PercentMult −0.2`, 3 stack → `PercentMult −0.6` (×0.4).
+- Modifier trỏ stat mà collection không có thì bị bỏ qua, phần còn lại áp bình thường; effect vẫn chạy kể cả khi mọi modifier đều bị bỏ qua. Mỗi lần tạo instance (`Apply` lần đầu, `Restore`) có một dòng `Debug.Log` liệt kê stat bị bỏ qua. Ví dụ: Bánh mì +`MaxStamina` +`MaxHealth`, NPC không có `MaxStamina` thì chỉ tăng `MaxHealth`.
 - Instance có tác dụng thì có modifier trên stat; bị suppress thì không. Mỗi lệnh của `EffectCollection` đổi modifier trong một batch: mỗi stat tính lại một lần, Resource clamp theo max cuối của batch. Effect +20 `MaxHealth` đang 115/120 lên stack 2 → 115/140, không bị clamp về 100 ở giữa. Batch không phủ derived stat nối bằng handler (xem Viết module dùng Stats).
 - Thời gian theo đơn vị do game quy ước (phút, giây, lượt), dùng chung cho `Duration` và `delta`.
 
@@ -325,7 +326,7 @@ Snapshot là class `[Serializable]` (mảng entry). `Restore` kiểm tra toàn b
 
 **`EffectsSnapshot`**
 - Lưu: mọi effect (kể cả bị suppress) theo thứ tự áp lần đầu: `EffectId`, `Stacks`, `Remaining` (vô hạn lưu bằng cờ `IsInfinite`), số thứ tự lần áp gần nhất. Không lưu settings (tra qua `resolve`) và `IsSuppressed` (tính lại từ group).
-- Từ chối: mảng hay entry `null`; `resolve == null`; `EffectId` sai hoặc trùng; số thứ tự âm hoặc trùng giữa hai effect; `Stacks < 1`; `Remaining <= 0`, NaN hay +∞ với effect có thời hạn; `resolve` trả `null`, settings sai (theo mục Settings) hoặc có `Id` khác ID của entry; modifier trỏ stat không có trong collection; `Stacks` vượt mức effect đạt được khi chơi (`MaxStacks` nếu `Stack`, còn lại 1); `Remaining` vượt mức effect đạt được khi chơi (`MaxDuration` nếu `Extend`, còn lại `Duration`); cờ `IsInfinite` khác settings; hai effect cùng group `Replace`; hai effect có group cùng `Id` khác `Policy`.
+- Từ chối: mảng hay entry `null`; `resolve == null`; `EffectId` sai hoặc trùng; số thứ tự âm hoặc trùng giữa hai effect; `Stacks < 1`; `Remaining <= 0`, NaN hay +∞ với effect có thời hạn; `resolve` trả `null`, settings sai (theo mục Settings) hoặc có `Id` khác ID của entry; `Stacks` vượt mức effect đạt được khi chơi (`MaxStacks` nếu `Stack`, còn lại 1); `Remaining` vượt mức effect đạt được khi chơi (`MaxDuration` nếu `Extend`, còn lại `Duration`); cờ `IsInfinite` khác settings; hai effect cùng group `Replace`; hai effect có group cùng `Id` khác `Policy`.
 - Gỡ effect đang chạy, áp lại theo snapshot trong một batch, phát `Restored`. Stat vẫn phát `ValueChanged` do modifier đổi, mỗi stat tối đa một lần, để handler derived stat cập nhật.
 - Bộ đếm lần áp đi tiếp từ số lớn nhất trong snapshot, để effect áp sau khi restore luôn được coi là áp gần nhất.
 

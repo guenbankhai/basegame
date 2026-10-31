@@ -27,6 +27,7 @@ namespace BaseGame.Playground.Stats
         public bool IsSuppressed { get; internal set; }
 
         internal EffectSettings SettingsRef => _settings;
+        /// <summary>Null where the collection lacks the stat; that modifier is skipped.</summary>
         internal Stat[] Targets { get; }
         /// <summary>Modifier currently on Targets[i] for settings modifier i; null while suppressed or removed.</summary>
         internal Modifier[] AppliedModifiers { get; }

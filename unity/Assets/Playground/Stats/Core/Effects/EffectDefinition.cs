@@ -55,7 +55,7 @@ namespace BaseGame.Playground.Stats
             return settings;
         }
 
-        // Runs the core's own check, so the Inspector warns about exactly what Apply would reject.
+        // Runs the core's check on this asset alone; a Policy conflict with a running effect only shows on Apply.
         private void OnValidate()
         {
             if (DefinitionIds.Check(this, _id) && CreateSettings().TryGetError(out string error))

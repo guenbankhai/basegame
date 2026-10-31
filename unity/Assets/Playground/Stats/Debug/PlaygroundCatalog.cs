@@ -4,7 +4,7 @@ namespace BaseGame.Playground.Stats
 {
     /// <summary>
     /// Stats, resources and effects of the test entity, built in code. Tests use it directly; the asset generator turns
-    /// it into definitions, whose names must match these IDs. Time unit: game minutes.
+    /// it into definitions with these IDs. Time unit: game minutes.
     /// </summary>
     public static class PlaygroundCatalog
     {

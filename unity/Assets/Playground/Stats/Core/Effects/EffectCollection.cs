@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using UnityEngine;
 
 namespace BaseGame.Playground.Stats
 {
@@ -58,8 +59,7 @@ namespace BaseGame.Playground.Stats
 
             _stats.ThrowIfTooDeep();
             EffectSettings copy = settings.Clone();
-            if (copy.TryGetError(out string error) || !TryResolveTargets(copy, out Stat[] targets, out error) ||
-                TryGetGroupConflict(copy, out error))
+            if (copy.TryGetError(out string error) || TryGetGroupConflict(copy, out error))
             {
                 throw new ArgumentException(error, nameof(settings));
             }
@@ -82,12 +82,13 @@ namespace BaseGame.Playground.Stats
                     return null;
                 }
 
-                instance = new EffectInstance(copy, targets)
+                instance = new EffectInstance(copy, ResolveTargets(copy))
                 {
                     Remaining = copy.Duration,
                     LastApplySequence = ++_applySequence,
                 };
                 _instances.Add(instance);
+                LogSkippedModifiers(instance);
                 events.Main.Add(new PendingEvent(EffectEventKind.Applied, instance));
                 // A new effect that loses straight away reports only Applied.
                 quiet = instance;
@@ -241,6 +242,7 @@ namespace BaseGame.Playground.Stats
             foreach (EffectInstance instance in restored)
             {
                 _instances.Add(instance);
+                LogSkippedModifiers(instance);
                 touched.Add(instance);
                 _applySequence = Math.Max(_applySequence, instance.LastApplySequence);
             }
@@ -403,6 +405,12 @@ namespace BaseGame.Playground.Stats
             bool active = !instance.IsRemoved && !instance.IsSuppressed;
             for (int i = 0; i < modifiers.Count; i++)
             {
+                Stat stat = instance.Targets[i];
+                if (stat == null)
+                {
+                    continue;
+                }
+
                 Modifier current = instance.AppliedModifiers[i];
                 Modifier desired = null;
                 if (active)
@@ -416,7 +424,6 @@ namespace BaseGame.Playground.Stats
                     continue;
                 }
 
-                Stat stat = instance.Targets[i];
                 if (current == null)
                 {
                     stat.AddModifierRaw(desired, change);
@@ -488,20 +495,29 @@ namespace BaseGame.Playground.Stats
             }
         }
 
-        private bool TryResolveTargets(EffectSettings settings, out Stat[] targets, out string error)
+        /// <summary>A null target means this entity lacks the stat: one effect can serve many kinds of entity.</summary>
+        private Stat[] ResolveTargets(EffectSettings settings)
         {
-            targets = new Stat[settings.Modifiers.Count];
+            var targets = new Stat[settings.Modifiers.Count];
             for (int i = 0; i < targets.Length; i++)
             {
-                if (!_stats.TryGetStat(settings.Modifiers[i].Stat, out targets[i]))
-                {
-                    error = $"Effect '{settings.Id}': stat '{settings.Modifiers[i].Stat}' is not in the collection.";
-                    return false;
-                }
+                _stats.TryGetStat(settings.Modifiers[i].Stat, out targets[i]);
             }
 
-            error = null;
-            return true;
+            return targets;
+        }
+
+        // Only when an instance is created, so re-applying the effect does not repeat the line.
+        private static void LogSkippedModifiers(EffectInstance instance)
+        {
+            string[] missing = instance.SettingsRef.Modifiers
+                .Where((_, i) => instance.Targets[i] == null)
+                .Select(m => m.Stat.Value)
+                .ToArray();
+            if (missing.Length > 0)
+            {
+                Debug.Log($"Effect '{instance.Id}': skipped modifiers on missing stats: {string.Join(", ", missing)}.");
+            }
         }
 
         private bool TryGetGroupConflict(EffectSettings settings, out string error)
@@ -575,11 +591,6 @@ namespace BaseGame.Playground.Stats
                     return true;
                 }
 
-                if (!TryResolveTargets(settings, out Stat[] targets, out error))
-                {
-                    return true;
-                }
-
                 int maxStacks = settings.StackCap;
                 if (entry.Stacks < 1 || entry.Stacks > maxStacks)
                 {
@@ -617,7 +628,7 @@ namespace BaseGame.Playground.Stats
                     }
                 }
 
-                restored.Add(new EffectInstance(settings, targets)
+                restored.Add(new EffectInstance(settings, ResolveTargets(settings))
                 {
                     Stacks = entry.Stacks,
                     Remaining = entry.IsInfinite ? double.PositiveInfinity : entry.Remaining,

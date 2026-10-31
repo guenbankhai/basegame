@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace BaseGame.Playground.Stats.Tests
 {
@@ -9,6 +10,7 @@ namespace BaseGame.Playground.Stats.Tests
         private static readonly StatId MaxHealth = new StatId("MaxHealth");
         private static readonly StatId Speed = new StatId("Speed");
         private static readonly ResourceId Health = new ResourceId("Health");
+        private const string MissingStatLog = "Effect 'Bread': skipped modifiers on missing stats: Ghost.";
 
         private StatCollection _stats;
         private EffectCollection _effects;
@@ -180,6 +182,80 @@ namespace BaseGame.Playground.Stats.Tests
             Assert.That(stats.GetResource(Health).Current, Is.EqualTo(115f));
             Assert.That(stats.GetResource(Health).Max, Is.EqualTo(120f));
             Assert.That(effects.TryGet(fortify.Id, out EffectInstance instance) && instance.Remaining == 30, Is.True);
+        }
+
+        [Test]
+        public void Apply_ModifierOnMissingStat_SkipsItLogsAndAppliesTheRest()
+        {
+            EffectSettings bread = BreadWithMissingStat();
+            LogAssert.Expect(LogType.Log, MissingStatLog);
+
+            EffectInstance instance = _effects.Apply(bread);
+
+            Assert.That(instance, Is.Not.Null);
+            Assert.That(_events, Is.EqualTo(new[] { "Applied Bread" }));
+            Assert.That(_stats.GetStat(Speed).Value, Is.EqualTo(6f));
+
+            Assert.That(_effects.Remove(bread.Id), Is.True);
+            Assert.That(_stats.GetStat(Speed).Value, Is.EqualTo(5f));
+        }
+
+        [Test]
+        public void Apply_ReappliedWithMissingStat_LogsOnlyOnce()
+        {
+            EffectSettings bread = BreadWithMissingStat();
+            int logs = 0;
+            void Count(string message, string stackTrace, LogType type)
+            {
+                if (message == MissingStatLog)
+                {
+                    logs++;
+                }
+            }
+
+            Application.logMessageReceived += Count;
+            try
+            {
+                _effects.Apply(bread);
+                _effects.Apply(bread);
+            }
+            finally
+            {
+                Application.logMessageReceived -= Count;
+            }
+
+            Assert.That(logs, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Apply_ModifierWithEmptyStat_Throws()
+        {
+            EffectSettings broken = Effect("Broken", StackRule.Refresh, 10, null, 0, default, ModifierType.Flat, 1f);
+
+            Assert.Throws<System.ArgumentException>(() => _effects.Apply(broken));
+            Assert.That(_effects.Instances, Is.Empty);
+        }
+
+        [Test]
+        public void Restore_ModifierOnMissingStat_LoadsAndAppliesTheRest()
+        {
+            EffectSettings bread = BreadWithMissingStat();
+            LogAssert.Expect(LogType.Log, MissingStatLog);
+            _effects.Apply(bread);
+            EffectsSnapshot snapshot = _effects.CaptureSnapshot();
+            LogAssert.Expect(LogType.Log, MissingStatLog);
+
+            _effects.Restore(snapshot, _ => bread);
+
+            Assert.That(_effects.Has(bread.Id), Is.True);
+            Assert.That(_stats.GetStat(Speed).Value, Is.EqualTo(6f));
+        }
+
+        private static EffectSettings BreadWithMissingStat()
+        {
+            EffectSettings bread = Effect("Bread", StackRule.Refresh, 60, null, 0, Speed, ModifierType.Flat, 1f);
+            bread.Modifiers.Add(new EffectModifierSettings(new StatId("Ghost"), ModifierType.Flat, 5f));
+            return bread;
         }
 
         private static EffectSettings Effect(
