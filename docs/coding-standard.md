@@ -52,7 +52,7 @@ Mọi code gọi trực tiếp `UnityEngine.Debug`, không có wrapper riêng.
 
 - **Định dạng:** `<Loại> '<tên hoặc ID>': <nội dung>`; không có định danh thì `<Loại>: <nội dung>`. Có `UnityEngine.Object` thì truyền làm context.
 - **Module:** hành vi đúng luật thì không log ở bản build thật; báo cho game qua giá trị trả về và event. Log của module không lặp theo frame hay step.
-- **Thu log:** thuộc về product, không thuộc module: một component đăng ký `Application.logMessageReceivedThreaded`, module không biết nó tồn tại. Mẫu: `Assets/Playground/Logging/`. Callback nhận chuỗi, không nhận context, nên định dạng ở trên là thứ để lọc log sau này.
+- **Thu log:** không thuộc module; mỗi product tự chọn cách thu. Trong project này, `Assets/Playground/Logging/` tự ghi log của mỗi lần Play ra `unity/Logs/Playground.log`, lần Play sau ghi đè.
 
 ## Null
 
