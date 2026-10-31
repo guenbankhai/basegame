@@ -41,7 +41,7 @@ namespace BaseGame.Playground.Calendar
         {
             if (_driver.Clock == null)
             {
-                Debug.LogError($"{nameof(CalendarDebugOverlay)} on '{name}' has no running {nameof(GameClock)}.", this);
+                Debug.LogError($"{nameof(CalendarDebugOverlay)} '{name}': no running {nameof(GameClock)}.", this);
                 enabled = false;
                 return;
             }

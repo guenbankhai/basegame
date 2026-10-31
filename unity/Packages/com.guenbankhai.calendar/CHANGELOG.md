@@ -2,6 +2,13 @@
 
 Mọi thay đổi của package `com.guenbankhai.calendar`, mới nhất ở trên. Version theo [Semantic Versioning](https://semver.org/); khi còn `0.x`, đổi API public thì tăng version minor.
 
+## [0.2.1] - 2026-10-31
+
+### Đổi hành vi
+
+- `GameClockDriver` gặp config sai: log bằng `LogError` kèm tên config, thay cho `LogException`. Driver vẫn tự tắt như cũ.
+- Nội dung log của `GameClock`, `GameClockDriver`, `CalendarConfig` theo định dạng `<Loại> '<tên>': <nội dung>`. Code đang dò chuỗi log cũ cần đổi theo.
+
 ## [0.2.0] - 2026-10-29
 
 ### Đổi API (không tương thích)

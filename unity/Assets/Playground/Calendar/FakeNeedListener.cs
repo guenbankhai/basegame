@@ -24,7 +24,7 @@ namespace BaseGame.Playground.Calendar
         {
             if (_driver.Clock == null)
             {
-                Debug.LogError($"{nameof(FakeNeedListener)} on '{name}' has no running {nameof(GameClock)}.", this);
+                Debug.LogError($"{nameof(FakeNeedListener)} '{name}': no running {nameof(GameClock)}.", this);
                 enabled = false;
                 return;
             }

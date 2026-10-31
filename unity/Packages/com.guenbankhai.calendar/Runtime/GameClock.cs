@@ -564,7 +564,7 @@ namespace GuenBanKhai.Calendar
                 {
                     if (run == MaxCommandsPerDrain)
                     {
-                        Debug.LogError($"{nameof(GameClock)} dropped {_commands.Count} queued commands: event handlers kept queueing commands ({MaxCommandsPerDrain} in a row).");
+                        Debug.LogError($"{nameof(GameClock)}: dropped {_commands.Count} queued commands: event handlers kept queueing commands ({MaxCommandsPerDrain} in a row).");
                         _commands.Clear();
                         break;
                     }

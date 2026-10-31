@@ -19,7 +19,7 @@ namespace GuenBanKhai.Calendar
         {
             if (_config == null)
             {
-                Debug.LogError($"{nameof(GameClockDriver)} on '{name}' has no {nameof(CalendarConfig)}.", this);
+                Debug.LogError($"{nameof(GameClockDriver)} '{name}': no {nameof(CalendarConfig)} assigned.", this);
                 enabled = false;
                 return;
             }
@@ -30,7 +30,7 @@ namespace GuenBanKhai.Calendar
             }
             catch (ArgumentException e)
             {
-                Debug.LogException(e, this);
+                Debug.LogError($"{nameof(GameClockDriver)} '{name}': config '{_config.name}' is invalid. {e.Message}", this);
                 enabled = false;
             }
         }

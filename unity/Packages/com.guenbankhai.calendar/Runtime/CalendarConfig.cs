@@ -15,7 +15,7 @@ namespace GuenBanKhai.Calendar
         {
             if (_settings != null && _settings.TryGetError(out string error))
             {
-                Debug.LogWarning($"{name}: {error}", this);
+                Debug.LogWarning($"{nameof(CalendarConfig)} '{name}': {error}", this);
             }
         }
     }

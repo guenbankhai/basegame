@@ -93,6 +93,6 @@ Kiểm bằng tay:
 | Config sai: asset log warning | Đặt `Minutes Per Step` = 7 trong `CalendarConfig.asset` → Console có warning |
 | Config thiếu: driver log lỗi, tự tắt | Bỏ trống ô Config của driver, vào Play → có lỗi, driver tắt |
 | Config sai: driver log lỗi, tự tắt | `Minutes Per Step` = 7, vào Play → có `ArgumentException`, driver tắt |
-| Driver bị bật lại khi không có `Clock` thì tự tắt | Bỏ trống ô Config, vào Play (có lỗi "has no CalendarConfig", ô enabled bị bỏ tick); trong lúc Play, tick lại ô enabled của driver → ô enabled bị bỏ tick lại ngay, Console không có `NullReferenceException` |
+| Driver bị bật lại khi không có `Clock` thì tự tắt | Bỏ trống ô Config, vào Play (có lỗi "no CalendarConfig assigned", ô enabled bị bỏ tick); trong lúc Play, tick lại ô enabled của driver → ô enabled bị bỏ tick lại ngay, Console không có `NullReferenceException` |
 | `Time.timeScale = 0` dừng đồng hồ | Vào Play, đặt `Time Scale` = 0 trong **Project Settings → Time** → giờ trên overlay đứng yên; đặt lại 1 → chạy tiếp |
 | Driver chạy trước: `Clock` có sẵn từ `Awake`/`OnEnable` | Mở scene `Calendar.unity`, vào Play → không có lỗi "has no running GameClock" từ `CalendarDebugOverlay` hay `FakeNeedListener` (hai component này đọc `Clock` trong `OnEnable`) |

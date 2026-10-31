@@ -5,7 +5,7 @@
 | Mục | Giá trị |
 |---|---|
 | Package | `com.guenbankhai.calendar` |
-| Version | 0.2.0 (thay đổi giữa các version: `CHANGELOG.md`) |
+| Version | 0.2.1 (thay đổi giữa các version: `CHANGELOG.md`) |
 | Namespace | `GuenBanKhai.Calendar` |
 | Unity | 6000.6 trở lên |
 | Phụ thuộc | Không có |
