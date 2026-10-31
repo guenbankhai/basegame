@@ -39,6 +39,21 @@ README của module có một bảng, mỗi lệnh public một dòng (xem `modu
 - Không dùng `Find*` hay `SendMessage`. Cache component trong `Awake`, không gọi `GetComponent` mỗi frame.
 - Giữa các phần code, dùng `event Action<T>` của C#. Chỉ dùng `UnityEvent` khi nối trong Inspector.
 
+## Log
+
+Mọi code gọi trực tiếp `UnityEngine.Debug`, không có wrapper riêng.
+
+| Mức | Khi nào dùng |
+|---|---|
+| `LogException` | Bắt exception ngoài dự kiến rồi chạy tiếp (handler) |
+| `LogError` | Tính năng không chạy được hoặc dữ liệu bị mất: config sai, chạm giới hạn chống lặp |
+| `LogWarning` | Vẫn chạy nhưng dữ liệu có khả năng sai, chủ yếu trong `OnValidate` |
+| `Log` | Thông tin có chủ ý của tool Editor và product. Trong module chỉ dùng cho log chẩn đoán, đặt sau `if (Debug.isDebugBuild)` (đúng trong Editor và development build; Unity 6000.6 đã deprecated symbol `DEVELOPMENT_BUILD`) |
+
+- **Định dạng:** `<Loại> '<tên hoặc ID>': <nội dung>`; không có định danh thì `<Loại>: <nội dung>`. Có `UnityEngine.Object` thì truyền làm context.
+- **Module:** hành vi đúng luật thì không log ở bản build thật; báo cho game qua giá trị trả về và event. Log của module không lặp theo frame hay step.
+- **Thu log:** thuộc về product, không thuộc module: một component đăng ký `Application.logMessageReceivedThreaded`, module không biết nó tồn tại. Mẫu: `Assets/Playground/Logging/`. Callback nhận chuỗi, không nhận context, nên định dạng ở trên là thứ để lọc log sau này.
+
 ## Null
 
 - Nullable reference types để tắt.

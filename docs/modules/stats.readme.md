@@ -273,7 +273,7 @@ Value     = clamp(unclamped, Min, Max)
 
 - Mỗi `EffectId` có tối đa một `EffectInstance`. Instance giữ bản copy settings lúc áp lần đầu, `Stacks`, `Remaining` (+∞ là vô hạn), `IsSuppressed`.
 - Mỗi phần tử trong `Modifiers` của settings sinh đúng một `Modifier` có giá trị `Value × Stacks`, kể cả `PercentMult`: Kiệt sức `PercentMult −0.2`, 3 stack → `PercentMult −0.6` (×0.4).
-- Modifier trỏ stat mà collection không có thì bị bỏ qua, phần còn lại áp bình thường; effect vẫn chạy kể cả khi mọi modifier đều bị bỏ qua. Mỗi lần tạo instance (`Apply` lần đầu, `Restore`) có một dòng `Debug.Log` liệt kê stat bị bỏ qua. Ví dụ: Bánh mì +`MaxStamina` +`MaxHealth`, NPC không có `MaxStamina` thì chỉ tăng `MaxHealth`.
+- Modifier trỏ stat mà collection không có thì bị bỏ qua, phần còn lại áp bình thường; effect vẫn chạy kể cả khi mọi modifier đều bị bỏ qua. Mỗi lần tạo instance (`Apply` lần đầu, `Restore`) có một dòng `Debug.Log` liệt kê stat bị bỏ qua, chỉ trong Editor và development build. Ví dụ: Bánh mì +`MaxStamina` +`MaxHealth`, NPC không có `MaxStamina` thì chỉ tăng `MaxHealth`.
 - Instance có tác dụng thì có modifier trên stat; bị suppress thì không. Mỗi lệnh của `EffectCollection` đổi modifier trong một batch: mỗi stat tính lại một lần, Resource clamp theo max cuối của batch. Effect +20 `MaxHealth` đang 115/120 lên stack 2 → 115/140, không bị clamp về 100 ở giữa. Batch không phủ derived stat nối bằng handler (xem Viết module dùng Stats).
 - Thời gian theo đơn vị do game quy ước (phút, giây, lượt), dùng chung cho `Duration` và `delta`.
 

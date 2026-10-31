@@ -507,9 +507,15 @@ namespace BaseGame.Playground.Stats
             return targets;
         }
 
-        // Only when an instance is created, so re-applying the effect does not repeat the line.
+        // Only when an instance is created, so re-applying the effect does not repeat the line. Skipping is normal
+        // behaviour, so release builds stay silent.
         private static void LogSkippedModifiers(EffectInstance instance)
         {
+            if (!Debug.isDebugBuild)
+            {
+                return;
+            }
+
             string[] missing = instance.SettingsRef.Modifiers
                 .Where((_, i) => instance.Targets[i] == null)
                 .Select(m => m.Stat.Value)
